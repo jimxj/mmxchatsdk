@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/menuUserSearch"
+        android:icon="@drawable/ic_search_tabbar"
+        android:title="Search user"
+        app:actionViewClass="com.magnet.magnetchat.ui.custom.CustomSearchView"
+        app:showAsAction="ifRoom" />
+
+</menu>

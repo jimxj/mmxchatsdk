@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="magnet-max-android-core-2.5.0-SNAPSHOT">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/sdk/build/intermediates/exploded-aar/com.magnet.max.android/magnet-max-android-core/2.5.0-SNAPSHOT/res" />
+      <root url="jar://$PROJECT_DIR$/sdk/build/intermediates/exploded-aar/com.magnet.max.android/magnet-max-android-core/2.5.0-SNAPSHOT/jars/classes.jar!/" />
+      <root url="jar://$PROJECT_DIR$/sdk/build/intermediates/exploded-aar/com.magnet.max.android/magnet-max-android-core/2.5.0-SNAPSHOT/jars/libs/ActiveAndroid-3.1.0-SNAPSHOT.jar!/" />
+      <root url="jar://$PROJECT_DIR$/sdk/build/intermediates/exploded-aar/com.magnet.max.android/magnet-max-android-core/2.5.0-SNAPSHOT/jars/libs/retrofit-2.0.0-SNAPSHOT.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
