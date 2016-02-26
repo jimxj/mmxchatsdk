@@ -11,7 +11,7 @@ import com.magnet.magnetchat.R;
 import com.magnet.magnetchat.callbacks.BaseActivityCallback;
 import com.magnet.magnetchat.helpers.UserHelper;
 import com.magnet.magnetchat.ui.fragments.BaseFragment;
-import com.magnet.magnetchat.ui.fragments.HomeFragment;
+import com.magnet.magnetchat.ui.fragments.ChatListFragment;
 import com.magnet.max.android.User;
 import com.magnet.mmx.client.api.MMX;
 import com.magnet.mmx.client.api.MMXChannel;
@@ -84,7 +84,7 @@ public class ChatListActivity extends BaseActivity implements BaseActivityCallba
      *
      */
     private void setFragment() {
-        BaseFragment baseFragment = new HomeFragment();
+        BaseFragment baseFragment = new ChatListFragment();
         baseFragment.setBaseActivityCallback(this);
         replace(baseFragment, R.id.container, "chats");
     }
