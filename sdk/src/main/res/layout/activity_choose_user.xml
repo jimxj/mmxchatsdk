@@ -9,7 +9,8 @@
     android:fitsSystemWindows="true"
     android:focusable="true"
     android:focusableInTouchMode="true"
-    tools:context=".MainActivity">
+    app:theme="@style/MagnetChatSDKTheme"
+    tools:context=".ui.activities.ChooseUserActivity">
 
     <android.support.design.widget.AppBarLayout
         android:id="@+id/appbar"
@@ -28,9 +29,8 @@
                 android:layout_height="?attr/actionBarSize"
                 android:background="?attr/colorPrimary"
                 android:gravity="center"
-                app:popupTheme="@style/AppTheme.PopupOverlay"
-                app:theme="@style/AppTheme.Toolbar"
-                app:titleTextAppearance="@style/AppTheme.Toolbar.Title">
+                app:popupTheme="@style/MagnetChatSDKTheme.PopupOverlay"
+                app:titleTextAppearance="@style/MagnetChatSDKTheme.Toolbar.Title">
 
                 <!--<android.support.v7.widget.AppCompatTextView-->
                 <!--style="@style/style_textview_h1"-->

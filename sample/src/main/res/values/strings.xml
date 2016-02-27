@@ -1,4 +1,5 @@
 <resources>
   <string name="app_name">ChatSDK Sample</string>
   <string name="title_activity_splash">SplashActivity</string>
+  <string name="my_chats">My Chats</string>
 </resources>

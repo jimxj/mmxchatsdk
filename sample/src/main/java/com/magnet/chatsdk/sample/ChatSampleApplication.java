@@ -40,7 +40,6 @@ public class ChatSampleApplication extends MultiDexApplication {
     MMXManager.getInstance(this);
     SharedPreferenceManager.getInstance(this);
     InternetConnectionManager.getInstance(this);
-    TypeFaceManager.getInstance(this);
     ChannelCacheManager.getInstance();
   }
 

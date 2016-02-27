@@ -80,6 +80,7 @@ public class ChatActivity extends BaseActivity implements GoogleApiClient.Connec
     private ProgressBar chatMessageProgress;
     AppCompatEditText editMessage;
     TextView sendMessageButton;
+    Toolbar toolbar;
 
     @Override
     protected int getLayoutResource() {
@@ -93,16 +94,16 @@ public class ChatActivity extends BaseActivity implements GoogleApiClient.Connec
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-
         //For keeping toolbar when user input message
-        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        //getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         super.onCreate(savedInstanceState);
-        setSupportActionBar(toolbar);
 
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        }
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+
+        //setSupportActionBar(toolbar);
+        //if (getSupportActionBar() != null) {
+        //    getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        //}
 
         editMessage = (AppCompatEditText) findViewById(R.id.chatMessageField);
         sendMessageButton = (TextView) findViewById(R.id.chatSendBtn);
@@ -142,7 +143,7 @@ public class ChatActivity extends BaseActivity implements GoogleApiClient.Connec
         }
 
         googleApiClient = new GoogleApiClient.Builder(this).addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this).addApi(LocationServices.API).build();
+            .addOnConnectionFailedListener(this).addApi(LocationServices.API).build();
     }
 
     @Override
@@ -320,9 +321,9 @@ public class ChatActivity extends BaseActivity implements GoogleApiClient.Connec
     private void selectImage() {
         Intent intent = new Intent(this, ImagePickerActivity.class);
         Config config = new Config.Builder()
-                .setTabBackgroundColor(R.color.white)
-                .setSelectionLimit(1)
-                .build();
+            .setTabBackgroundColor(R.color.white)
+            .setSelectionLimit(1)
+            .build();
         ImagePickerActivity.setConfig(config);
         startActivityForResult(intent, INTENT_REQUEST_GET_IMAGES);
     }
@@ -353,7 +354,7 @@ public class ChatActivity extends BaseActivity implements GoogleApiClient.Connec
         }
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             showMessage("Location permission is not enabled");
             return;
         }
@@ -574,5 +575,9 @@ public class ChatActivity extends BaseActivity implements GoogleApiClient.Connec
                 Logger.error(TAG, "channel subscribers", throwable);
             }
         });
+    }
+
+    private void setTitle(String title) {
+        toolbar.setTitle(title);
     }
 }
