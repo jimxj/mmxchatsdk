@@ -4,4 +4,10 @@
 */build/*
 */target/*
 */local.properties
-
+*.DS_Store
+/.idea/**
+.idea/
+out/
+local.properties
+.gradle/
+/.gradle/**

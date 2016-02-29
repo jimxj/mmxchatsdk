@@ -16,7 +16,7 @@ import com.magnet.magnetchat.R;
 import com.magnet.magnetchat.helpers.DateHelper;
 import com.magnet.magnetchat.model.Conversation;
 import com.magnet.magnetchat.model.Message;
-import com.magnet.magnetchat.ui.views.CircleNameView;
+import com.magnet.magnetchat.ui.views.section.chat.CircleNameView;
 import com.magnet.max.android.UserProfile;
 import de.hdodenhof.circleimageview.CircleImageView;
 import java.util.List;

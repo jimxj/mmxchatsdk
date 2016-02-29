@@ -19,7 +19,7 @@ import com.magnet.magnetchat.R;
 import com.magnet.magnetchat.helpers.DateHelper;
 import com.magnet.magnetchat.helpers.UserHelper;
 import com.magnet.magnetchat.model.Message;
-import com.magnet.magnetchat.ui.views.CircleNameView;
+import com.magnet.magnetchat.ui.views.section.chat.CircleNameView;
 import com.magnet.magnetchat.util.AppLogger;
 import com.magnet.magnetchat.util.Utils;
 import com.magnet.max.android.Attachment;

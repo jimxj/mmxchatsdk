@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
+
 import com.magnet.magnetchat.helpers.SnackNotificationHelper;
 import com.magnet.magnetchat.util.AppLogger;
 import com.magnet.max.android.util.StringUtil;
@@ -141,6 +142,7 @@ public abstract class BaseActivity extends AppCompatActivity implements View.OnC
 
     /**
      * Returns string value from EditText. If editText object is null, returns empty line
+     *
      * @param editText
      * @return
      */
@@ -343,5 +345,10 @@ public abstract class BaseActivity extends AppCompatActivity implements View.OnC
         } catch (Exception ex) {
             AppLogger.error(this, ex.toString());
         }
+    }
+
+    @Override
+    public void onClick(View v) {
+
     }
 }

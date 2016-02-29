@@ -33,7 +33,7 @@
             android:layout_marginTop="@dimen/dimen_7"
             android:orientation="horizontal">
 
-            <com.magnet.magnetchat.ui.views.CircleNameView
+            <com.magnet.magnetchat.ui.views.section.chat.CircleNameView
                 android:id="@+id/viewUserAvatar"
                 android:layout_width="@dimen/dimen_50"
                 android:layout_height="@dimen/dimen_50" />
