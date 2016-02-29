@@ -74,9 +74,9 @@ public class LoginView extends BaseView<LoginViewProperties> {
     public void onResume() {
         super.onResume();
         if (User.getCurrentUser() != null) {
-            changeLoginMode(true);
+            switchLoginProgressView(true);
         } else {
-            changeLoginMode(false);
+            switchLoginProgressView(false);
         }
     }
 
@@ -88,17 +88,20 @@ public class LoginView extends BaseView<LoginViewProperties> {
                 onLoginEventListener.onRegisterPressed();
             }
         } else if (v.getId() == R.id.loginSignInBtn) {
-            runLoginFromFields();
+            startLogIn();
         }
     }
 
-    private void runLoginFromFields() {
+    /**
+     * Method which provide the running log in functional
+     */
+    private void startLogIn() {
         if (InternetConnectionManager.getInstance().isAnyConnectionAvailable()) {
             final String email = UserInterfaceHelper.getStringFromField(editEmail);
             final String password = UserInterfaceHelper.getStringFromField(editPassword);
             boolean shouldRemember = checkBoxRememberMe.isChecked();
             if (checkStrings(email, password)) {
-                changeLoginMode(true);
+                switchLoginProgressView(true);
                 UserHelper.login(email, password, shouldRemember, loginListener);
             } else {
                 showLoginFailed();
@@ -108,28 +111,44 @@ public class LoginView extends BaseView<LoginViewProperties> {
         }
     }
 
+    /**
+     * Method which provide to send of the incorrect password message
+     */
     private void showLoginFailed() {
         if (onLoginEventListener != null) {
             onLoginEventListener.onLoginError(null, "Email or password is incorrect");
         }
-        changeLoginMode(false);
+        switchLoginProgressView(false);
     }
 
+    /**
+     * Method which provide to send error message with description
+     *
+     * @param cause
+     */
     private void showLoginErrorCause(String cause) {
         if (onLoginEventListener != null) {
             onLoginEventListener.onLoginError(null, cause);
         }
-        changeLoginMode(false);
+        switchLoginProgressView(false);
     }
 
+    /**
+     * Method which provide to send the error message about no connection
+     */
     private void showNoConnection() {
         if (onLoginEventListener != null) {
             onLoginEventListener.onLoginError(null, "No connection");
         }
-        changeLoginMode(false);
+        switchLoginProgressView(false);
     }
 
-    private void changeLoginMode(boolean runLogining) {
+    /**
+     * Method which provide to show/hide login view
+     *
+     * @param runLogining is need show/hide
+     */
+    private void switchLoginProgressView(boolean runLogining) {
         if (runLogining == true) {
             viewProgress.setVisibility(View.VISIBLE);
         } else {
@@ -137,6 +156,9 @@ public class LoginView extends BaseView<LoginViewProperties> {
         }
     }
 
+    /**
+     * Listener which provide the watchdog for the logining functional
+     */
     private final UserHelper.OnLoginListener loginListener = new UserHelper.OnLoginListener() {
         @Override
         public void onSuccess() {
@@ -148,7 +170,7 @@ public class LoginView extends BaseView<LoginViewProperties> {
         @Override
         public void onFailedLogin(ApiError apiError) {
             Logger.error("login", apiError);
-            changeLoginMode(false);
+            switchLoginProgressView(false);
             if (apiError.getMessage().contains(MMX.FailureCode.BAD_REQUEST.getDescription())) {
                 showLoginErrorCause("A bad request submitted to the server.");
             } else if (apiError.getMessage().contains(MMX.FailureCode.SERVER_AUTH_FAILED.getDescription())) {
