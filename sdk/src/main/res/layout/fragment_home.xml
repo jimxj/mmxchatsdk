@@ -18,32 +18,6 @@
 
     </android.support.v4.widget.SwipeRefreshLayout>
 
-    <LinearLayout
-        android:id="@+id/llHomeCreateMsg"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/swipeContainer"
-        android:layout_alignParentBottom="true"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:visibility="gone">
-
-        <ImageView
-            android:id="@+id/ivHomeCreateMsg"
-            android:layout_width="@dimen/dimen_55"
-            android:layout_height="@dimen/dimen_55"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_add_message_tabbar" />
-
-        <android.support.v7.widget.AppCompatTextView
-            android:id="@+id/tvHomeCreateMsg"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/dimen_50"
-            android:text="Create a new massage" />
-
-    </LinearLayout>
-
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fabHomeCreateMessage"
         android:layout_width="@dimen/dimen_60"
