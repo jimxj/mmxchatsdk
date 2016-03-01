@@ -5,7 +5,7 @@ import android.util.Log;
 import com.magnet.magnetchat.model.Conversation;
 import java.util.List;
 
-public class SupportConversationsAdapter extends BaseConversationsAdapter {
+public class SupportConversationsAdapter extends ChatsAdapter {
 
     public SupportConversationsAdapter(Context context, List<Conversation> conversations) {
         super(context, conversations);

@@ -14,14 +14,16 @@ import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 import com.magnet.magnetchat.R;
 import com.magnet.magnetchat.helpers.DateHelper;
+import com.magnet.magnetchat.helpers.UserHelper;
 import com.magnet.magnetchat.model.Conversation;
 import com.magnet.magnetchat.model.Message;
 import com.magnet.magnetchat.ui.views.section.chat.CircleNameView;
+import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;
 import de.hdodenhof.circleimageview.CircleImageView;
 import java.util.List;
 
-public abstract class BaseConversationsAdapter extends RecyclerView.Adapter<BaseConversationsAdapter.ConversationViewHolder> {
+public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ConversationViewHolder> {
 
     private LayoutInflater inflater;
     private List<Conversation> conversations;
@@ -101,7 +103,7 @@ public abstract class BaseConversationsAdapter extends RecyclerView.Adapter<Base
         }
     }
 
-    public BaseConversationsAdapter(Context context, List<Conversation> conversations) {
+    public ChatsAdapter(Context context, List<Conversation> conversations) {
         this.context = context;
         inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         this.conversations = conversations;
@@ -231,6 +233,23 @@ public abstract class BaseConversationsAdapter extends RecyclerView.Adapter<Base
      * @param conversation object for current item
      * @param viewHolder
      */
-    protected abstract void prepareTitleAndAvatar(Conversation conversation, AvatarConversationViewHolder viewHolder);
-
+    protected void prepareTitleAndAvatar(Conversation conversation, AvatarConversationViewHolder viewHolder) {
+        List<UserProfile> suppliers = conversation.getSuppliersList();
+        //If all suppliers left conversation, show current user.
+        if (suppliers.size() == 0) {
+            User currentUser = User.getCurrentUser();
+            if (currentUser != null) {
+                viewHolder.title.setText(String.format("%s %s", currentUser.getFirstName(), currentUser.getLastName()));
+                setUserAvatar(currentUser, viewHolder);
+            }
+        } else {
+            viewHolder.title.setText(UserHelper.getDisplayNames(conversation.getSuppliersList()));
+            if (suppliers.size() > 1) {
+                Glide.with(getContext()).load(R.drawable.user_group).fitCenter().into(viewHolder.imageAvatar);
+            } else {
+                //If there is one supplier, show his avatar.
+                setUserAvatar(suppliers.get(0), viewHolder);
+            }
+        }
+    }
 }
