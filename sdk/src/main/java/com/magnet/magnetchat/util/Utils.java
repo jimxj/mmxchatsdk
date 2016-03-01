@@ -7,6 +7,7 @@ import android.content.Context;
 import android.widget.Toast;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.magnet.max.android.util.StringUtil;
 
 public class Utils {
   private static final String TAG = Utils.class.getSimpleName();
@@ -21,6 +22,8 @@ public class Utils {
   }
 
   public static void showMessage(Context context, String message) {
-    Toast.makeText(context, message, Toast.LENGTH_LONG).show();
+    if(null != context && StringUtil.isNotEmpty(message)) {
+      Toast.makeText(context, message, Toast.LENGTH_LONG).show();
+    }
   }
 }

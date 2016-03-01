@@ -4,16 +4,17 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.util.Log;
 
 import com.magnet.magnetchat.core.managers.ChannelCacheManager;
 import com.magnet.magnetchat.helpers.ChannelHelper;
 import com.magnet.magnetchat.model.Conversation;
-import com.magnet.magnetchat.mvp.views.ChatListFragmentView;
+import com.magnet.magnetchat.mvp.api.ChatListContract;
 import com.magnet.magnetchat.util.Logger;
 import com.magnet.magnetchat.util.Utils;
+import com.magnet.max.android.Max;
 import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;
+import com.magnet.mmx.client.api.ChannelDetail;
 import com.magnet.mmx.client.api.MMX;
 import com.magnet.mmx.client.api.MMXChannel;
 import com.magnet.mmx.client.api.MMXMessage;
@@ -24,26 +25,63 @@ import java.util.List;
 /**
  * Created by dlernatovich on 3/1/16.
  */
-public class ChatListFragmentPresenterImpl implements ChatListFragmentPresenter {
+public class ChatListPresenterImpl implements ChatListContract.UserActionsListener {
+    protected static final String TAG = "ChatListPresenter";
 
+    protected List<Conversation> mConversations = new ArrayList<>();
     private boolean isLoadingWhenCreating = false;
-    private ChatListFragmentView view;
+    protected ChatListContract.View mView;
 
     /**
      * Constructor
      *
      * @param view
      */
-    public ChatListFragmentPresenterImpl(ChatListFragmentView view) {
-        this.view = view;
+    public ChatListPresenterImpl(ChatListContract.View view) {
+        this.mView = view;
     }
 
     /**
      * Method which provide to getting of the reading channels
      */
     @Override
-    public void getConversations() {
-        ChannelHelper.readConversations(readChannelInfoListener);
+    public void onLoadConversations(boolean forceUpdate) {
+        if(forceUpdate) {
+            ChannelHelper.getAllSubscriptionDetails(new MMXChannel.OnFinishedListener<List<ChannelDetail>>() {
+                @Override public void onSuccess(List<ChannelDetail> channelDetails) {
+                    for (ChannelDetail cd : channelDetails) {
+                        Conversation c = new Conversation(cd);
+                        ChannelCacheManager.getInstance().addConversation(c);
+                    }
+
+                    mConversations.clear();
+                    mConversations.addAll(ChannelCacheManager.getInstance().getConversations());
+
+                    showAllConversations();
+
+                    finishGetChannels();
+                }
+
+                @Override public void onFailure(MMXChannel.FailureCode failureCode, Throwable throwable) {
+                    handleError(failureCode.toString(), throwable);
+                    finishGetChannels();
+                }
+
+                private void finishGetChannels() {
+                    isLoadingWhenCreating = false;
+                    mView.setProgressIndicator(false);
+                }
+
+                private void handleError(String message, Throwable throwable) {
+                    Logger.error(TAG, "Can't get conversations due to "
+                        + message
+                        + ", throwable : \n"
+                        + throwable);
+                }
+            });
+        } else {
+            showAllConversations();
+        }
     }
 
     /**
@@ -57,7 +95,10 @@ public class ChatListFragmentPresenterImpl implements ChatListFragmentPresenter 
             ChannelCacheManager.getInstance().resetConversationListUpdated();
         }
         MMX.registerListener(eventListener);
-        view.getActivity().registerReceiver(onAddedConversation, new IntentFilter(ChannelHelper.ACTION_ADDED_CONVERSATION));
+
+        if(null != Max.getApplicationContext()) {
+            Max.getApplicationContext().registerReceiver(onAddedConversation, new IntentFilter(ChannelHelper.ACTION_ADDED_CONVERSATION));
+        }
     }
 
     /**
@@ -67,8 +108,11 @@ public class ChatListFragmentPresenterImpl implements ChatListFragmentPresenter 
     @Override
     public void onPause() {
         MMX.unregisterListener(eventListener);
-        view.getActivity().unregisterReceiver(onAddedConversation);
-        view.dismissLeaveDialog();
+
+        if(null != Max.getApplicationContext()) {
+            Max.getApplicationContext().unregisterReceiver(onAddedConversation);
+        }
+        mView.dismissLeaveDialog();
     }
 
     /**
@@ -77,7 +121,7 @@ public class ChatListFragmentPresenterImpl implements ChatListFragmentPresenter 
      * @param query search query
      */
     @Override
-    public void searchMessage(String query) {
+    public void onSearchMessage(String query) {
         final List<Conversation> searchResult = new ArrayList<>();
         for (Conversation conversation : getAllConversations()) {
             for (UserProfile userProfile : conversation.getSuppliersList()) {
@@ -88,9 +132,17 @@ public class ChatListFragmentPresenterImpl implements ChatListFragmentPresenter 
             }
         }
         if (searchResult.isEmpty()) {
-            Utils.showMessage(view.getActivity(), "Nothing found");
+            Utils.showMessage(Max.getApplicationContext(), "Nothing found");
         }
-        view.showList(searchResult);
+        mView.showList(searchResult);
+    }
+
+    @Override public void onConversationClick(Conversation conversation) {
+        mView.showChatDetails(conversation);
+    }
+
+    @Override public void onConversationLongClick(Conversation conversation) {
+
     }
 
     /**
@@ -100,15 +152,14 @@ public class ChatListFragmentPresenterImpl implements ChatListFragmentPresenter 
      */
     @Override
     public List<Conversation> getAllConversations() {
-        return ChannelCacheManager.getInstance().getConversations();
+        return mConversations;
     }
 
     /**
      * Method which provide to showing of the all conversations
      */
-    @Override
-    public void showAllConversations() {
-        view.showList(getAllConversations());
+    private void showAllConversations() {
+        mView.showList(mConversations);
     }
 
     /**
@@ -117,36 +168,36 @@ public class ChatListFragmentPresenterImpl implements ChatListFragmentPresenter 
     private final MMX.EventListener eventListener = new MMX.EventListener() {
         @Override
         public boolean onMessageReceived(MMXMessage mmxMessage) {
-            Logger.debug(view.getTAG(), "onMessageReceived");
+            Logger.debug(TAG, "onMessageReceived");
             showAllConversations();
             return false;
         }
 
         @Override
         public boolean onMessageAcknowledgementReceived(User from, String messageId) {
-            Logger.debug(view.getTAG(), "onMessageAcknowledgementReceived");
-            view.updateList();
+            Logger.debug(TAG, "onMessageAcknowledgementReceived");
+            //view.updateList();
             return false;
         }
 
         @Override
         public boolean onInviteReceived(MMXChannel.MMXInvite invite) {
-            Logger.debug(view.getTAG(), "onInviteReceived");
-            view.updateList();
+            Logger.debug(TAG, "onInviteReceived");
+            //view.updateList();
             return false;
         }
 
         @Override
         public boolean onInviteResponseReceived(MMXChannel.MMXInviteResponse inviteResponse) {
-            Logger.debug(view.getTAG(), "onInviteResponseReceived");
-            view.updateList();
+            Logger.debug(TAG, "onInviteResponseReceived");
+            //view.updateList();
             return false;
         }
 
         @Override
         public boolean onMessageSendError(String messageId, MMXMessage.FailureCode code, String text) {
             Logger.debug("onMessageSendError");
-            view.updateList();
+            //view.updateList();
             return false;
         }
     };
@@ -161,30 +212,4 @@ public class ChatListFragmentPresenterImpl implements ChatListFragmentPresenter 
         }
     };
 
-    /**
-     * Callback which provide the listening of the watch dog notification when user try to read the channel information
-     */
-    private ChannelHelper.OnReadChannelInfoListener readChannelInfoListener = new ChannelHelper.OnReadChannelInfoListener() {
-        @Override
-        public void onSuccessFinish(Conversation lastConversation) {
-            finishGetChannels();
-            showAllConversations();
-            if (view.getConversations() == null || view.getConversations().size() == 0) {
-                //onConversationListIsEmpty(true);
-                Log.w("read channels", "No conversation is available");
-            } else {
-                //onConversationListIsEmpty(false);
-            }
-        }
-
-        @Override
-        public void onFailure(Throwable throwable) {
-            finishGetChannels();
-        }
-
-        private void finishGetChannels() {
-            isLoadingWhenCreating = false;
-            view.switchSwipeContainer(true);
-        }
-    };
 }

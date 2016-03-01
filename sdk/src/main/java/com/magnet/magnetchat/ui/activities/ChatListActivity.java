@@ -29,8 +29,6 @@ public class ChatListActivity extends BaseActivity implements BaseActivityCallba
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d(TAG,
-            "\n---------------------------------\nHomeActivity created\n---------------------------------\n");
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         //setSupportActionBar(toolbar);
@@ -45,18 +43,7 @@ public class ChatListActivity extends BaseActivity implements BaseActivityCallba
         super.onResume();
 
         if (User.getCurrentUser() != null) {
-            if (UserHelper.isMagnetSupportMember()) {
-                MMX.registerListener(homeMessageReceiver);
-            }
 
-            //if (null != User.getCurrentUser().getAvatarUrl()) {
-            //    Glide.with(this)
-            //            .load(User.getCurrentUser().getAvatarUrl())
-            //            .placeholder(R.mipmap.ic_user)
-            //                    //.signature(new StringSignature(String.valueOf(System.currentTimeMillis())))
-            //            .centerCrop()
-            //            .into(ivUserAvatar);
-            //}
         } else {
             Log.w(TAG, "CurrentUser is null, logout");
             //TODO :

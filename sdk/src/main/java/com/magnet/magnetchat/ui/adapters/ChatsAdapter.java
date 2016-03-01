@@ -21,12 +21,13 @@ import com.magnet.magnetchat.ui.views.section.chat.CircleNameView;
 import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;
 import de.hdodenhof.circleimageview.CircleImageView;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ConversationViewHolder> {
 
     private LayoutInflater inflater;
-    private List<Conversation> conversations;
+    private List<Conversation> mConversations;
     private Context context;
     protected OnConversationClick onConversationClick;
     protected OnConversationLongClick onConversationLongClick;
@@ -72,7 +73,7 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.Conversation
     }
 
     /**
-     * View holder to show conversations with user's avatars and messages
+     * View holder to show mConversations with user's avatars and messages
      */
     protected class AvatarConversationViewHolder extends ConversationViewHolder implements View.OnLongClickListener {
         ImageView newMessage;
@@ -106,7 +107,7 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.Conversation
     public ChatsAdapter(Context context, List<Conversation> conversations) {
         this.context = context;
         inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        this.conversations = conversations;
+        this.mConversations = conversations;
     }
 
     /**
@@ -114,7 +115,7 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.Conversation
      * @return an item by position in list
      */
     public Conversation getItem(int position) {
-        return conversations.get(position);
+        return mConversations.get(position);
     }
 
     @Override
@@ -147,11 +148,29 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.Conversation
 
     @Override
     public int getItemCount() {
-        return conversations.size();
+        return mConversations.size();
     }
 
     public void setOnConversationLongClick(OnConversationLongClick onConversationLongClick) {
         this.onConversationLongClick = onConversationLongClick;
+    }
+
+    public void swapData(List<Conversation> data){
+        if(mConversations != data) {
+            mConversations.clear();
+            mConversations.addAll(data);
+        }
+        notifyDataSetChanged();
+    }
+
+    public List<Conversation> getData() {
+        return mConversations;
+    }
+
+    public void removeItem(int position) {
+        mConversations.remove(position);
+        notifyItemRemoved(position);
+        notifyItemRangeChanged(position, mConversations.size());
     }
 
     public void setOnConversationClick(OnConversationClick onConversationClick) {

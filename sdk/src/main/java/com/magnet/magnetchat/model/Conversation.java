@@ -114,10 +114,14 @@ public class Conversation {
         return messages;
     }
 
-    public void addMessage(Message message) {
+    public boolean addMessage(Message message) {
         if (!getMessages().contains(message)) {
             messages.add(message);
+
+            return true;
         }
+
+        return false;
     }
 
     /**
@@ -138,6 +142,26 @@ public class Conversation {
         for (MMXMessage mmxMessage : channelDetail.getMessages()) {
             this.addMessage(Message.createMessageFrom(mmxMessage));
         }
+    }
+
+    public boolean mergeFrom(Conversation conversation) {
+        boolean newMessageAdded = false;
+        if(null != conversation) {
+            for (UserProfile up : conversation.getSuppliers().values()) {
+                if (owner == null && up.getUserIdentifier().equals(channel.getOwnerId())) {
+                    owner = up;
+                }
+                if (!up.getUserIdentifier().equals(User.getCurrentUserId())) {
+                    this.addSupplier(up);
+                }
+            }
+
+            for (Message message : conversation.getMessages()) {
+                newMessageAdded = newMessageAdded || this.addMessage(message);
+            }
+        }
+
+        return newMessageAdded;
     }
 
     public void sendTextMessage(final String text, final OnSendMessageListener listener) {

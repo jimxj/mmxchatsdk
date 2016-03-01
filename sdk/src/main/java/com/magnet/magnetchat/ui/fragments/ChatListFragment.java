@@ -17,19 +17,18 @@ import com.magnet.magnetchat.R;
 import com.magnet.magnetchat.core.managers.ChannelCacheManager;
 import com.magnet.magnetchat.helpers.ChannelHelper;
 import com.magnet.magnetchat.model.Conversation;
-import com.magnet.magnetchat.mvp.presenters.ChatListFragmentPresenter;
-import com.magnet.magnetchat.mvp.presenters.ChatListFragmentPresenterImpl;
-import com.magnet.magnetchat.mvp.views.ChatListFragmentView;
+import com.magnet.magnetchat.mvp.api.ChatListContract;
+import com.magnet.magnetchat.mvp.presenters.ChatListPresenterImpl;
 import com.magnet.magnetchat.ui.activities.ChatActivity;
 import com.magnet.magnetchat.ui.activities.ChooseUserActivity;
 import com.magnet.magnetchat.ui.adapters.ChatsAdapter;
 import com.magnet.magnetchat.ui.custom.CustomSearchView;
 import com.magnet.magnetchat.ui.views.DividerItemDecoration;
 
-import java.util.ArrayList;
 import java.util.List;
 
-public class ChatListFragment extends BaseFragment implements ChatListFragmentView {
+public class ChatListFragment extends BaseFragment implements ChatListContract.View {
+    private final static String TAG = "ChatListFragment";
 
     private RecyclerView conversationsList;
     private SwipeRefreshLayout swipeContainer;
@@ -38,10 +37,9 @@ public class ChatListFragment extends BaseFragment implements ChatListFragmentVi
 
     private FloatingActionButton fabCreateMessage;
 
-    private List<Conversation> conversations;
     private ChatsAdapter adapter;
 
-    private ChatListFragmentPresenter presenter;
+    private ChatListContract.UserActionsListener presenter;
 
     @Override
     protected int getLayoutId() {
@@ -50,9 +48,6 @@ public class ChatListFragment extends BaseFragment implements ChatListFragmentVi
 
     @Override
     protected void onCreateFragment(View containerView) {
-
-        presenter = new ChatListFragmentPresenterImpl(this);
-
         conversationsList = (RecyclerView) containerView.findViewById(R.id.homeConversationsList);
 
         LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
@@ -67,7 +62,7 @@ public class ChatListFragment extends BaseFragment implements ChatListFragmentVi
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                presenter.getConversations();
+                presenter.onLoadConversations(true);
             }
         });
         swipeContainer.setColorSchemeResources(R.color.colorPrimaryDark, R.color.colorPrimary, R.color.colorAccent);
@@ -78,11 +73,13 @@ public class ChatListFragment extends BaseFragment implements ChatListFragmentVi
 
         setHasOptionsMenu(true);
 
+        presenter = new ChatListPresenterImpl(this);
+
         swipeContainer.post(new Runnable() {
             @Override
             public void run() {
                 swipeContainer.setRefreshing(true);
-                presenter.getConversations();
+                presenter.onLoadConversations(true);
             }
         });
     }
@@ -107,7 +104,7 @@ public class ChatListFragment extends BaseFragment implements ChatListFragmentVi
             search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
                 @Override
                 public boolean onQueryTextSubmit(String query) {
-                    presenter.searchMessage(query);
+                    presenter.onSearchMessage(query);
                     return true;
                 }
 
@@ -115,7 +112,7 @@ public class ChatListFragment extends BaseFragment implements ChatListFragmentVi
                 public boolean onQueryTextChange(String newText) {
                     if (newText.isEmpty()) {
                         hideKeyboard();
-                        presenter.showAllConversations();
+                        presenter.onLoadConversations(false);
                     }
                     return false;
                 }
@@ -125,17 +122,12 @@ public class ChatListFragment extends BaseFragment implements ChatListFragmentVi
                 @Override
                 public boolean onClose() {
                     search.onActionViewCollapsed();
-                    presenter.showAllConversations();
+                    presenter.onLoadConversations(false);
                     return true;
                 }
             });
         }
         super.onCreateOptionsMenu(menu, inflater);
-    }
-
-    @Override
-    public List<Conversation> getConversations() {
-        return conversations;
     }
 
     @Override
@@ -157,31 +149,29 @@ public class ChatListFragment extends BaseFragment implements ChatListFragmentVi
     public void showList(List<Conversation> conversations) {
         if (null != getActivity()) {
             if (adapter == null) {
-                this.conversations = new ArrayList<>(conversations);
-                adapter = new ChatsAdapter(getActivity(), this.conversations);
+                adapter = new ChatsAdapter(getActivity(), conversations);
                 adapter.setOnConversationClick(new ChatsAdapter.OnConversationClick() {
                     @Override
                     public void onClick(Conversation conversation) {
                         if (conversation != null) {
-                            Log.d(getTAG(), "Channel " + conversation.getChannel().getName() + " is selected");
-                            showChatDetails(conversation);
+                            Log.d(TAG, "Channel " + conversation.getChannel().getName() + " is selected");
+                            presenter.onConversationClick(conversation);
                         }
                     }
                 });
                 adapter.setOnConversationLongClick(new ChatsAdapter.OnConversationLongClick() {
                     @Override
                     public void onLongClick(Conversation conversation) {
+                        presenter.onConversationLongClick(conversation);
                         showLeaveDialog(conversation);
                     }
                 });
                 conversationsList.setAdapter(adapter);
             } else {
-                this.conversations.clear();
-                this.conversations.addAll(conversations);
-                adapter.notifyDataSetChanged();
+                adapter.swapData(conversations);
             }
         } else {
-            Log.w(getTAG(), "Fragment is detached, won't update list");
+            Log.w(TAG, "Fragment is detached, won't update list");
         }
     }
 
@@ -207,7 +197,8 @@ public class ChatListFragment extends BaseFragment implements ChatListFragmentVi
                     public void onSuccess() {
                         //setProgressBarVisibility(View.GONE);
                         ChannelCacheManager.getInstance().removeConversation(conversation.getChannel().getName());
-                        presenter.showAllConversations();
+
+                        removeItem(adapter.getData().indexOf(conversation));
                     }
 
                     @Override
@@ -221,7 +212,8 @@ public class ChatListFragment extends BaseFragment implements ChatListFragmentVi
         leaveDialog.show();
     }
 
-    private void setProgressIndicator(boolean active) {
+    @Override
+    public void setProgressIndicator(boolean active) {
         swipeContainer.setRefreshing(active);
     }
 
@@ -239,6 +231,10 @@ public class ChatListFragment extends BaseFragment implements ChatListFragmentVi
         startActivity(ChatActivity.getIntentWithChannel(getActivity(), conversation));
     }
 
+    @Override public void showLeaveConfirmation(Conversation conversation) {
+        showLeaveDialog(conversation);
+    }
+
     @Override
     public void dismissLeaveDialog() {
         if (leaveDialog != null && leaveDialog.isShowing()) {
@@ -246,15 +242,8 @@ public class ChatListFragment extends BaseFragment implements ChatListFragmentVi
         }
     }
 
-    @Override
-    public void switchSwipeContainer(boolean isNeedHidden) {
-        if (swipeContainer != null) {
-            swipeContainer.setRefreshing(!isNeedHidden);
-        }
-    }
-
-    @Override
-    public String getTAG() {
-        return ChatListFragment.class.getSimpleName();
+    private void removeItem(int position) {
+        conversationsList.removeViewAt(position);
+        adapter.removeItem(position);
     }
 }
