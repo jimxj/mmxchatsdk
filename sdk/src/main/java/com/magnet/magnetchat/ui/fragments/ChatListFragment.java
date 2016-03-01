@@ -17,7 +17,7 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.widget.SearchView;
 import com.magnet.magnetchat.R;
-import com.magnet.magnetchat.api.ChatList;
+import com.magnet.magnetchat.api.ChatListContract;
 import com.magnet.magnetchat.core.managers.ChannelCacheManager;
 import com.magnet.magnetchat.helpers.ChannelHelper;
 import com.magnet.magnetchat.model.Conversation;
@@ -36,7 +36,7 @@ import com.magnet.mmx.client.api.MMXMessage;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ChatListFragment extends BaseFragment implements ChatList.View {
+public class ChatListFragment extends BaseFragment implements ChatListContract.View {
 
     private static String TAG = ChatListFragment.class.getSimpleName();
 
