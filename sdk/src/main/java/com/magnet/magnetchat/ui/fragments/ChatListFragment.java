@@ -54,7 +54,7 @@ public class ChatListFragment extends BaseFragment implements ChatList.View {
 
     @Override
     protected int getLayoutId() {
-        return R.layout.fragment_home;
+        return R.layout.fragment_chat_list;
     }
 
     @Override
