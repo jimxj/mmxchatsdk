@@ -1,10 +1,6 @@
 package com.magnet.magnetchat.ui.fragments;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Build;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -16,41 +12,36 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.widget.SearchView;
+
 import com.magnet.magnetchat.R;
-import com.magnet.magnetchat.api.ChatListContract;
 import com.magnet.magnetchat.core.managers.ChannelCacheManager;
 import com.magnet.magnetchat.helpers.ChannelHelper;
 import com.magnet.magnetchat.model.Conversation;
+import com.magnet.magnetchat.mvp.presenters.ChatListFragmentPresenter;
+import com.magnet.magnetchat.mvp.presenters.ChatListFragmentPresenterImpl;
+import com.magnet.magnetchat.mvp.views.ChatListFragmentView;
 import com.magnet.magnetchat.ui.activities.ChatActivity;
 import com.magnet.magnetchat.ui.activities.ChooseUserActivity;
 import com.magnet.magnetchat.ui.adapters.ChatsAdapter;
 import com.magnet.magnetchat.ui.custom.CustomSearchView;
 import com.magnet.magnetchat.ui.views.DividerItemDecoration;
-import com.magnet.magnetchat.util.Logger;
-import com.magnet.magnetchat.util.Utils;
-import com.magnet.max.android.User;
-import com.magnet.max.android.UserProfile;
-import com.magnet.mmx.client.api.MMX;
-import com.magnet.mmx.client.api.MMXChannel;
-import com.magnet.mmx.client.api.MMXMessage;
+
 import java.util.ArrayList;
 import java.util.List;
 
-public class ChatListFragment extends BaseFragment implements ChatListContract.View {
+public class ChatListFragment extends BaseFragment implements ChatListFragmentView {
 
-    private static String TAG = ChatListFragment.class.getSimpleName();
+    private RecyclerView conversationsList;
+    private SwipeRefreshLayout swipeContainer;
 
-    RecyclerView conversationsList;
-    SwipeRefreshLayout swipeContainer;
+    private AlertDialog leaveDialog;
 
-    AlertDialog leaveDialog;
-
-    FloatingActionButton fabCreateMessage;
+    private FloatingActionButton fabCreateMessage;
 
     private List<Conversation> conversations;
     private ChatsAdapter adapter;
 
-    private boolean isLoadingWhenCreating = false;
+    private ChatListFragmentPresenter presenter;
 
     @Override
     protected int getLayoutId() {
@@ -59,6 +50,8 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
 
     @Override
     protected void onCreateFragment(View containerView) {
+
+        presenter = new ChatListFragmentPresenterImpl(this);
 
         conversationsList = (RecyclerView) containerView.findViewById(R.id.homeConversationsList);
 
@@ -74,7 +67,7 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                getConversations();
+                presenter.getConversations();
             }
         });
         swipeContainer.setColorSchemeResources(R.color.colorPrimaryDark, R.color.colorPrimary, R.color.colorAccent);
@@ -86,9 +79,10 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
         setHasOptionsMenu(true);
 
         swipeContainer.post(new Runnable() {
-            @Override public void run() {
+            @Override
+            public void run() {
                 swipeContainer.setRefreshing(true);
-                getConversations();
+                presenter.getConversations();
             }
         });
     }
@@ -96,23 +90,12 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
     @Override
     public void onResume() {
         super.onResume();
-        if (!isLoadingWhenCreating && ChannelCacheManager.getInstance().isConversationListUpdated()) {
-            showAllConversations();
-            ChannelCacheManager.getInstance().resetConversationListUpdated();
-        }
-        MMX.registerListener(eventListener);
-        getActivity().registerReceiver(onAddedConversation, new IntentFilter(ChannelHelper.ACTION_ADDED_CONVERSATION));
+        presenter.onResume();
     }
 
     @Override
     public void onPause() {
-        MMX.unregisterListener(eventListener);
-        getActivity().unregisterReceiver(onAddedConversation);
-
-        if (leaveDialog != null && leaveDialog.isShowing()) {
-            leaveDialog.dismiss();
-        }
-
+        presenter.onPause();
         super.onPause();
     }
 
@@ -124,7 +107,7 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
             search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
                 @Override
                 public boolean onQueryTextSubmit(String query) {
-                    searchMessage(query);
+                    presenter.searchMessage(query);
                     return true;
                 }
 
@@ -132,7 +115,7 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
                 public boolean onQueryTextChange(String newText) {
                     if (newText.isEmpty()) {
                         hideKeyboard();
-                        showAllConversations();
+                        presenter.showAllConversations();
                     }
                     return false;
                 }
@@ -142,7 +125,7 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
                 @Override
                 public boolean onClose() {
                     search.onActionViewCollapsed();
-                    showAllConversations();
+                    presenter.showAllConversations();
                     return true;
                 }
             });
@@ -150,42 +133,37 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
         super.onCreateOptionsMenu(menu, inflater);
     }
 
-    protected void getConversations() {
-        ChannelHelper.readConversations(readChannelInfoListener);
+    @Override
+    public List<Conversation> getConversations() {
+        return conversations;
     }
 
     @Override
     public void onClick(View v) {
         super.onClick(v);
-        if(v.getId() == R.id.fabHomeCreateMessage) {
+        if (v.getId() == R.id.fabHomeCreateMessage) {
             showNewChat();
         }
     }
 
-    protected List<Conversation> getAllConversations() {
-        return ChannelCacheManager.getInstance().getConversations();
-    }
-
-    protected void showAllConversations() {
-        showList(getAllConversations());
-    }
-
-    protected void updateList() {
+    @Override
+    public void updateList() {
         if (adapter != null) {
             adapter.notifyDataSetChanged();
         }
     }
 
-    protected void showList(List<Conversation> conversationsToShow) {
-        if(null != getActivity()) {
+    @Override
+    public void showList(List<Conversation> conversations) {
+        if (null != getActivity()) {
             if (adapter == null) {
-                conversations = new ArrayList<>(conversationsToShow);
-                adapter = new ChatsAdapter(getActivity(), conversations);
+                this.conversations = new ArrayList<>(conversations);
+                adapter = new ChatsAdapter(getActivity(), this.conversations);
                 adapter.setOnConversationClick(new ChatsAdapter.OnConversationClick() {
                     @Override
                     public void onClick(Conversation conversation) {
                         if (conversation != null) {
-                            Log.d(TAG, "Channel " + conversation.getChannel().getName() + " is selected");
+                            Log.d(getTAG(), "Channel " + conversation.getChannel().getName() + " is selected");
                             showChatDetails(conversation);
                         }
                     }
@@ -198,29 +176,13 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
                 });
                 conversationsList.setAdapter(adapter);
             } else {
-                conversations.clear();
-                conversations.addAll(conversationsToShow);
+                this.conversations.clear();
+                this.conversations.addAll(conversations);
                 adapter.notifyDataSetChanged();
             }
         } else {
-            Log.w(TAG, "Fragment is detached, won't update list");
+            Log.w(getTAG(), "Fragment is detached, won't update list");
         }
-    }
-
-    protected void searchMessage(final String query) {
-        final List<Conversation> searchResult = new ArrayList<>();
-        for (Conversation conversation : getAllConversations()) {
-            for (UserProfile userProfile : conversation.getSuppliersList()) {
-                if (userProfile.getDisplayName() != null && userProfile.getDisplayName().toLowerCase().contains(query.toLowerCase())) {
-                    searchResult.add(conversation);
-                    break;
-                }
-            }
-        }
-        if (searchResult.isEmpty()) {
-            Utils.showMessage(getActivity(), "Nothing found");
-        }
-        showList(searchResult);
     }
 
     private void showLeaveDialog(final Conversation conversation) {
@@ -245,7 +207,7 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
                     public void onSuccess() {
                         //setProgressBarVisibility(View.GONE);
                         ChannelCacheManager.getInstance().removeConversation(conversation.getChannel().getName());
-                        showAllConversations();
+                        presenter.showAllConversations();
                     }
 
                     @Override
@@ -259,88 +221,40 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
         leaveDialog.show();
     }
 
-    private ChannelHelper.OnReadChannelInfoListener readChannelInfoListener = new ChannelHelper.OnReadChannelInfoListener() {
-        @Override
-        public void onSuccessFinish(Conversation lastConversation) {
-            finishGetChannels();
-            showAllConversations();
-            if (conversations == null || conversations.size() == 0) {
-                //onConversationListIsEmpty(true);
-                Log.w("read channels", "No conversation is available");
-            } else {
-                //onConversationListIsEmpty(false);
-            }
-        }
-
-        @Override
-        public void onFailure(Throwable throwable) {
-            finishGetChannels();
-        }
-
-        private void finishGetChannels() {
-            isLoadingWhenCreating = false;
-            swipeContainer.setRefreshing(false);
-        }
-    };
-
-    private MMX.EventListener eventListener = new MMX.EventListener() {
-        @Override
-        public boolean onMessageReceived(MMXMessage mmxMessage) {
-            Logger.debug(TAG, "onMessageReceived");
-            showAllConversations();
-            //onReceiveMessage(mmxMessage);
-            return false;
-        }
-
-        @Override
-        public boolean onMessageAcknowledgementReceived(User from, String messageId) {
-            Logger.debug(TAG, "onMessageAcknowledgementReceived");
-            updateList();
-            return false;
-        }
-
-        @Override
-        public boolean onInviteReceived(MMXChannel.MMXInvite invite) {
-            Logger.debug(TAG, "onInviteReceived");
-            updateList();
-            return false;
-        }
-
-        @Override
-        public boolean onInviteResponseReceived(MMXChannel.MMXInviteResponse inviteResponse) {
-            Logger.debug(TAG, "onInviteResponseReceived");
-            updateList();
-            return false;
-        }
-
-        @Override
-        public boolean onMessageSendError(String messageId, MMXMessage.FailureCode code, String text) {
-            Logger.debug("onMessageSendError");
-            updateList();
-            return false;
-        }
-    };
-
-    private BroadcastReceiver onAddedConversation = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            showAllConversations();
-        }
-    };
-
-    @Override public void setProgressIndicator(boolean active) {
+    private void setProgressIndicator(boolean active) {
         swipeContainer.setRefreshing(active);
     }
 
-    @Override public void showChatList(List<Conversation> chatList) {
+    private void showChatList(List<Conversation> chatList) {
         showList(chatList);
     }
 
-    @Override public void showNewChat() {
+    @Override
+    public void showNewChat() {
         startActivity(ChooseUserActivity.getIntentToCreateChannel(getActivity()));
     }
 
-    @Override public void showChatDetails(Conversation conversation) {
+    @Override
+    public void showChatDetails(Conversation conversation) {
         startActivity(ChatActivity.getIntentWithChannel(getActivity(), conversation));
+    }
+
+    @Override
+    public void dismissLeaveDialog() {
+        if (leaveDialog != null && leaveDialog.isShowing()) {
+            leaveDialog.dismiss();
+        }
+    }
+
+    @Override
+    public void switchSwipeContainer(boolean isNeedHidden) {
+        if (swipeContainer != null) {
+            swipeContainer.setRefreshing(isNeedHidden);
+        }
+    }
+
+    @Override
+    public String getTAG() {
+        return ChatListFragment.class.getSimpleName();
     }
 }
