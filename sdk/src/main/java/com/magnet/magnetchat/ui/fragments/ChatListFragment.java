@@ -249,7 +249,7 @@ public class ChatListFragment extends BaseFragment implements ChatListFragmentVi
     @Override
     public void switchSwipeContainer(boolean isNeedHidden) {
         if (swipeContainer != null) {
-            swipeContainer.setRefreshing(isNeedHidden);
+            swipeContainer.setRefreshing(!isNeedHidden);
         }
     }
 
