@@ -159,7 +159,7 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
      * @param message current message
      */
     @Override
-    public void showInformationMessage(String message) {
+    public void showInformationMessage(@NonNull String message) {
         showMessage(message);
     }
 

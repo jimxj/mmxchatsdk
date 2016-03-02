@@ -20,7 +20,7 @@ public interface ChooseUserContract {
          *
          * @param message current message
          */
-        void showInformationMessage(String message);
+        void showInformationMessage(@NonNull String message);
 
         /**
          * Method which provide to switching of the search user progress
