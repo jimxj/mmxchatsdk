@@ -11,6 +11,7 @@ import com.magnet.mmx.client.api.MMXChannel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +28,6 @@ public class ChannelCacheManager {
     /**
      * Key is channel owner id
      */
-    private Map<String, Conversation> askConversations;
     private Map<String, Message> messagesToApproveDeliver;
 
     private AtomicBoolean isConversationListUpdated = new AtomicBoolean(false);
@@ -41,7 +41,6 @@ public class ChannelCacheManager {
 
     private ChannelCacheManager() {
         conversations = new HashMap<>();
-        askConversations = new HashMap<>();
     }
 
     public static ChannelCacheManager getInstance() {
@@ -53,24 +52,7 @@ public class ChannelCacheManager {
     }
 
     public List<Conversation> getConversations() {
-        ArrayList<Conversation> list = new ArrayList<>();
-        for (Conversation c : conversations.values()) {
-            if (!c.getChannel().getName().startsWith("global_")
-                    && !c.getChannel().getName().toLowerCase().startsWith(ChannelHelper.ASK_MAGNET.toLowerCase())) {
-                list.add(c);
-            }
-        }
-        Collections.sort(list, conversationComparator);
-        return list;
-    }
-
-    public List<Conversation> getSupportConversations() {
-        ArrayList<Conversation> list = new ArrayList<>();
-        for (Conversation c : askConversations.values()) {
-            if(null != c.getMessages() && !c.getMessages().isEmpty()) {
-                list.add(c);
-            }
-        }
+        ArrayList<Conversation> list = new ArrayList<>(conversations.values());
         Collections.sort(list, conversationComparator);
         return list;
     }
@@ -82,13 +64,24 @@ public class ChannelCacheManager {
         return messagesToApproveDeliver;
     }
 
-    public void addConversation(String channelName, Conversation conversation) {
-        if (channelName.equalsIgnoreCase(ChannelHelper.ASK_MAGNET) && UserHelper.isMagnetSupportMember()) {
-            askConversations.put(conversation.getChannel().getOwnerId().toLowerCase(), conversation);
-        } else {
-            conversations.put(channelName.toLowerCase(), conversation);
+    public void addConversation(Conversation conversation) {
+        if(null != conversation) {
+            Conversation existingConversation = getConversationByName(conversation.getChannel().getName());
+            if (existingConversation == null) {
+                conversations.put(conversation.getChannel().getName(), conversation);
+                //TODO : handling new message
+                //conversation.setHasUnreadMessage(true);
+                //conversation.setLastActiveTime(new Date());
+            } else {
+                boolean newMessageAdded = existingConversation.mergeFrom(conversation);
+                if(newMessageAdded) {
+                    existingConversation.setHasUnreadMessage(true);
+                    existingConversation.setLastActiveTime(new Date());
+                }
+            }
+
+            isConversationListUpdated.set(true);
         }
-        isConversationListUpdated.set(true);
     }
 
     public void removeConversation(String channelName) {
@@ -118,17 +111,6 @@ public class ChannelCacheManager {
         }
     }
 
-    public Conversation getConversationByChannel(MMXChannel channel) {
-        if (channel != null && channel.getName() != null) {
-            if (channel.getName().equalsIgnoreCase(ChannelHelper.ASK_MAGNET)) {
-                return getAskConversationByOwnerId(channel.getOwnerId());
-            } else {
-                return getConversationByName(channel.getName());
-            }
-        }
-        return null;
-    }
-
     public Conversation getConversationByName(String name) {
         if (name == null) {
             return null;
@@ -136,26 +118,9 @@ public class ChannelCacheManager {
         return conversations.get(name.toLowerCase());
     }
 
-    public Conversation getAskConversationByOwnerId(String ownerId) {
-        if (ownerId == null) {
-            return null;
-        }
-        return askConversations.get(ownerId.toLowerCase());
-    }
-
-    public int getSupportUnreadCount() {
-        int supportUnreadCount = 0;
-        for (Conversation conversation : getSupportConversations()) {
-            if (conversation.hasUnreadMessage()) {
-                supportUnreadCount++;
-            }
-        }
-        return supportUnreadCount;
-    }
 
     public void resetConversations() {
         conversations.clear();
-        askConversations.clear();
         isConversationListUpdated.set(true);
     }
 

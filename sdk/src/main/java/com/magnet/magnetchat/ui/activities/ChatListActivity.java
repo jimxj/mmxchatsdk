@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.View;
 import com.magnet.magnetchat.R;
 import com.magnet.magnetchat.callbacks.BaseActivityCallback;
+import com.magnet.magnetchat.core.managers.ChannelCacheManager;
 import com.magnet.magnetchat.helpers.UserHelper;
 import com.magnet.magnetchat.ui.fragments.BaseFragment;
 import com.magnet.magnetchat.ui.fragments.ChatListFragment;
@@ -29,8 +30,6 @@ public class ChatListActivity extends BaseActivity implements BaseActivityCallba
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d(TAG,
-            "\n---------------------------------\nHomeActivity created\n---------------------------------\n");
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         //setSupportActionBar(toolbar);
@@ -45,18 +44,7 @@ public class ChatListActivity extends BaseActivity implements BaseActivityCallba
         super.onResume();
 
         if (User.getCurrentUser() != null) {
-            if (UserHelper.isMagnetSupportMember()) {
-                MMX.registerListener(homeMessageReceiver);
-            }
 
-            //if (null != User.getCurrentUser().getAvatarUrl()) {
-            //    Glide.with(this)
-            //            .load(User.getCurrentUser().getAvatarUrl())
-            //            .placeholder(R.mipmap.ic_user)
-            //                    //.signature(new StringSignature(String.valueOf(System.currentTimeMillis())))
-            //            .centerCrop()
-            //            .into(ivUserAvatar);
-            //}
         } else {
             Log.w(TAG, "CurrentUser is null, logout");
             //TODO :
@@ -71,7 +59,7 @@ public class ChatListActivity extends BaseActivity implements BaseActivityCallba
     }
 
     /**
-     * method which provide the setting of the current fragment co container view
+     * method which provide the setting of the current fragment co container mView
      *
      */
     private void setFragment() {

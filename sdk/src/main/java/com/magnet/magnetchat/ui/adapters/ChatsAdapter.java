@@ -17,64 +17,20 @@ import com.magnet.magnetchat.helpers.DateHelper;
 import com.magnet.magnetchat.helpers.UserHelper;
 import com.magnet.magnetchat.model.Conversation;
 import com.magnet.magnetchat.model.Message;
+import com.magnet.magnetchat.mvp.api.OnRecyclerViewItemClickListener;
 import com.magnet.magnetchat.ui.views.section.chat.CircleNameView;
 import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;
 import de.hdodenhof.circleimageview.CircleImageView;
 import java.util.List;
 
-public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ConversationViewHolder> {
-
-    private LayoutInflater inflater;
-    private List<Conversation> conversations;
-    private Context context;
-    protected OnConversationClick onConversationClick;
-    protected OnConversationLongClick onConversationLongClick;
+public class ChatsAdapter extends BaseAdapter<ChatsAdapter.ConversationViewHolder, Conversation> {
 
     /**
-     * Listener which provides actions when user click on item
+     * View holder to show mConversations with user's avatars and messages
      */
-    public interface OnConversationClick {
-        void onClick(Conversation conversation);
-    }
-
-    /**
-     * Listener which provides actions when user click long on item
-     */
-    public interface OnConversationLongClick {
-        void onLongClick(Conversation conversation);
-    }
-
-    protected class ConversationViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    protected class ConversationViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
         Conversation conversation;
-
-        public ConversationViewHolder(View itemView) {
-            super(itemView);
-            itemView.setOnClickListener(this);
-            TableRow.LayoutParams params = new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT, TableRow.LayoutParams.WRAP_CONTENT);
-            itemView.setLayoutParams(params);
-        }
-
-        @Override
-        public void onClick(View v) {
-            if (onConversationClick != null) {
-                onConversationClick.onClick(conversation);
-            }
-        }
-
-        public void setDefaultOnClickListener() {
-            setOnCLickListener(this);
-        }
-
-        public void setOnCLickListener(View.OnClickListener listener) {
-            itemView.setOnClickListener(listener);
-        }
-    }
-
-    /**
-     * View holder to show conversations with user's avatars and messages
-     */
-    protected class AvatarConversationViewHolder extends ConversationViewHolder implements View.OnLongClickListener {
         ImageView newMessage;
         CircleImageView imageAvatar;
         CircleNameView viewAvatar;
@@ -82,7 +38,7 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.Conversation
         TextView date;
         TextView lastMessage;
 
-        public AvatarConversationViewHolder(View itemView) {
+        public ConversationViewHolder(View itemView) {
             super(itemView);
             newMessage = (ImageView) itemView.findViewById(R.id.imConversationNewMsg);
             imageAvatar = (CircleImageView) itemView.findViewById(R.id.imageConversationOwnerAvatar);
@@ -91,12 +47,22 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.Conversation
             date = (TextView) itemView.findViewById(R.id.tvConversationDate);
             lastMessage = (TextView) itemView.findViewById(R.id.tvConversationLastMsg);
             itemView.setOnLongClickListener(this);
+            itemView.setOnClickListener(this);
+            TableRow.LayoutParams params = new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT, TableRow.LayoutParams.WRAP_CONTENT);
+            itemView.setLayoutParams(params);
+        }
+
+        @Override
+        public void onClick(View v) {
+            if (mOnClickListener != null) {
+                mOnClickListener.onClick(getAdapterPosition());
+            }
         }
 
         @Override
         public boolean onLongClick(View v) {
-            if (onConversationLongClick != null) {
-                onConversationLongClick.onLongClick(conversation);
+            if (mOnClickListener != null) {
+                mOnClickListener.onLongClick(getAdapterPosition());
                 return true;
             }
             return false;
@@ -104,28 +70,18 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.Conversation
     }
 
     public ChatsAdapter(Context context, List<Conversation> conversations) {
-        this.context = context;
-        inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        this.conversations = conversations;
-    }
-
-    /**
-     * @param position
-     * @return an item by position in list
-     */
-    public Conversation getItem(int position) {
-        return conversations.get(position);
+       super(context, conversations);
     }
 
     @Override
     public ConversationViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = inflater.inflate(R.layout.item_conversation, parent, false);
-        return new AvatarConversationViewHolder(view);
+        View view = mInflater.inflate(R.layout.item_conversation, parent, false);
+        return new ConversationViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(ConversationViewHolder holder, int position) {
-        AvatarConversationViewHolder viewHolder = (AvatarConversationViewHolder) holder;
+        ConversationViewHolder viewHolder = holder;
         Conversation conversation = getItem(position);
         if (viewHolder != null && conversation != null) {
             viewHolder.conversation = conversation;
@@ -138,28 +94,6 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.Conversation
             viewHolder.date.setText(DateHelper.getConversationLastDate(conversation.getLastActiveTime()));
             viewHolder.lastMessage.setText(getLastMessage(conversation));
         }
-    }
-
-    @Override
-    public long getItemId(int position) {
-        return position;
-    }
-
-    @Override
-    public int getItemCount() {
-        return conversations.size();
-    }
-
-    public void setOnConversationLongClick(OnConversationLongClick onConversationLongClick) {
-        this.onConversationLongClick = onConversationLongClick;
-    }
-
-    public void setOnConversationClick(OnConversationClick onConversationClick) {
-        this.onConversationClick = onConversationClick;
-    }
-
-    protected Context getContext() {
-        return context;
     }
 
     /**
@@ -201,13 +135,13 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.Conversation
      * @param user
      * @param viewHolder
      */
-    protected void setUserAvatar(UserProfile user, final AvatarConversationViewHolder viewHolder) {
+    protected void setUserAvatar(UserProfile user, final ConversationViewHolder viewHolder) {
         if (user != null) {
             viewHolder.title.setText(user.getDisplayName());
             viewHolder.viewAvatar.setUserName(user.getDisplayName());
             if (user.getAvatarUrl() != null) {
                 viewHolder.imageAvatar.setVisibility(View.VISIBLE);
-                Glide.with(context).load(user.getAvatarUrl()).fitCenter().listener(new RequestListener<String, GlideDrawable>() {
+                Glide.with(mContext).load(user.getAvatarUrl()).fitCenter().listener(new RequestListener<String, GlideDrawable>() {
                     @Override
                     public boolean onException(Exception e, String s, Target<GlideDrawable> target,
                         boolean b) {
@@ -233,7 +167,7 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.Conversation
      * @param conversation object for current item
      * @param viewHolder
      */
-    protected void prepareTitleAndAvatar(Conversation conversation, AvatarConversationViewHolder viewHolder) {
+    protected void prepareTitleAndAvatar(Conversation conversation, ConversationViewHolder viewHolder) {
         List<UserProfile> suppliers = conversation.getSuppliersList();
         //If all suppliers left conversation, show current user.
         if (suppliers.size() == 0) {

@@ -19,6 +19,7 @@ import com.magnet.magnetchat.R;
 import com.magnet.magnetchat.helpers.DateHelper;
 import com.magnet.magnetchat.helpers.UserHelper;
 import com.magnet.magnetchat.model.Message;
+import com.magnet.magnetchat.mvp.api.OnRecyclerViewItemClickListener;
 import com.magnet.magnetchat.ui.views.section.chat.CircleNameView;
 import com.magnet.magnetchat.util.AppLogger;
 import com.magnet.magnetchat.util.Utils;
@@ -29,14 +30,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHolder> {
+public class MessagesAdapter extends BaseAdapter<MessagesAdapter.ViewHolder, Message> {
     private final static String TAG = MessagesAdapter.class.getSimpleName();
 
-    private LayoutInflater inflater;
-    private List<Message> messageList;
-    private Context context;
-
-    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
         LinearLayout messageArea;
         AppCompatTextView date;
         AppCompatTextView sender;
@@ -70,85 +67,28 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
 
         @Override
         public void onClick(View v) {
-            try {
-                onOpenAttachment();
-            } catch (Exception e) {
-                AppLogger.error(this, e.toString());
+            if (mOnClickListener != null) {
+                mOnClickListener.onClick(getAdapterPosition());
             }
         }
 
-        /**
-         * Method which provide the opening of the attachment
-         *
-         * @throws Exception
-         */
-        private void onOpenAttachment() throws Exception {
-            Intent intent;
-            if (message.getType() != null) {
-                switch (message.getType()) {
-                    case Message.TYPE_MAP:
-                        if (!Utils.isGooglePlayServiceInstalled(context)) {
-                            Utils.showMessage(context, "It seems Google play services is not available, can't use location API");
-                        } else {
-                            String uri = String.format(Locale.ENGLISH, "geo:%s?z=16&q=%s", message.getLatitudeLongitude(), message.getLatitudeLongitude());
-                            intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
-                            try {
-                                context.startActivity(intent);
-                            } catch (Throwable e) {
-                                Log.e(TAG, "Can find any app to show map", e);
-                                Utils.showMessage(context, "Can find any app to show map");
-                            }
-                        }
-                        break;
-                    case Message.TYPE_VIDEO:
-                        String newVideoPath = message.getAttachment().getDownloadUrl();
-                        Log.d(TAG, "paying video : " + newVideoPath + "\n" + message.getAttachment());
-                        if (newVideoPath != null) {
-                            String type = "video/*";
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                type = message.getAttachment().getMimeType();
-                            }
-                            intent = new Intent(Intent.ACTION_VIEW, Uri.parse(newVideoPath));
-                            intent.setDataAndType(Uri.parse(newVideoPath), type);
-                            try {
-                                context.startActivity(intent);
-                            } catch (Throwable e) {
-                                Log.e(TAG, "Can find any app to play video", e);
-                                Utils.showMessage(context, "Can find any app to play video");
-                            }
-                        }
-                        break;
-                    case Message.TYPE_PHOTO:
-                        if (message.getAttachment() != null) {
-                            String newImagePath = message.getAttachment().getDownloadUrl();
-                            Log.d(TAG, "Viewing photo : " + newImagePath + "\n" + message.getAttachment());
-                            if (newImagePath != null) {
-                                intent = new Intent(Intent.ACTION_VIEW, Uri.parse(newImagePath));
-                                intent.setDataAndType(Uri.parse(newImagePath), "image/*");
-                                try {
-                                    context.startActivity(intent);
-                                } catch (Throwable e) {
-                                    Log.e(TAG, "Can find any app to view image", e);
-                                    Utils.showMessage(context, "Can find any app to view image");
-                                }
-                            }
-                        }
-                        break;
-                }
+        @Override
+        public boolean onLongClick(View v) {
+            if (mOnClickListener != null) {
+                mOnClickListener.onLongClick(getAdapterPosition());
+                return true;
             }
+            return false;
         }
-
     }
 
     public MessagesAdapter(Context context, List<Message> messages) {
-        inflater = LayoutInflater.from(context);
-        this.messageList = messages;
-        this.context = context;
+        super(context, messages);
     }
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = inflater.inflate(R.layout.item_message, parent, false);
+        View view = mInflater.inflate(R.layout.item_message, parent, false);
         return new ViewHolder(view);
     }
 
@@ -189,13 +129,8 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
         }
     }
 
-    @Override
-    public int getItemCount() {
-        return messageList.size();
-    }
-
-    private Message getItem(int position) {
-        return messageList.get(position);
+    public void setmOnClickListener(OnRecyclerViewItemClickListener onConversationLongClick) {
+        this.mOnClickListener = onConversationLongClick;
     }
 
     private void configureDate(ViewHolder viewHolder, Message message, Message previous, int position) {
@@ -248,7 +183,7 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
                 viewHolder.sender.setVisibility(View.VISIBLE);
             }
             if (null != message.getSender().getAvatarUrl()) {
-                Glide.with(context)
+                Glide.with(mContext)
                         .load(message.getSender().getAvatarUrl())
                         .fitCenter()
                         .into(viewHolder.imageOtherAvatar);
@@ -281,7 +216,7 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
             String userName = UserHelper.getDisplayName(user);
             viewHolder.viewMyAvatar.setUserName(userName);
             if ((null != user.getAvatarUrl())) {
-                Glide.with(context)
+                Glide.with(mContext)
                         .load(user.getAvatarUrl())
                         .fitCenter()
                         .into(viewHolder.imageMyAvatar);
@@ -297,7 +232,7 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
     private void configureMapMsg(ViewHolder holder, Message message) {
         configureMediaMsg(holder);
         String loc = "http://maps.google.com/maps/api/staticmap?center=" + message.getLatitudeLongitude() + "&zoom=18&size=700x300&sensor=false&markers=color:blue%7Clabel:S%7C" + message.getLatitudeLongitude();
-        Glide.with(context).load(loc).placeholder(R.drawable.map_msg).centerCrop().into(holder.image);
+        Glide.with(mContext).load(loc).placeholder(R.drawable.map_msg).centerCrop().into(holder.image);
     }
 
     private void configureVideoMsg(ViewHolder holder, Message message) {
@@ -317,13 +252,13 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
                 Log.d(TAG, "Attachment is not ready2", e);
             }
             if (null != attachmentId) {
-                Glide.with(context)
+                Glide.with(mContext)
                         .load(Uri.parse(attachmentId))
                         .centerCrop()
                         .placeholder(R.drawable.photo_msg)
                         .into(holder.image);
             } else {
-                Glide.with(context)
+                Glide.with(mContext)
                         .load(R.drawable.photo_msg)
                         .centerCrop()
                         .into(holder.image);

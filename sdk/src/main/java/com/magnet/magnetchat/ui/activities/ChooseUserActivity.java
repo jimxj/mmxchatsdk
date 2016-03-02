@@ -50,7 +50,7 @@ public class ChooseUserActivity extends BaseActivity implements SearchView.OnQue
     private SelectedUsersAdapter selectedAdapter;
     private ActivityMode currentMode;
     private Conversation conversation;
-    private List<UserProfile> selectedUsers;
+    private ArrayList<UserProfile> selectedUsers;
 
     @Override
     protected int getLayoutResource() {
@@ -155,11 +155,7 @@ public class ChooseUserActivity extends BaseActivity implements SearchView.OnQue
                     addUserToChannel(selectedUsers);
                     break;
                 case MODE_TO_CREATE:
-                    String[] userIds = new String[selectedUsers.size()];
-                    for (int i = 0; i < userIds.length; i++) {
-                        userIds[i] = selectedUsers.get(i).getUserIdentifier();
-                    }
-                    startActivity(ChatActivity.getIntentForNewChannel(this, userIds));
+                    startActivity(ChatActivity.getIntentForNewChannel(this, selectedUsers));
                     finish();
                     break;
             }
