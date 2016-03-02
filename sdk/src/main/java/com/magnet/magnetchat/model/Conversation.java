@@ -45,6 +45,16 @@ public class Conversation {
     public Conversation() {
     }
 
+    public Conversation(MMXChannel channel, List<UserProfile> suppliers, UserProfile owner) {
+        this.channel = channel;
+        this.owner = owner;
+        lastActiveTime = new Date();
+
+        for(UserProfile up : suppliers) {
+            addSupplier(up);
+        }
+    }
+
     public Conversation(ChannelDetail channelDetail) {
         this.channel = channelDetail.getChannel();
 
@@ -114,10 +124,23 @@ public class Conversation {
         return messages;
     }
 
-    public void addMessage(Message message) {
+    public boolean addMessage(Message message) {
         if (!getMessages().contains(message)) {
             messages.add(message);
+
+            User sender = message.getMmxMessage().getSender();
+            if (sender != null && !sender.equals(User.getCurrentUser())) {
+                if (getSupplier(sender.getUserIdentifier()) == null) {
+                    addSupplier(sender);
+                }
+                setHasUnreadMessage(true);
+
+                lastActiveTime = new Date();
+            }
+            return true;
         }
+
+        return false;
     }
 
     /**
@@ -138,6 +161,26 @@ public class Conversation {
         for (MMXMessage mmxMessage : channelDetail.getMessages()) {
             this.addMessage(Message.createMessageFrom(mmxMessage));
         }
+    }
+
+    public boolean mergeFrom(Conversation conversation) {
+        boolean newMessageAdded = false;
+        if(null != conversation) {
+            for (UserProfile up : conversation.getSuppliers().values()) {
+                if (owner == null && up.getUserIdentifier().equals(channel.getOwnerId())) {
+                    owner = up;
+                }
+                if (!up.getUserIdentifier().equals(User.getCurrentUserId())) {
+                    this.addSupplier(up);
+                }
+            }
+
+            for (Message message : conversation.getMessages()) {
+                newMessageAdded = newMessageAdded || this.addMessage(message);
+            }
+        }
+
+        return newMessageAdded;
     }
 
     public void sendTextMessage(final String text, final OnSendMessageListener listener) {

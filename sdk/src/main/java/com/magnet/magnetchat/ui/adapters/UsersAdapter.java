@@ -223,7 +223,7 @@ public class UsersAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     }
 
     /**
-     * Colors the item view, if item is selected or returns to default color
+     * Colors the item mView, if item is selected or returns to default color
      *
      * @param view
      * @param user
