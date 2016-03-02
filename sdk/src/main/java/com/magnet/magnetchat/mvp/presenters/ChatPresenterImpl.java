@@ -5,8 +5,7 @@ package com.magnet.magnetchat.mvp.presenters;
 
 import android.location.Location;
 import android.net.Uri;
-import android.util.Log;
-import android.view.View;
+
 import com.magnet.magnetchat.core.managers.ChannelCacheManager;
 import com.magnet.magnetchat.helpers.ChannelHelper;
 import com.magnet.magnetchat.helpers.FileHelper;
@@ -18,12 +17,11 @@ import com.magnet.magnetchat.util.Utils;
 import com.magnet.max.android.Max;
 import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;
-import com.magnet.mmx.client.api.ListResult;
 import com.magnet.mmx.client.api.MMXChannel;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ChatPresenterImpl implements ChatContract.UserActionsListener {
+public class ChatPresenterImpl implements ChatContract.Presenter {
   protected static final String TAG = "ChatPresenterImpl";
 
   protected ChatContract.View mView;
