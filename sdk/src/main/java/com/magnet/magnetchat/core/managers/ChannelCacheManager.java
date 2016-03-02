@@ -3,11 +3,8 @@
  */
 package com.magnet.magnetchat.core.managers;
 
-import com.magnet.magnetchat.helpers.ChannelHelper;
-import com.magnet.magnetchat.helpers.UserHelper;
 import com.magnet.magnetchat.model.Conversation;
 import com.magnet.magnetchat.model.Message;
-import com.magnet.mmx.client.api.MMXChannel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;

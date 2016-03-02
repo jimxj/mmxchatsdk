@@ -1,7 +1,6 @@
 package com.magnet.magnetchat.mvp.api;
 
 import com.magnet.magnetchat.model.Conversation;
-
 import java.util.List;
 
 /**

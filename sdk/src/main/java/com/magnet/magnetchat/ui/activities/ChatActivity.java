@@ -27,13 +27,13 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
 import com.magnet.magnetchat.R;
+import com.magnet.magnetchat.callbacks.OnRecyclerViewItemClickListener;
 import com.magnet.magnetchat.core.managers.ChannelCacheManager;
 import com.magnet.magnetchat.helpers.PermissionHelper;
 import com.magnet.magnetchat.helpers.UserHelper;
 import com.magnet.magnetchat.model.Conversation;
 import com.magnet.magnetchat.model.Message;
 import com.magnet.magnetchat.mvp.api.ChatContract;
-import com.magnet.magnetchat.callbacks.OnRecyclerViewItemClickListener;
 import com.magnet.magnetchat.mvp.presenters.ChatPresenterImpl;
 import com.magnet.magnetchat.ui.adapters.MessagesAdapter;
 import com.magnet.magnetchat.util.Logger;
@@ -98,11 +98,10 @@ public class ChatActivity extends BaseActivity implements ChatContract.View, Goo
         super.onCreate(savedInstanceState);
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
-
-        //setSupportActionBar(toolbar);
-        //if (getSupportActionBar() != null) {
-        //    getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        //}
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
 
         editMessage = (AppCompatEditText) findViewById(R.id.chatMessageField);
         sendMessageButton = (TextView) findViewById(R.id.chatSendBtn);
@@ -123,7 +122,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View, Goo
         if (null != channelName) {
             Conversation currentConversation = ChannelCacheManager.getInstance().getConversationByName(channelName);
             if (currentConversation != null) {
-                presenter = new ChatPresenterImpl(this, currentConversation);
+                presenter = new ChatPresenterImpl(this, currentConversation, this);
             } else {
                 showMessage("Can load the conversation");
                 finish();
@@ -132,7 +131,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View, Goo
         } else {
             ArrayList<UserProfile> recipients = getIntent().getParcelableArrayListExtra(TAG_CREATE_WITH_RECIPIENTS);
             if (recipients != null) {
-                presenter = new ChatPresenterImpl(this, recipients);
+                presenter = new ChatPresenterImpl(this, recipients, this);
             } else {
                 showMessage("Can load the conversation");
                 finish();
@@ -170,7 +169,8 @@ public class ChatActivity extends BaseActivity implements ChatContract.View, Goo
     protected void onResume() {
         super.onResume();
 
-        presenter.onRefreshMessages();
+        presenter.onLoadRecipients(false);
+        presenter.onLoadMessages(false);
 
         MMX.registerListener(eventListener);
     }
@@ -196,7 +196,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View, Goo
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.menuChatOpenDetails) {
-            showChatDetails(presenter.getCurrentConversation());
+            presenter.onChatDetials();
         } else if (item.getItemId() == android.R.id.home){
             onBackPressed();
         }
@@ -287,12 +287,6 @@ public class ChatActivity extends BaseActivity implements ChatContract.View, Goo
                     Utils.showMessage(this, "Can find any app to mView image");
                 }
             }
-        }
-    }
-
-    @Override public void showChatDetails(Conversation conversation) {
-        if (conversation != null) {
-            startActivity(DetailsActivity.createIntentForChannel(this, conversation));
         }
     }
 
@@ -444,13 +438,15 @@ public class ChatActivity extends BaseActivity implements ChatContract.View, Goo
         }
     }
 
-    public static Intent getIntentForNewChannel(Context context, ArrayList<UserProfile> recipients) {
+    public static Intent getIntentForNewChannel(Context context, List<UserProfile> recipients) {
         Intent intent = new Intent(context, ChatActivity.class);
-        intent.putParcelableArrayListExtra(TAG_CREATE_WITH_RECIPIENTS, recipients);
+        ArrayList<UserProfile> arrayList = null;
+        if(recipients instanceof ArrayList) {
+            arrayList = (ArrayList<UserProfile>) recipients;
+        } else {
+            arrayList = new ArrayList<>(recipients);
+        }
+        intent.putParcelableArrayListExtra(TAG_CREATE_WITH_RECIPIENTS, arrayList);
         return intent;
-    }
-
-    private void setTitle(String title) {
-        toolbar.setTitle(title);
     }
 }

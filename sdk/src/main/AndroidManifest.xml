@@ -34,7 +34,7 @@
             android:label="Chat"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".ui.activities.DetailsActivity"
+            android:name=".ui.activities.ChatDetailsActivity"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale"
             android:screenOrientation="portrait" />
         <activity

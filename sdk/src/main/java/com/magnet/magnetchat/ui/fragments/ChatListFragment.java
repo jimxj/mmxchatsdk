@@ -12,20 +12,18 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.widget.SearchView;
-
 import com.magnet.magnetchat.R;
+import com.magnet.magnetchat.callbacks.OnRecyclerViewItemClickListener;
 import com.magnet.magnetchat.core.managers.ChannelCacheManager;
 import com.magnet.magnetchat.helpers.ChannelHelper;
 import com.magnet.magnetchat.model.Conversation;
 import com.magnet.magnetchat.mvp.api.ChatListContract;
-import com.magnet.magnetchat.callbacks.OnRecyclerViewItemClickListener;
 import com.magnet.magnetchat.mvp.presenters.ChatListPresenterImpl;
 import com.magnet.magnetchat.ui.activities.ChatActivity;
 import com.magnet.magnetchat.ui.activities.ChooseUserActivity;
 import com.magnet.magnetchat.ui.adapters.ChatsAdapter;
 import com.magnet.magnetchat.ui.custom.CustomSearchView;
 import com.magnet.magnetchat.ui.views.DividerItemDecoration;
-
 import java.util.List;
 
 public class ChatListFragment extends BaseFragment implements ChatListContract.View {

@@ -5,7 +5,6 @@ import android.graphics.Typeface;
 import android.support.v7.widget.AppCompatTextView;
 import android.util.AttributeSet;
 import android.view.View;
-
 import com.magnet.magnetchat.R;
 import com.magnet.magnetchat.helpers.UserInterfaceHelper;
 import com.magnet.magnetchat.ui.views.abs.BaseView;

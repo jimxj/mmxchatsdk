@@ -6,8 +6,6 @@ import android.util.Log;
 import android.view.View;
 import com.magnet.magnetchat.R;
 import com.magnet.magnetchat.callbacks.BaseActivityCallback;
-import com.magnet.magnetchat.core.managers.ChannelCacheManager;
-import com.magnet.magnetchat.helpers.UserHelper;
 import com.magnet.magnetchat.ui.fragments.BaseFragment;
 import com.magnet.magnetchat.ui.fragments.ChatListFragment;
 import com.magnet.max.android.User;
