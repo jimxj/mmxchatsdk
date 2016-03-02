@@ -64,7 +64,9 @@ public class EditProfileActivity extends BaseActivity {
     buttonClose = (View) findViewById(R.id.buttonClose);
     buttonSaveChanges = (View) findViewById(R.id.buttonSaveChanges);
     buttonChoosePicture = (View) findViewById(R.id.buttonChoosePicture);
+
     viewProgress = findViewById(R.id.viewProgress);
+    viewProgress.setVisibility(View.GONE);
 
     textEmail = (AppCompatTextView) findViewById(R.id.textEmail);
     editFirstName = (AppCompatEditText) findViewById(R.id.editFirstName);

@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
@@ -29,39 +28,38 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
 import com.magnet.magnetchat.R;
 import com.magnet.magnetchat.core.managers.ChannelCacheManager;
-import com.magnet.magnetchat.helpers.ChannelHelper;
-import com.magnet.magnetchat.helpers.FileHelper;
 import com.magnet.magnetchat.helpers.PermissionHelper;
 import com.magnet.magnetchat.helpers.UserHelper;
 import com.magnet.magnetchat.model.Conversation;
 import com.magnet.magnetchat.model.Message;
+import com.magnet.magnetchat.mvp.api.ChatContract;
+import com.magnet.magnetchat.mvp.api.OnRecyclerViewItemClickListener;
+import com.magnet.magnetchat.mvp.presenters.ChatPresenterImpl;
 import com.magnet.magnetchat.ui.adapters.MessagesAdapter;
 import com.magnet.magnetchat.util.Logger;
 import com.magnet.magnetchat.util.Utils;
 import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;
-import com.magnet.max.android.util.StringUtil;
-import com.magnet.mmx.client.api.ChannelDetail;
-import com.magnet.mmx.client.api.ListResult;
 import com.magnet.mmx.client.api.MMX;
 import com.magnet.mmx.client.api.MMXChannel;
 import com.magnet.mmx.client.api.MMXMessage;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import nl.changer.polypicker.Config;
 import nl.changer.polypicker.ImagePickerActivity;
 
-public class ChatActivity extends BaseActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+public class ChatActivity extends BaseActivity implements ChatContract.View, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     public static final String TAG = ChatActivity.class.getSimpleName();
 
     public static final String TAG_CHANNEL_NAME = "channelName";
     public static final String TAG_CHANNEL_OWNER_ID = "channelOwnerId";
     public static final String TAG_CHANNEL_DETAIL = "channelDetail";
-    public static final String TAG_CREATE_WITH_USER_ID = "createWithUserId";
+    public static final String TAG_CREATE_WITH_RECIPIENTS = "createWithRecipients";
     public static final String TAG_CREATE_NEW = "createNew";
 
-    private static final String[] ATTACHMENT_VARIANTS = {"Send photo", "Send location", "Send video", "Cancel"};
+    private static final String[] ATTACHMENT_VARIANTS = {"Send photo", "Send location", /*"Send video",*/ "Cancel"};
 
     public static final int INTENT_REQUEST_GET_IMAGES = 14;
     public static final int INTENT_SELECT_VIDEO = 13;
@@ -70,11 +68,9 @@ public class ChatActivity extends BaseActivity implements GoogleApiClient.Connec
     public static final int REQUEST_VIDEO = 1112;
     public static final int REQUEST_IMAGE = 1113;
 
-    private Conversation currentConversation;
-    private MessagesAdapter adapter;
+    private MessagesAdapter mAdapter;
     private RecyclerView messagesListView;
     private String channelName;
-    private String ownerId;
     private AlertDialog attachmentDialog;
     private GoogleApiClient googleApiClient;
 
@@ -82,6 +78,8 @@ public class ChatActivity extends BaseActivity implements GoogleApiClient.Connec
     AppCompatEditText editMessage;
     TextView sendMessageButton;
     Toolbar toolbar;
+
+    ChatContract.UserActionsListener presenter;
 
     @Override
     protected int getLayoutResource() {
@@ -121,23 +119,25 @@ public class ChatActivity extends BaseActivity implements GoogleApiClient.Connec
         layoutManager.setReverseLayout(false);
         messagesListView.setLayoutManager(layoutManager);
 
-        if (getIntent().getBooleanExtra(TAG_CREATE_NEW, false)) {
-            String[] userIds = getIntent().getStringArrayExtra(TAG_CREATE_WITH_USER_ID);
-            if (userIds != null) {
-                ChannelHelper.createChannelForUsers(userIds, createListener);
-            }
-        } else {
-            channelName = getIntent().getStringExtra(TAG_CHANNEL_NAME);
-            if (channelName != null) {
-                currentConversation = ChannelCacheManager.getInstance().getConversationByName(channelName);
-            }
-            ownerId = getIntent().getStringExtra(TAG_CHANNEL_OWNER_ID);
-            if (currentConversation == null) {
+        channelName = getIntent().getStringExtra(TAG_CHANNEL_NAME);
+        if (null != channelName) {
+            Conversation currentConversation = ChannelCacheManager.getInstance().getConversationByName(channelName);
+            if (currentConversation != null) {
+                presenter = new ChatPresenterImpl(this, currentConversation);
+            } else {
                 showMessage("Can load the conversation");
                 finish();
                 return;
             }
-            updateConversationUserList();
+        } else {
+            ArrayList<UserProfile> recipients = getIntent().getParcelableArrayListExtra(TAG_CREATE_WITH_RECIPIENTS);
+            if (recipients != null) {
+                presenter = new ChatPresenterImpl(this, recipients);
+            } else {
+                showMessage("Can load the conversation");
+                finish();
+                return;
+            }
         }
 
         googleApiClient = new GoogleApiClient.Builder(this).addConnectionCallbacks(this)
@@ -150,7 +150,7 @@ public class ChatActivity extends BaseActivity implements GoogleApiClient.Connec
             String text = getSimpleText(editMessage);
             if (text != null && !text.isEmpty()) {
                 sendMessageButton.setEnabled(false);
-                sendText(text);
+                presenter.onSendText(text);
             }
         } else if(v.getId() == R.id.chatAddAttachment) {
             showAttachmentDialog();
@@ -169,9 +169,9 @@ public class ChatActivity extends BaseActivity implements GoogleApiClient.Connec
     @Override
     protected void onResume() {
         super.onResume();
-        if (currentConversation != null) {
-            prepareConversation(currentConversation);
-        }
+
+        presenter.onRefreshMessages();
+
         MMX.registerListener(eventListener);
     }
 
@@ -196,13 +196,104 @@ public class ChatActivity extends BaseActivity implements GoogleApiClient.Connec
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.menuChatOpenDetails) {
-            if (currentConversation != null) {
-                startActivity(DetailsActivity.createIntentForChannel(this, currentConversation));
-            }
+            showChatDetails(presenter.getCurrentConversation());
         } else if (item.getItemId() == android.R.id.home){
             onBackPressed();
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override public void setProgressIndicator(boolean active) {
+        chatMessageProgress.setVisibility(active ? View.VISIBLE : View.INVISIBLE);
+    }
+
+    @Override public void showMessages(List<Message> messages) {
+        if(null == mAdapter) {
+            mAdapter = new MessagesAdapter(this, messages);
+            mAdapter.setmOnClickListener(new OnRecyclerViewItemClickListener() {
+                @Override public void onClick(int position) {
+                    presenter.onMessageClick(mAdapter.getItem(position));
+                }
+
+                @Override public void onLongClick(int position) {
+
+                }
+            });
+            messagesListView.setAdapter(mAdapter);
+        } else {
+            mAdapter.swapData(messages);
+        }
+    }
+
+    @Override public void showRecipients(List<UserProfile> recipients) {
+        if (recipients.size() == 1) {
+            setTitle(UserHelper.getDisplayNames(recipients));
+        } else {
+            setTitle("Group");
+        }
+    }
+
+    @Override public void showNewMessage(Message message) {
+        if (mAdapter != null) {
+            mAdapter.notifyItemChanged(mAdapter.getItemCount());
+            messagesListView.smoothScrollToPosition(mAdapter.getItemCount());
+        }
+    }
+
+    @Override public void showImagePicker() {
+        Intent intent = new Intent(this, ImagePickerActivity.class);
+        Config config = new Config.Builder()
+            .setTabBackgroundColor(R.color.white)
+            .setSelectionLimit(1)
+            .build();
+        ImagePickerActivity.setConfig(config);
+        startActivityForResult(intent, INTENT_REQUEST_GET_IMAGES);
+    }
+
+    @Override public void clearInput() {
+        editMessage.setText("");
+    }
+
+    @Override public void setSendEnabled(boolean enabled) {
+        sendMessageButton.setEnabled(true);
+    }
+
+    @Override public void showLocation(Message message) {
+        if (!Utils.isGooglePlayServiceInstalled()) {
+            Utils.showMessage(this, "It seems Google play services is not available, can't use location API");
+        } else {
+            String uri = String.format(Locale.ENGLISH, "geo:%s?z=16&q=%s", message.getLatitudeLongitude(), message.getLatitudeLongitude());
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+            try {
+                this.startActivity(intent);
+            } catch (Throwable e) {
+                Log.e(TAG, "Can find any app to show map", e);
+                Utils.showMessage(this, "Can find any app to show map");
+            }
+        }
+    }
+
+    @Override public void showImage(Message message) {
+        if (message.getAttachment() != null) {
+            String newImagePath = message.getAttachment().getDownloadUrl();
+            Log.d(TAG, "Viewing photo : " + newImagePath + "\n" + message.getAttachment());
+            if (newImagePath != null) {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(newImagePath));
+                intent.setDataAndType(Uri.parse(newImagePath), "image/*");
+                try {
+                    this.startActivity(intent);
+                } catch (Throwable e) {
+                    Log.e(TAG, "Can find any app to mView image", e);
+                    Utils.showMessage(this, "Can find any app to mView image");
+                }
+            }
+        }
+    }
+
+    @Override public void showChatDetails(Conversation conversation) {
+        if (conversation != null) {
+            startActivity(DetailsActivity.createIntentForChannel(this, conversation));
+        }
     }
 
     @Override
@@ -218,24 +309,7 @@ public class ChatActivity extends BaseActivity implements GoogleApiClient.Connec
                 Uri[] uris = new Uri[parcelableUris.length];
                 System.arraycopy(parcelableUris, 0, uris, 0, parcelableUris.length);
 
-                if (uris.length > 0) {
-                    for (Uri uri : uris) {
-                        chatMessageProgress.setVisibility(View.VISIBLE);
-                        String filePath = uri.toString();
-                        currentConversation.sendPhoto(filePath, FileHelper.getMimeType(this, uri, filePath, Message.FILE_TYPE_PHOTO), sendMessageListener);
-                    }
-                }
-            } else if (requestCode == INTENT_SELECT_VIDEO) {
-                Uri videoUri = intent.getData();
-                String videoPath = FileHelper.getPath(this, videoUri);
-                Logger.debug(TAG, "selected video from Uri : " + videoUri + " file path : " + videoPath);
-                if (StringUtil.isNotEmpty(videoPath)) {
-                    chatMessageProgress.setVisibility(View.VISIBLE);
-                    currentConversation.sendVideo(videoPath, FileHelper.getMimeType(this, videoUri, videoPath, Message.FILE_TYPE_VIDEO), sendMessageListener);
-                } else {
-                    Logger.error(TAG, "Can't read video from Uri : " + videoUri);
-                    showMessage("Can't read the video file");
-                }
+                presenter.onSendImages(uris);
             }
         }
     }
@@ -252,14 +326,14 @@ public class ChatActivity extends BaseActivity implements GoogleApiClient.Connec
         if (allPermitted) {
             switch (requestCode) {
                 case REQUEST_IMAGE:
-                    selectImage();
+                    showImagePicker();
                     break;
                 case REQUEST_LOCATION:
                     sendLocation();
                     break;
-                case REQUEST_VIDEO:
-                    selectVideo();
-                    break;
+                //case REQUEST_VIDEO:
+                //    selectVideo();
+                //    break;
             }
         } else {
             showMessage("Can't do it without permission");
@@ -291,7 +365,7 @@ public class ChatActivity extends BaseActivity implements GoogleApiClient.Connec
                     switch (which) {
                         case 0:
                             if (!needPermission(REQUEST_IMAGE, PermissionHelper.CAMERA_PERMISSION, PermissionHelper.STORAGE_PERMISSION)) {
-                                selectImage();
+                                showImagePicker();
                             }
                             break;
                         case 1:
@@ -299,11 +373,11 @@ public class ChatActivity extends BaseActivity implements GoogleApiClient.Connec
                                 sendLocation();
                             }
                             break;
-                        case 2:
-                            if (!needPermission(REQUEST_VIDEO, PermissionHelper.STORAGE_PERMISSION)) {
-                                selectVideo();
-                            }
-                            break;
+                        //case 2:
+                        //    if (!needPermission(REQUEST_VIDEO, PermissionHelper.STORAGE_PERMISSION)) {
+                        //        selectVideo();
+                        //    }
+                        //    break;
                         case 3:
                             break;
                     }
@@ -316,37 +390,8 @@ public class ChatActivity extends BaseActivity implements GoogleApiClient.Connec
         attachmentDialog.show();
     }
 
-    private void selectImage() {
-        Intent intent = new Intent(this, ImagePickerActivity.class);
-        Config config = new Config.Builder()
-            .setTabBackgroundColor(R.color.white)
-            .setSelectionLimit(1)
-            .build();
-        ImagePickerActivity.setConfig(config);
-        startActivityForResult(intent, INTENT_REQUEST_GET_IMAGES);
-    }
-
-    private void selectVideo() {
-        if (Build.VERSION.SDK_INT >= 19) {
-            Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Video.Media.EXTERNAL_CONTENT_URI);
-            startActivityForResult(intent, INTENT_SELECT_VIDEO);
-        } else {
-            Intent intent = new Intent();
-            intent.setType("video/*");
-            intent.setAction(Intent.ACTION_GET_CONTENT);
-            startActivityForResult(Intent.createChooser(intent, "Select a Video "), INTENT_SELECT_VIDEO);
-        }
-
-    }
-
-    private void sendText(String text) {
-        if (currentConversation != null) {
-            currentConversation.sendTextMessage(text, sendMessageListener);
-        }
-    }
-
     private void sendLocation() {
-        if (!Utils.isGooglePlayServiceInstalled(this)) {
+        if (!Utils.isGooglePlayServiceInstalled()) {
             showMessage("It seems Google play services is not available, can't use location API");
             return;
         }
@@ -358,127 +403,21 @@ public class ChatActivity extends BaseActivity implements GoogleApiClient.Connec
         }
         Location currentLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
         if (currentLocation != null) {
-            currentConversation.sendLocation(currentLocation, sendMessageListener);
+            presenter.onSendLocation(currentLocation);
         } else {
             showMessage("Can't get location");
         }
     }
-
-    private void setMessagesList(List<Message> messages) {
-        adapter = new MessagesAdapter(this, messages);
-        messagesListView.setAdapter(adapter);
-    }
-
-    private void updateList() {
-        if (adapter != null) {
-            adapter.notifyDataSetChanged();
-            messagesListView.smoothScrollToPosition(adapter.getItemCount());
-        }
-    }
-
-    private void prepareConversation(Conversation conversation) {
-        if (channelName == null) {
-            finish();
-            return;
-        }
-        channelName = conversation.getChannel().getName();
-        ownerId = conversation.getChannel().getOwnerId();
-
-        ChannelCacheManager.getInstance().addConversation(conversation);
-
-        currentConversation = conversation;
-        updateUsers();
-        conversation.setHasUnreadMessage(false);
-        ChannelCacheManager.getInstance().setConversationListUpdated();
-        setMessagesList(conversation.getMessages());
-    }
-
-    private void updateUsers() {
-        List<UserProfile> suppliersList = currentConversation.getSuppliersList();
-        if (suppliersList.size() == 1) {
-            setTitle(UserHelper.getDisplayNames(suppliersList));
-        } else {
-            setTitle("Group");
-        }
-    }
-
-    private Conversation.OnSendMessageListener sendMessageListener = new Conversation.OnSendMessageListener() {
-        @Override
-        public void onSuccessSend(Message message) {
-            sendMessageButton.setEnabled(true);
-            chatMessageProgress.setVisibility(View.GONE);
-            ChannelCacheManager.getInstance().getMessagesToApproveDeliver().put(message.getMessageId(), message);
-            if (message.getType() != null && message.getType().equals(Message.TYPE_TEXT)) {
-                editMessage.setText("");
-            }
-            updateList();
-        }
-
-        @Override
-        public void onFailure(Throwable throwable) {
-            sendMessageButton.setEnabled(true);
-            chatMessageProgress.setVisibility(View.GONE);
-            Logger.error(TAG, "send message error", throwable);
-            showMessage("Can't send message");
-        }
-    };
-
-    private ChannelHelper.OnCreateChannelListener createListener = new ChannelHelper.OnCreateChannelListener() {
-        @Override
-        public void onSuccessCreated(MMXChannel channel) {
-            channelName = channel.getName();
-            ChannelHelper.getChannelDetails(channel, readChannelInfoListener);
-        }
-
-        @Override
-        public void onChannelExists(MMXChannel channel) {
-            currentConversation = ChannelCacheManager.getInstance().getConversationByName(channel.getName());
-            if (currentConversation == null) {
-                ChannelHelper.getChannelDetails(channel, readChannelInfoListener);
-            } else {
-                prepareConversation(currentConversation);
-            }
-        }
-
-        @Override
-        public void onFailureCreated(Throwable throwable) {
-            showMessage("Can't create conversation");
-            finish();
-        }
-    };
-
-    private ChannelHelper.OnReadChannelDetailListener
-        readChannelInfoListener = new ChannelHelper.OnReadChannelDetailListener() {
-        @Override
-        public void onSuccessFinish(Conversation lastConversation) {
-            if (lastConversation == null) {
-                String message = "Can't load conversation";
-                Logger.debug(TAG, message);
-                showMessage(message);
-                finish();
-            } else {
-                prepareConversation(lastConversation);
-            }
-        }
-
-        @Override
-        public void onFailure(Throwable throwable) {
-            showMessage("Can't read conversation information");
-            finish();
-        }
-    };
 
     private MMX.EventListener eventListener = new MMX.EventListener() {
         @Override
         public boolean onMessageReceived(MMXMessage mmxMessage) {
             Logger.debug(TAG, "Received message in : " + mmxMessage);
             MMXChannel channel = mmxMessage.getChannel();
-            if (channel != null && adapter != null) {
+            if (channel != null && mAdapter != null) {
                 String messageChannelName = channel.getName();
                 if (messageChannelName.equalsIgnoreCase(channelName)) {
-                    currentConversation.addMessage(Message.createMessageFrom(mmxMessage));
-                    updateList();
-                    currentConversation.setHasUnreadMessage(false);
+                    presenter.onNewMessage(Message.createMessageFrom(mmxMessage));
                     return true;
                 }
             }
@@ -487,7 +426,7 @@ public class ChatActivity extends BaseActivity implements GoogleApiClient.Connec
 
         @Override
         public boolean onMessageAcknowledgementReceived(User from, String messageId) {
-            if (adapter != null) {
+            if (mAdapter != null) {
                 //updateList();
             }
             return true;
@@ -505,61 +444,10 @@ public class ChatActivity extends BaseActivity implements GoogleApiClient.Connec
         }
     }
 
-    public static Intent getIntentWithChannelOwner(Context context, Conversation conversation) {
-        if (null != conversation && null != conversation.getChannel()) {
-            Intent intent = new Intent(context, ChatActivity.class);
-            intent.putExtra(TAG_CHANNEL_OWNER_ID, conversation.getChannel().getOwnerId());
-            intent.putExtra(TAG_CHANNEL_NAME, conversation.getChannel().getName());
-            return intent;
-        } else {
-            Log.e(TAG, "getIntentWithChannel return null because conversation or channel is null");
-            return null;
-        }
-    }
-
-    public static Intent getIntentForNewChannel(Context context, String[] userId) {
+    public static Intent getIntentForNewChannel(Context context, ArrayList<UserProfile> recipients) {
         Intent intent = new Intent(context, ChatActivity.class);
-        intent.putExtra(TAG_CREATE_NEW, true);
-        intent.putExtra(TAG_CREATE_WITH_USER_ID, userId);
+        intent.putParcelableArrayListExtra(TAG_CREATE_WITH_RECIPIENTS, recipients);
         return intent;
-    }
-
-    private void updateConversationUserList() {
-        final MMXChannel channel = currentConversation.getChannel();
-        if (channel == null) {
-            return;
-        }
-        channel.getAllSubscribers(100, 0, new MMXChannel.OnFinishedListener<ListResult<User>>() {
-            @Override
-            public void onSuccess(ListResult<User> userListResult) {
-                boolean subscribersUpdated = userListResult.items.size() != currentConversation.getSuppliersList().size();
-                if (!subscribersUpdated) {
-                    for (User u : userListResult.items) {
-                        if (null == currentConversation.getSupplier(u.getUserIdentifier())) {
-                            subscribersUpdated = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (subscribersUpdated) {
-                    Logger.debug("channel subscribers", "success. channel " + channel.getName() + " : " + userListResult.items);
-                    for (User user : userListResult.items) {
-                        if (!user.getUserIdentifier().equals(User.getCurrentUserId())) {
-                            currentConversation.addSupplier(user);
-                        }
-                    }
-                    updateUsers();
-                }
-
-                Log.d(TAG, "subscribersUpdated = " + subscribersUpdated);
-            }
-
-            @Override
-            public void onFailure(MMXChannel.FailureCode failureCode, Throwable throwable) {
-                Logger.error(TAG, "channel subscribers", throwable);
-            }
-        });
     }
 
     private void setTitle(String title) {

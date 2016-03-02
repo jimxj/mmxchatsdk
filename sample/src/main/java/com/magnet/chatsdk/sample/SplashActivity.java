@@ -10,6 +10,7 @@ import com.magnet.magnetchat.util.Logger;
 import com.magnet.max.android.ApiCallback;
 import com.magnet.max.android.ApiError;
 import com.magnet.max.android.User;
+import com.magnet.mmx.client.api.MMX;
 
 //import com.magnet.magnetchat.ui.activities.HomeActivity;
 
@@ -35,6 +36,7 @@ public class SplashActivity extends BaseActivity {
         @Override
         public void success(Boolean aBoolean) {
           if (aBoolean) {
+            MMX.start();
             goToHomeActivity();
           } else {
             handleError("");

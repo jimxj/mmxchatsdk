@@ -45,6 +45,16 @@ public class Conversation {
     public Conversation() {
     }
 
+    public Conversation(MMXChannel channel, List<UserProfile> suppliers, UserProfile owner) {
+        this.channel = channel;
+        this.owner = owner;
+        lastActiveTime = new Date();
+
+        for(UserProfile up : suppliers) {
+            addSupplier(up);
+        }
+    }
+
     public Conversation(ChannelDetail channelDetail) {
         this.channel = channelDetail.getChannel();
 
@@ -118,6 +128,15 @@ public class Conversation {
         if (!getMessages().contains(message)) {
             messages.add(message);
 
+            User sender = message.getMmxMessage().getSender();
+            if (sender != null && !sender.equals(User.getCurrentUser())) {
+                if (getSupplier(sender.getUserIdentifier()) == null) {
+                    addSupplier(sender);
+                }
+                setHasUnreadMessage(true);
+
+                lastActiveTime = new Date();
+            }
             return true;
         }
 

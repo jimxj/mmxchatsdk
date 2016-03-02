@@ -7,18 +7,24 @@ import android.content.Context;
 import android.widget.Toast;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.magnet.max.android.Max;
 import com.magnet.max.android.util.StringUtil;
 
 public class Utils {
   private static final String TAG = Utils.class.getSimpleName();
 
-  public static boolean isGooglePlayServiceInstalled(Context context) {
-    final int status = GooglePlayServicesUtil.isGooglePlayServicesAvailable(context.getApplicationContext());
+  public static boolean isGooglePlayServiceInstalled() {
+    final int status = GooglePlayServicesUtil.isGooglePlayServicesAvailable(
+        Max.getApplicationContext());
     com.magnet.mmx.client.common.Log.d(TAG, "----------------GooglePlayServicesUtil.isGooglePlayServicesAvailable : " + status);
     if (status == ConnectionResult.SUCCESS) {
       return true;
     }
     return false;
+  }
+
+  public static void showMessage(String message) {
+    showMessage(Max.getApplicationContext(), message);
   }
 
   public static void showMessage(Context context, String message) {

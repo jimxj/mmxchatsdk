@@ -49,9 +49,11 @@ public class ChatListPresenterImpl implements ChatListContract.UserActionsListen
         if(forceUpdate) {
             ChannelHelper.getAllSubscriptionDetails(new MMXChannel.OnFinishedListener<List<ChannelDetail>>() {
                 @Override public void onSuccess(List<ChannelDetail> channelDetails) {
-                    for (ChannelDetail cd : channelDetails) {
-                        Conversation c = new Conversation(cd);
-                        ChannelCacheManager.getInstance().addConversation(c);
+                    if(null != channelDetails) {
+                        for (ChannelDetail cd : channelDetails) {
+                            Conversation c = new Conversation(cd);
+                            ChannelCacheManager.getInstance().addConversation(c);
+                        }
                     }
 
                     mConversations.clear();
@@ -176,28 +178,28 @@ public class ChatListPresenterImpl implements ChatListContract.UserActionsListen
         @Override
         public boolean onMessageAcknowledgementReceived(User from, String messageId) {
             Logger.debug(TAG, "onMessageAcknowledgementReceived");
-            //view.updateList();
+            //mView.updateList();
             return false;
         }
 
         @Override
         public boolean onInviteReceived(MMXChannel.MMXInvite invite) {
             Logger.debug(TAG, "onInviteReceived");
-            //view.updateList();
+            //mView.updateList();
             return false;
         }
 
         @Override
         public boolean onInviteResponseReceived(MMXChannel.MMXInviteResponse inviteResponse) {
             Logger.debug(TAG, "onInviteResponseReceived");
-            //view.updateList();
+            //mView.updateList();
             return false;
         }
 
         @Override
         public boolean onMessageSendError(String messageId, MMXMessage.FailureCode code, String text) {
             Logger.debug("onMessageSendError");
-            //view.updateList();
+            //mView.updateList();
             return false;
         }
     };

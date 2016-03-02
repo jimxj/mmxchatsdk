@@ -18,6 +18,7 @@ import com.magnet.magnetchat.core.managers.ChannelCacheManager;
 import com.magnet.magnetchat.helpers.ChannelHelper;
 import com.magnet.magnetchat.model.Conversation;
 import com.magnet.magnetchat.mvp.api.ChatListContract;
+import com.magnet.magnetchat.mvp.api.OnRecyclerViewItemClickListener;
 import com.magnet.magnetchat.mvp.presenters.ChatListPresenterImpl;
 import com.magnet.magnetchat.ui.activities.ChatActivity;
 import com.magnet.magnetchat.ui.activities.ChooseUserActivity;
@@ -150,20 +151,21 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
         if (null != getActivity()) {
             if (adapter == null) {
                 adapter = new ChatsAdapter(getActivity(), conversations);
-                adapter.setOnConversationClick(new ChatsAdapter.OnConversationClick() {
-                    @Override
-                    public void onClick(Conversation conversation) {
+                adapter.setOnClickListener(new OnRecyclerViewItemClickListener() {
+                    @Override public void onClick(int position) {
+                        Conversation conversation = adapter.getItem(position);
                         if (conversation != null) {
                             Log.d(TAG, "Channel " + conversation.getChannel().getName() + " is selected");
                             presenter.onConversationClick(conversation);
                         }
                     }
-                });
-                adapter.setOnConversationLongClick(new ChatsAdapter.OnConversationLongClick() {
-                    @Override
-                    public void onLongClick(Conversation conversation) {
-                        presenter.onConversationLongClick(conversation);
-                        showLeaveDialog(conversation);
+
+                    @Override public void onLongClick(int position) {
+                        Conversation conversation = adapter.getItem(position);
+                        if (conversation != null) {
+                            presenter.onConversationLongClick(conversation);
+                            showLeaveDialog(conversation);
+                        }
                     }
                 });
                 conversationsList.setAdapter(adapter);

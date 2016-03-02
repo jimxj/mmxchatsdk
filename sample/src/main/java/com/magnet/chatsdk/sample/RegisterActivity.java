@@ -41,6 +41,7 @@ public class RegisterActivity extends BaseActivity {
     editRepeatPassword = (AppCompatEditText) findViewById(R.id.registerRepeatPassword);
 
     viewProgress = findViewById(R.id.viewProgress);
+    viewProgress.setVisibility(View.GONE);
 
     setOnClickListeners(R.id.registerSaveBtn, R.id.buttonBack);
   }

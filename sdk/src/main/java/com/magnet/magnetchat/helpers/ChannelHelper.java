@@ -211,10 +211,8 @@ public class ChannelHelper {
         return DateHelper.getDateWithoutSpaces();
     }
 
-    public static void createChannelForUsers(final String[] userIds, final OnCreateChannelListener listener) {
-        List<String> userIdList = new ArrayList<>(Arrays.asList(userIds));
-        userIdList.add(User.getCurrentUserId());
-        findChannelByUsers(userIdList, new OnFindChannelByUsersListener() {
+    public static void createChannelForUsers(final List<String> userIds, final OnCreateChannelListener listener) {
+        findChannelByUsers(userIds, new OnFindChannelByUsersListener() {
             @Override
             public void onSuccessFound(List<MMXChannel> mmxChannels) {
                 if (mmxChannels.size() == 1) { // Use existing one if only one found
@@ -223,7 +221,7 @@ public class ChannelHelper {
                         listener.onChannelExists(mmxChannels.get(0));
                 } else {
                     Set<String> users = new HashSet<>();
-                    users.addAll(Arrays.asList(userIds));
+                    users.addAll(userIds);
                     String summary = User.getCurrentUser().getUserName();
                     MMXChannel.create(getNameForChannel(), summary, false, MMXChannel.PublishPermission.SUBSCRIBER, users, new MMXChannel.OnFinishedListener<MMXChannel>() {
                         @Override
@@ -298,16 +296,7 @@ public class ChannelHelper {
 
     private static void checkMessageConversation(final MMXMessage mmxMessage, Conversation conversation) {
         if (conversation != null) {
-            Message message = Message.createMessageFrom(mmxMessage);
-            conversation.addMessage(message);
-            conversation.setLastActiveTime(new Date());
-            User sender = message.getMmxMessage().getSender();
-            if (sender != null && !sender.equals(User.getCurrentUser())) {
-                if (conversation.getSupplier(sender.getUserIdentifier()) == null) {
-                    conversation.addSupplier(sender);
-                }
-                conversation.setHasUnreadMessage(true);
-            }
+            conversation.addMessage(Message.createMessageFrom(mmxMessage));
         } else {
             getChannelDetails(mmxMessage.getChannel(), new OnReadChannelDetailListener() {
                 @Override public void onSuccessFinish(Conversation conversation) {
