@@ -2,7 +2,6 @@ package com.magnet.magnetchat.ui.adapters;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -17,7 +16,6 @@ import com.magnet.magnetchat.helpers.DateHelper;
 import com.magnet.magnetchat.helpers.UserHelper;
 import com.magnet.magnetchat.model.Conversation;
 import com.magnet.magnetchat.model.Message;
-import com.magnet.magnetchat.mvp.api.OnRecyclerViewItemClickListener;
 import com.magnet.magnetchat.ui.views.section.chat.CircleNameView;
 import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;

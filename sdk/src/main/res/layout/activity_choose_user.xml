@@ -67,7 +67,7 @@
         <LinearLayout
             android:id="@+id/llSelectedUsers"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/dimen_60"
+            android:layout_height="@dimen/dimen_70"
             android:gravity="center"
             android:orientation="horizontal"
             android:visibility="gone">

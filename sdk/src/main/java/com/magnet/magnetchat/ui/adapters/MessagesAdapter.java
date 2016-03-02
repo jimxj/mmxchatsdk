@@ -1,15 +1,12 @@
 package com.magnet.magnetchat.ui.adapters;
 
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
-import android.os.Build;
 import android.support.v7.widget.AppCompatTextView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -19,16 +16,13 @@ import com.magnet.magnetchat.R;
 import com.magnet.magnetchat.helpers.DateHelper;
 import com.magnet.magnetchat.helpers.UserHelper;
 import com.magnet.magnetchat.model.Message;
-import com.magnet.magnetchat.mvp.api.OnRecyclerViewItemClickListener;
+import com.magnet.magnetchat.callbacks.OnRecyclerViewItemClickListener;
 import com.magnet.magnetchat.ui.views.section.chat.CircleNameView;
-import com.magnet.magnetchat.util.AppLogger;
-import com.magnet.magnetchat.util.Utils;
 import com.magnet.max.android.Attachment;
 import com.magnet.max.android.User;
 import com.magnet.max.android.util.StringUtil;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 public class MessagesAdapter extends BaseAdapter<MessagesAdapter.ViewHolder, Message> {
     private final static String TAG = MessagesAdapter.class.getSimpleName();

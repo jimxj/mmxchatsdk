@@ -18,7 +18,7 @@ import com.magnet.magnetchat.core.managers.ChannelCacheManager;
 import com.magnet.magnetchat.helpers.ChannelHelper;
 import com.magnet.magnetchat.model.Conversation;
 import com.magnet.magnetchat.mvp.api.ChatListContract;
-import com.magnet.magnetchat.mvp.api.OnRecyclerViewItemClickListener;
+import com.magnet.magnetchat.callbacks.OnRecyclerViewItemClickListener;
 import com.magnet.magnetchat.mvp.presenters.ChatListPresenterImpl;
 import com.magnet.magnetchat.ui.activities.ChatActivity;
 import com.magnet.magnetchat.ui.activities.ChooseUserActivity;
@@ -40,7 +40,7 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
 
     private ChatsAdapter adapter;
 
-    private ChatListContract.UserActionsListener presenter;
+    private ChatListContract.Presenter presenter;
 
     @Override
     protected int getLayoutId() {

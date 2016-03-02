@@ -25,7 +25,7 @@ import java.util.List;
 /**
  * Created by dlernatovich on 3/1/16.
  */
-public class ChatListPresenterImpl implements ChatListContract.UserActionsListener {
+public class ChatListPresenterImpl implements ChatListContract.Presenter {
     protected static final String TAG = "ChatListPresenter";
 
     protected List<Conversation> mConversations = new ArrayList<>();
@@ -46,41 +46,8 @@ public class ChatListPresenterImpl implements ChatListContract.UserActionsListen
      */
     @Override
     public void onLoadConversations(boolean forceUpdate) {
-        if(forceUpdate) {
-            ChannelHelper.getAllSubscriptionDetails(new MMXChannel.OnFinishedListener<List<ChannelDetail>>() {
-                @Override public void onSuccess(List<ChannelDetail> channelDetails) {
-                    if(null != channelDetails) {
-                        for (ChannelDetail cd : channelDetails) {
-                            Conversation c = new Conversation(cd);
-                            ChannelCacheManager.getInstance().addConversation(c);
-                        }
-                    }
-
-                    mConversations.clear();
-                    mConversations.addAll(ChannelCacheManager.getInstance().getConversations());
-
-                    showAllConversations();
-
-                    finishGetChannels();
-                }
-
-                @Override public void onFailure(MMXChannel.FailureCode failureCode, Throwable throwable) {
-                    handleError(failureCode.toString(), throwable);
-                    finishGetChannels();
-                }
-
-                private void finishGetChannels() {
-                    isLoadingWhenCreating = false;
-                    mView.setProgressIndicator(false);
-                }
-
-                private void handleError(String message, Throwable throwable) {
-                    Logger.error(TAG, "Can't get conversations due to "
-                        + message
-                        + ", throwable : \n"
-                        + throwable);
-                }
-            });
+        if (forceUpdate) {
+            ChannelHelper.getAllSubscriptionDetails(channelsListener);
         } else {
             showAllConversations();
         }
@@ -98,7 +65,7 @@ public class ChatListPresenterImpl implements ChatListContract.UserActionsListen
         }
         MMX.registerListener(eventListener);
 
-        if(null != Max.getApplicationContext()) {
+        if (null != Max.getApplicationContext()) {
             Max.getApplicationContext().registerReceiver(onAddedConversation, new IntentFilter(ChannelHelper.ACTION_ADDED_CONVERSATION));
         }
     }
@@ -111,7 +78,7 @@ public class ChatListPresenterImpl implements ChatListContract.UserActionsListen
     public void onPause() {
         MMX.unregisterListener(eventListener);
 
-        if(null != Max.getApplicationContext()) {
+        if (null != Max.getApplicationContext()) {
             Max.getApplicationContext().unregisterReceiver(onAddedConversation);
         }
         mView.dismissLeaveDialog();
@@ -139,11 +106,23 @@ public class ChatListPresenterImpl implements ChatListContract.UserActionsListen
         mView.showList(searchResult);
     }
 
-    @Override public void onConversationClick(Conversation conversation) {
+    /**
+     * Method which provide the action when user click on the conversation channel
+     *
+     * @param conversation channel
+     */
+    @Override
+    public void onConversationClick(Conversation conversation) {
         mView.showChatDetails(conversation);
     }
 
-    @Override public void onConversationLongClick(Conversation conversation) {
+    /**
+     * Method which provide the action when user do long click for the conversation
+     *
+     * @param conversation channel
+     */
+    @Override
+    public void onConversationLongClick(Conversation conversation) {
 
     }
 
@@ -211,6 +190,46 @@ public class ChatListPresenterImpl implements ChatListContract.UserActionsListen
         @Override
         public void onReceive(Context context, Intent intent) {
             showAllConversations();
+        }
+    };
+
+    /**
+     * Listener which provide the listening of the watch dog notification for channel creation
+     */
+    private final MMXChannel.OnFinishedListener<List<ChannelDetail>> channelsListener = new MMXChannel.OnFinishedListener<List<ChannelDetail>>() {
+        @Override
+        public void onSuccess(List<ChannelDetail> channelDetails) {
+            if (null != channelDetails) {
+                for (ChannelDetail cd : channelDetails) {
+                    Conversation c = new Conversation(cd);
+                    ChannelCacheManager.getInstance().addConversation(c);
+                }
+            }
+
+            mConversations.clear();
+            mConversations.addAll(ChannelCacheManager.getInstance().getConversations());
+
+            showAllConversations();
+
+            finishGetChannels();
+        }
+
+        @Override
+        public void onFailure(MMXChannel.FailureCode failureCode, Throwable throwable) {
+            handleError(failureCode.toString(), throwable);
+            finishGetChannels();
+        }
+
+        private void finishGetChannels() {
+            isLoadingWhenCreating = false;
+            mView.setProgressIndicator(false);
+        }
+
+        private void handleError(String message, Throwable throwable) {
+            Logger.error(TAG, "Can't get conversations due to "
+                    + message
+                    + ", throwable : \n"
+                    + throwable);
         }
     };
 

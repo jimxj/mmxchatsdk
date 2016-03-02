@@ -33,7 +33,7 @@ import com.magnet.magnetchat.helpers.UserHelper;
 import com.magnet.magnetchat.model.Conversation;
 import com.magnet.magnetchat.model.Message;
 import com.magnet.magnetchat.mvp.api.ChatContract;
-import com.magnet.magnetchat.mvp.api.OnRecyclerViewItemClickListener;
+import com.magnet.magnetchat.callbacks.OnRecyclerViewItemClickListener;
 import com.magnet.magnetchat.mvp.presenters.ChatPresenterImpl;
 import com.magnet.magnetchat.ui.adapters.MessagesAdapter;
 import com.magnet.magnetchat.util.Logger;
@@ -79,7 +79,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View, Goo
     TextView sendMessageButton;
     Toolbar toolbar;
 
-    ChatContract.UserActionsListener presenter;
+    ChatContract.Presenter presenter;
 
     @Override
     protected int getLayoutResource() {

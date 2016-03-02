@@ -1,6 +1,7 @@
 package com.magnet.magnetchat.mvp.api;
 
 import com.magnet.magnetchat.model.Conversation;
+
 import java.util.List;
 
 /**
@@ -8,82 +9,92 @@ import java.util.List;
  */
 public interface ChatListContract {
 
-  interface View {
+    interface View {
 
-    /**
-     * Method which provide to show of the list of the conversations
-     *
-     * @param conversations conversation
-     */
-    void showList(List<Conversation> conversations);
+        /**
+         * Method which provide to show of the list of the conversations
+         *
+         * @param conversations conversation
+         */
+        void showList(List<Conversation> conversations);
 
-    /**
-     * Method which provide the list updating
-     */
-    void updateList();
+        /**
+         * Method which provide the list updating
+         */
+        void updateList();
 
-    /**
-     * Method which provide to show of the new chat
-     */
-    void showNewChat();
+        /**
+         * Method which provide to show of the new chat
+         */
+        void showNewChat();
 
-    /**
-     * Method which provide the conversation details
-     *
-     * @param conversation current conversation
-     */
-    void showChatDetails(Conversation conversation);
+        /**
+         * Method which provide the conversation details
+         *
+         * @param conversation current conversation
+         */
+        void showChatDetails(Conversation conversation);
 
-    void showLeaveConfirmation(Conversation conversation);
+        void showLeaveConfirmation(Conversation conversation);
 
-    /**
-     * Method which provide the dismissing of the leave dialog
-     */
-    void dismissLeaveDialog();
+        /**
+         * Method which provide the dismissing of the leave dialog
+         */
+        void dismissLeaveDialog();
 
-    /**
-     * Show or hide the progress bar
-     *
-     * @param active
-     */
-    void setProgressIndicator(boolean active);
-  }
+        /**
+         * Show or hide the progress bar
+         *
+         * @param active
+         */
+        void setProgressIndicator(boolean active);
+    }
 
-  interface UserActionsListener {
+    interface Presenter {
 
-    /**
-     * Method which provide to getting of the reading channels
-     */
-    void onLoadConversations(boolean forceUpdate);
+        /**
+         * Method which provide to getting of the reading channels
+         */
+        void onLoadConversations(boolean forceUpdate);
 
-    /**
-     * Method which provide to show of the messages by query
-     *
-     * @param query search query
-     */
-    void onSearchMessage(final String query);
+        /**
+         * Method which provide to show of the messages by query
+         *
+         * @param query search query
+         */
+        void onSearchMessage(final String query);
 
-    void onConversationClick(Conversation conversation);
+        /**
+         * Method which provide the action when user click on the conversation channel
+         *
+         * @param conversation channel
+         */
+        void onConversationClick(Conversation conversation);
 
-    void onConversationLongClick(Conversation conversation);
+        /**
+         * Method which provide the action when user do long click for the conversation
+         *
+         * @param conversation channel
+         */
+        void onConversationLongClick(Conversation conversation);
 
-    /**
-     * Method which provide the action when activity or fragment call onResume
-     * (WARNING: Should be inside the onCreate method)
-     */
-    void onResume();
+        /**
+         * Method which provide the action when activity or fragment call onResume
+         * (WARNING: Should be inside the onCreate method)
+         */
+        void onResume();
 
-    /**
-     * Method which provide the action when activity or fragment call onPause
-     * (WARNING: Should be inside the onPause method)
-     */
-    void onPause();
+        /**
+         * Method which provide the action when activity or fragment call onPause
+         * (WARNING: Should be inside the onPause method)
+         */
+        void onPause();
 
-    /**
-     * Method which provide to getting of the list of the all conversations
-     *
-     * @return list of all conversations
-     */
-    List<Conversation> getAllConversations();
-  }
+        /**
+         * Method which provide to getting of the list of the all conversations
+         *
+         * @return list of all conversations
+         */
+        List<Conversation> getAllConversations();
+    }
 }

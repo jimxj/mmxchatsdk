@@ -6,12 +6,12 @@
 
     <com.magnet.magnetchat.ui.views.section.chat.CircleNameView
         android:id="@+id/viewUserName"
-        android:layout_width="@dimen/dimen_40"
-        android:layout_height="@dimen/dimen_40" />
+        android:layout_width="@dimen/dimen_50"
+        android:layout_height="@dimen/dimen_50" />
 
     <de.hdodenhof.circleimageview.CircleImageView
         android:id="@+id/imageUserAvatar"
-        android:layout_width="@dimen/dimen_40"
-        android:layout_height="@dimen/dimen_40" />
+        android:layout_width="@dimen/dimen_50"
+        android:layout_height="@dimen/dimen_50" />
 
 </FrameLayout>

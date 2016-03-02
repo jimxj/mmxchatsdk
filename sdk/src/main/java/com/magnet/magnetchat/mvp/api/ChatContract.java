@@ -43,7 +43,7 @@ public interface ChatContract {
     void showChatDetails(Conversation conversation);
   }
 
-  interface UserActionsListener {
+  interface Presenter {
 
     void onLoadMessages(boolean forceUpdate);
 
