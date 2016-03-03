@@ -1,5 +1,6 @@
 package com.magnet.magnetchat.ui.activities;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
@@ -14,6 +15,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.SearchView;
 import android.widget.TextView;
+
 import com.magnet.magnetchat.R;
 import com.magnet.magnetchat.callbacks.OnRecyclerViewItemClickListener;
 import com.magnet.magnetchat.mvp.api.ChooseUserContract;
@@ -22,6 +24,7 @@ import com.magnet.magnetchat.ui.adapters.SelectedUsersAdapter;
 import com.magnet.magnetchat.ui.adapters.UsersAdapter;
 import com.magnet.magnetchat.ui.custom.CustomSearchView;
 import com.magnet.max.android.UserProfile;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -73,10 +76,10 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
         String channelName = getIntent().getStringExtra(TAG_ADD_USER_TO_CHANNEL);
         if (channelName != null) {
             setTitle("Add contacts");
-            presenter = new ChooseUserPresenterImpl(this, this, channelName);
+            presenter = new ChooseUserPresenterImpl(this, channelName);
         } else {
             setTitle("All contacts");
-            presenter = new ChooseUserPresenterImpl(this, this);
+            presenter = new ChooseUserPresenterImpl(this);
         }
     }
 
@@ -154,6 +157,16 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
         finish();
     }
 
+    /**
+     * Method which provide the getting of the activity
+     *
+     * @return current activity
+     */
+    @Override
+    public Activity getActivity() {
+        return this;
+    }
+
     //STATIC METHODS
 
     public static Intent getIntentToCreateChannel(Context context) {
@@ -193,7 +206,8 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
      * Listener which provide to the user click listening
      */
     private final OnRecyclerViewItemClickListener userClickListener = new OnRecyclerViewItemClickListener() {
-        @Override public void onClick(int position) {
+        @Override
+        public void onClick(int position) {
             hideKeyboard();
             UserProfile user = adapter.getItem(position);
             if (user != null) {
@@ -213,7 +227,8 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
             }
         }
 
-        @Override public void onLongClick(int position) {
+        @Override
+        public void onLongClick(int position) {
 
         }
     };

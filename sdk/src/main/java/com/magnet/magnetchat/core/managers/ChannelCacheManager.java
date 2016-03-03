@@ -10,6 +10,7 @@ import com.magnet.magnetchat.model.Message;
 import com.magnet.magnetchat.util.Logger;
 import com.magnet.mmx.client.api.MMXChannel;
 import com.magnet.mmx.client.api.MMXMessage;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -37,7 +38,7 @@ public class ChannelCacheManager {
 
     private AtomicBoolean isConversationListUpdated = new AtomicBoolean(false);
 
-    private Comparator<Conversation> conversationComparator = new Comparator<Conversation>() {
+    private final Comparator<Conversation> conversationComparator = new Comparator<Conversation>() {
         @Override
         public int compare(Conversation lhs, Conversation rhs) {
             return 0 - lhs.getLastActiveTime().compareTo(rhs.getLastActiveTime());
@@ -71,7 +72,7 @@ public class ChannelCacheManager {
             if (limit > 0) {
                 if (offset >= 0 && offset < size) {
                     return (offset + limit) > size ? allSubscriptions.subList(offset, size)
-                        : allSubscriptions.subList(offset, offset + limit);
+                            : allSubscriptions.subList(offset, offset + limit);
                 }
             } else {
                 return allSubscriptions;
@@ -95,7 +96,7 @@ public class ChannelCacheManager {
     }
 
     public void addConversation(Conversation conversation) {
-        if(null != conversation) {
+        if (null != conversation) {
             Conversation existingConversation = getConversationByName(conversation.getChannel().getName());
             if (existingConversation == null) {
                 conversations.put(conversation.getChannel().getName(), conversation);
@@ -104,7 +105,7 @@ public class ChannelCacheManager {
                 //conversation.setLastActiveTime(new Date());
             } else {
                 boolean newMessageAdded = existingConversation.mergeFrom(conversation);
-                if(newMessageAdded) {
+                if (newMessageAdded) {
                     existingConversation.setHasUnreadMessage(true);
                     existingConversation.setLastActiveTime(new Date());
                 }
@@ -162,24 +163,26 @@ public class ChannelCacheManager {
             final Message message = Message.createMessageFrom(mmxMessage);
             if (conversation != null) {
                 conversation.addMessage(message);
-                if(null != listener) {
+                if (null != listener) {
                     listener.onProcessSuccess(conversation, message, false);
                 }
             } else {
                 ChannelHelper.getChannelDetails(mmxMessage.getChannel(), new ChannelHelper.OnReadChannelDetailListener() {
-                    @Override public void onSuccessFinish(Conversation conversation) {
+                    @Override
+                    public void onSuccessFinish(Conversation conversation) {
                         addConversation(conversation);
                         conversation.addMessage(message);
 
-                        if(null != listener) {
+                        if (null != listener) {
                             listener.onProcessSuccess(conversation, message, true);
                         }
                     }
 
-                    @Override public void onFailure(Throwable throwable) {
+                    @Override
+                    public void onFailure(Throwable throwable) {
                         Logger.error(TAG, "Failed to load channel details for channel : " + channelName);
 
-                        if(null != listener) {
+                        if (null != listener) {
                             listener.onProcessFailure(throwable);
                         }
                     }

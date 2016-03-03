@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+
 import com.magnet.magnetchat.R;
 import com.magnet.magnetchat.callbacks.BaseActivityCallback;
 import com.magnet.magnetchat.ui.fragments.BaseFragment;
@@ -26,7 +27,10 @@ public class ChatListActivity extends BaseActivity implements BaseActivityCallba
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        toolbar.setTitle(User.getCurrentUser().getDisplayName());
+
+        if (User.getCurrentUser() != null && User.getCurrentUser().getDisplayName() != null) {
+            toolbar.setTitle(User.getCurrentUser().getDisplayName());
+        }
 
         setFragment();
     }
@@ -47,7 +51,6 @@ public class ChatListActivity extends BaseActivity implements BaseActivityCallba
 
     /**
      * method which provide the setting of the current fragment co container mView
-     *
      */
     private void setFragment() {
         BaseFragment baseFragment = new ChatListFragment();
@@ -60,7 +63,8 @@ public class ChatListActivity extends BaseActivity implements BaseActivityCallba
 
     }
 
-    @Override public void onClick(View v) {
+    @Override
+    public void onClick(View v) {
 
     }
 }

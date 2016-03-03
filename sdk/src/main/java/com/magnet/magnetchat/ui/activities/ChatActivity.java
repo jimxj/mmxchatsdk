@@ -23,6 +23,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
@@ -36,20 +37,17 @@ import com.magnet.magnetchat.model.Message;
 import com.magnet.magnetchat.mvp.api.ChatContract;
 import com.magnet.magnetchat.mvp.presenters.ChatPresenterImpl;
 import com.magnet.magnetchat.ui.adapters.MessagesAdapter;
-import com.magnet.magnetchat.util.Logger;
 import com.magnet.magnetchat.util.Utils;
-import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;
-import com.magnet.mmx.client.api.MMX;
-import com.magnet.mmx.client.api.MMXChannel;
-import com.magnet.mmx.client.api.MMXMessage;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
 import nl.changer.polypicker.Config;
 import nl.changer.polypicker.ImagePickerActivity;
 
-public class ChatActivity extends BaseActivity implements ChatContract.View, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+public class ChatActivity extends BaseActivity implements ChatContract.View {
 
     public static final String TAG = ChatActivity.class.getSimpleName();
 
@@ -122,7 +120,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View, Goo
         if (null != channelName) {
             Conversation currentConversation = ChannelCacheManager.getInstance().getConversationByName(channelName);
             if (currentConversation != null) {
-                presenter = new ChatPresenterImpl(this, currentConversation, this);
+                presenter = new ChatPresenterImpl(this, currentConversation);
             } else {
                 showMessage("Can load the conversation");
                 finish();
@@ -131,7 +129,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View, Goo
         } else {
             ArrayList<UserProfile> recipients = getIntent().getParcelableArrayListExtra(TAG_CREATE_WITH_RECIPIENTS);
             if (recipients != null) {
-                presenter = new ChatPresenterImpl(this, recipients, this);
+                presenter = new ChatPresenterImpl(this, recipients);
             } else {
                 showMessage("Can load the conversation");
                 finish();
@@ -139,40 +137,41 @@ public class ChatActivity extends BaseActivity implements ChatContract.View, Goo
             }
         }
 
-        googleApiClient = new GoogleApiClient.Builder(this).addConnectionCallbacks(this)
-            .addOnConnectionFailedListener(this).addApi(LocationServices.API).build();
+        googleApiClient = new GoogleApiClient.Builder(this).addConnectionCallbacks(connectionCallback)
+                .addOnConnectionFailedListener(connectionFailedListener).addApi(LocationServices.API).build();
     }
 
     @Override
     public void onClick(View v) {
-        if(v.getId() == R.id.chatSendBtn) {
+        if (v.getId() == R.id.chatSendBtn) {
             String text = getSimpleText(editMessage);
             if (text != null && !text.isEmpty()) {
                 sendMessageButton.setEnabled(false);
                 presenter.onSendText(text);
             }
-        } else if(v.getId() == R.id.chatAddAttachment) {
+        } else if (v.getId() == R.id.chatAddAttachment) {
             showAttachmentDialog();
         }
     }
 
     @Override
     protected void onPause() {
-        MMX.unregisterListener(eventListener);
         if (attachmentDialog != null && attachmentDialog.isShowing()) {
             attachmentDialog.dismiss();
         }
+
+        presenter.onPause();
+
         super.onPause();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
         presenter.onLoadRecipients(false);
         presenter.onLoadMessages(false);
 
-        MMX.registerListener(eventListener);
+        presenter.onResume();
     }
 
     @Override
@@ -196,26 +195,40 @@ public class ChatActivity extends BaseActivity implements ChatContract.View, Goo
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.menuChatOpenDetails) {
-            presenter.onChatDetials();
-        } else if (item.getItemId() == android.R.id.home){
+            presenter.onChatDetails();
+        } else if (item.getItemId() == android.R.id.home) {
             onBackPressed();
         }
         return super.onOptionsItemSelected(item);
     }
 
-    @Override public void setProgressIndicator(boolean active) {
+    /**
+     * Show or hide the progress bar
+     *
+     * @param active
+     */
+    @Override
+    public void setProgressIndicator(boolean active) {
         chatMessageProgress.setVisibility(active ? View.VISIBLE : View.INVISIBLE);
     }
 
-    @Override public void showMessages(List<Message> messages) {
-        if(null == mAdapter) {
+    /**
+     * Method which provide to show the messages
+     *
+     * @param messages messages list
+     */
+    @Override
+    public void showMessages(List<Message> messages) {
+        if (null == mAdapter) {
             mAdapter = new MessagesAdapter(this, messages);
             mAdapter.setmOnClickListener(new OnRecyclerViewItemClickListener() {
-                @Override public void onClick(int position) {
+                @Override
+                public void onClick(int position) {
                     presenter.onMessageClick(mAdapter.getItem(position));
                 }
 
-                @Override public void onLongClick(int position) {
+                @Override
+                public void onLongClick(int position) {
 
                 }
             });
@@ -225,7 +238,13 @@ public class ChatActivity extends BaseActivity implements ChatContract.View, Goo
         }
     }
 
-    @Override public void showRecipients(List<UserProfile> recipients) {
+    /**
+     * Method which provide to show the recipients
+     *
+     * @param recipients recipients list
+     */
+    @Override
+    public void showRecipients(List<UserProfile> recipients) {
         if (recipients.size() == 1) {
             setTitle(UserHelper.getDisplayNames(recipients));
         } else {
@@ -233,32 +252,58 @@ public class ChatActivity extends BaseActivity implements ChatContract.View, Goo
         }
     }
 
-    @Override public void showNewMessage(Message message) {
+    /**
+     * Method whihc provide to show of the new message
+     *
+     * @param message new message
+     */
+    @Override
+    public void showNewMessage(Message message) {
         if (mAdapter != null) {
             mAdapter.notifyItemChanged(mAdapter.getItemCount());
             messagesListView.smoothScrollToPosition(mAdapter.getItemCount());
         }
     }
 
-    @Override public void showImagePicker() {
+    /**
+     * Method which provide to show of the image picker
+     */
+    @Override
+    public void showImagePicker() {
         Intent intent = new Intent(this, ImagePickerActivity.class);
         Config config = new Config.Builder()
-            .setTabBackgroundColor(R.color.white)
-            .setSelectionLimit(1)
-            .build();
+                .setTabBackgroundColor(R.color.white)
+                .setSelectionLimit(1)
+                .build();
         ImagePickerActivity.setConfig(config);
         startActivityForResult(intent, INTENT_REQUEST_GET_IMAGES);
     }
 
-    @Override public void clearInput() {
+    /**
+     * Method which provide to clearing of the input field
+     */
+    @Override
+    public void clearInput() {
         editMessage.setText("");
     }
 
-    @Override public void setSendEnabled(boolean enabled) {
+    /**
+     * Method which provide the enabling of the send button
+     *
+     * @param enabled is need enable
+     */
+    @Override
+    public void setSendEnabled(boolean enabled) {
         sendMessageButton.setEnabled(true);
     }
 
-    @Override public void showLocation(Message message) {
+    /**
+     * Method whihc provide to show of the location
+     *
+     * @param message message
+     */
+    @Override
+    public void showLocation(Message message) {
         if (!Utils.isGooglePlayServiceInstalled()) {
             Utils.showMessage(this, "It seems Google play services is not available, can't use location API");
         } else {
@@ -273,7 +318,13 @@ public class ChatActivity extends BaseActivity implements ChatContract.View, Goo
         }
     }
 
-    @Override public void showImage(Message message) {
+    /**
+     * Method which provide to show of the image message
+     *
+     * @param message image message
+     */
+    @Override
+    public void showImage(Message message) {
         if (message.getAttachment() != null) {
             String newImagePath = message.getAttachment().getDownloadUrl();
             Log.d(TAG, "Viewing photo : " + newImagePath + "\n" + message.getAttachment());
@@ -288,6 +339,17 @@ public class ChatActivity extends BaseActivity implements ChatContract.View, Goo
                 }
             }
         }
+    }
+
+    /**
+     * Method which provide the getting of the activity
+     *
+     * @return current activity
+     */
+    @Override
+    @NonNull
+    public Activity getActivity() {
+        return this;
     }
 
     @Override
@@ -332,18 +394,6 @@ public class ChatActivity extends BaseActivity implements ChatContract.View, Goo
         } else {
             showMessage("Can't do it without permission");
         }
-    }
-
-    @Override
-    public void onConnected(Bundle bundle) {
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
     }
 
     private boolean needPermission(int requestCode, String... permissions) {
@@ -391,7 +441,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View, Goo
         }
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-            && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             showMessage("Location permission is not enabled");
             return;
         }
@@ -402,30 +452,6 @@ public class ChatActivity extends BaseActivity implements ChatContract.View, Goo
             showMessage("Can't get location");
         }
     }
-
-    private MMX.EventListener eventListener = new MMX.EventListener() {
-        @Override
-        public boolean onMessageReceived(MMXMessage mmxMessage) {
-            Logger.debug(TAG, "Received message in : " + mmxMessage);
-            MMXChannel channel = mmxMessage.getChannel();
-            if (channel != null && mAdapter != null) {
-                String messageChannelName = channel.getName();
-                if (messageChannelName.equalsIgnoreCase(channelName)) {
-                    presenter.onNewMessage(Message.createMessageFrom(mmxMessage));
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        @Override
-        public boolean onMessageAcknowledgementReceived(User from, String messageId) {
-            if (mAdapter != null) {
-                //updateList();
-            }
-            return true;
-        }
-    };
 
     public static Intent getIntentWithChannel(Context context, Conversation conversation) {
         if (null != conversation && null != conversation.getChannel()) {
@@ -441,7 +467,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View, Goo
     public static Intent getIntentForNewChannel(Context context, List<UserProfile> recipients) {
         Intent intent = new Intent(context, ChatActivity.class);
         ArrayList<UserProfile> arrayList = null;
-        if(recipients instanceof ArrayList) {
+        if (recipients instanceof ArrayList) {
             arrayList = (ArrayList<UserProfile>) recipients;
         } else {
             arrayList = new ArrayList<>(recipients);
@@ -449,4 +475,26 @@ public class ChatActivity extends BaseActivity implements ChatContract.View, Goo
         intent.putParcelableArrayListExtra(TAG_CREATE_WITH_RECIPIENTS, arrayList);
         return intent;
     }
+
+    /**
+     * Google api connection callback
+     */
+    private final GoogleApiClient.ConnectionCallbacks connectionCallback = new GoogleApiClient.ConnectionCallbacks() {
+        @Override
+        public void onConnected(Bundle bundle) {
+        }
+
+        @Override
+        public void onConnectionSuspended(int i) {
+        }
+    };
+
+    /**
+     * Google API filed connection callback
+     */
+    private final GoogleApiClient.OnConnectionFailedListener connectionFailedListener = new GoogleApiClient.OnConnectionFailedListener() {
+        @Override
+        public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        }
+    };
 }

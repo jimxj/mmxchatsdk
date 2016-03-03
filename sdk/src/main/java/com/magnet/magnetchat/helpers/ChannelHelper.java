@@ -1,9 +1,9 @@
 package com.magnet.magnetchat.helpers;
 
 import android.content.Intent;
+
 import com.magnet.magnetchat.core.managers.ChannelCacheManager;
 import com.magnet.magnetchat.model.Conversation;
-import com.magnet.magnetchat.model.Message;
 import com.magnet.magnetchat.util.Logger;
 import com.magnet.max.android.ApiCallback;
 import com.magnet.max.android.ApiError;
@@ -15,7 +15,7 @@ import com.magnet.mmx.client.api.ChannelDetailOptions;
 import com.magnet.mmx.client.api.ChannelMatchType;
 import com.magnet.mmx.client.api.ListResult;
 import com.magnet.mmx.client.api.MMXChannel;
-import com.magnet.mmx.client.api.MMXMessage;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -63,11 +63,12 @@ public class ChannelHelper {
 
     public static void getSubscriptionDetails(final int offset, final int limit, final MMXChannel.OnFinishedListener<List<ChannelDetail>> listener) {
         boolean needToRefreshSubscriptions = 0 == offset || null == ChannelCacheManager.getInstance().getAllSubscriptions();
-        if(!needToRefreshSubscriptions) {
+        if (!needToRefreshSubscriptions) {
             getChannelDetails(ChannelCacheManager.getInstance().getSubscriptions(offset, limit), listener);
         } else {
             MMXChannel.getAllSubscriptions(new MMXChannel.OnFinishedListener<List<MMXChannel>>() {
-                @Override public void onSuccess(final List<MMXChannel> channels) {
+                @Override
+                public void onSuccess(final List<MMXChannel> channels) {
                     Logger.debug(TAG, "getSubscriptionDetails success : " + channels);
                     //ChannelCacheManager.getInstance().resetConversations();
                     if (null != channels && channels.size() > 0) {
@@ -80,7 +81,8 @@ public class ChannelHelper {
                     }
                 }
 
-                @Override public void onFailure(MMXChannel.FailureCode failureCode, Throwable throwable) {
+                @Override
+                public void onFailure(MMXChannel.FailureCode failureCode, Throwable throwable) {
                     Logger.error(TAG, throwable, "getSubscriptionDetails failed");
                     if (listener != null) {
                         listener.onFailure(failureCode, throwable);
@@ -103,40 +105,41 @@ public class ChannelHelper {
 
     public static void getChannelDetails(final MMXChannel channel, final OnReadChannelDetailListener listener) {
         MMXChannel.getChannelDetail(Arrays.asList(channel),
-            new ChannelDetailOptions.Builder().numOfMessages(50).numOfSubcribers(10).build(),
-            new MMXChannel.OnFinishedListener<List<ChannelDetail>>() {
-                @Override public void onSuccess(List<ChannelDetail> channelDetails) {
-                    if (null != channelDetails && 1 == channelDetails.size()) {
-                        Conversation conversation = new Conversation(channelDetails.get(0));
-                        ChannelCacheManager.getInstance().addConversation(conversation);
+                new ChannelDetailOptions.Builder().numOfMessages(50).numOfSubcribers(10).build(),
+                new MMXChannel.OnFinishedListener<List<ChannelDetail>>() {
+                    @Override
+                    public void onSuccess(List<ChannelDetail> channelDetails) {
+                        if (null != channelDetails && 1 == channelDetails.size()) {
+                            Conversation conversation = new Conversation(channelDetails.get(0));
+                            ChannelCacheManager.getInstance().addConversation(conversation);
 
-                        if(null != listener) {
-                            listener.onSuccessFinish(conversation);
+                            if (null != listener) {
+                                listener.onSuccessFinish(conversation);
+                            }
+
+                            //Without this new conversation isn't shown at once
+                            MaxCore.getApplicationContext().sendBroadcast(new Intent(ACTION_ADDED_CONVERSATION));
+                        } else {
+                            handleError("empty result", new Exception("empty result"));
                         }
-
-                        //Without this new conversation isn't shown at once
-                        MaxCore.getApplicationContext().sendBroadcast(new Intent(ACTION_ADDED_CONVERSATION));
-                    } else {
-                        handleError("empty result", new Exception("empty result"));
                     }
-                }
 
-                @Override
-                public void onFailure(MMXChannel.FailureCode failureCode, Throwable throwable) {
-                    handleError(failureCode.toString(), throwable);
-                }
-
-                private void handleError(String message, Throwable throwable) {
-                    Logger.error(TAG, "Can't load conversation for new channel : "
-                        + channel
-                        + " due to "
-                        + message);
-
-                    if(null != listener) {
-                        listener.onFailure(throwable);
+                    @Override
+                    public void onFailure(MMXChannel.FailureCode failureCode, Throwable throwable) {
+                        handleError(failureCode.toString(), throwable);
                     }
-                }
-            });
+
+                    private void handleError(String message, Throwable throwable) {
+                        Logger.error(TAG, "Can't load conversation for new channel : "
+                                + channel
+                                + " due to "
+                                + message);
+
+                        if (null != listener) {
+                            listener.onFailure(throwable);
+                        }
+                    }
+                });
     }
 
     public static void getChannelDetails(final List<MMXChannel> channels, final MMXChannel.OnFinishedListener<List<ChannelDetail>> listener) {

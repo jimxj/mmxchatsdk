@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+
 import com.magnet.magnetchat.callbacks.NewMessageProcessListener;
 import com.magnet.magnetchat.core.managers.ChannelCacheManager;
 import com.magnet.magnetchat.helpers.ChannelHelper;
@@ -19,6 +20,7 @@ import com.magnet.mmx.client.api.ChannelDetail;
 import com.magnet.mmx.client.api.MMX;
 import com.magnet.mmx.client.api.MMXChannel;
 import com.magnet.mmx.client.api.MMXMessage;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,7 +51,8 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
         ChannelHelper.getSubscriptionDetails(offset, limit, channelsListener);
     }
 
-    @Override public void onConversationUpdate(Conversation conversation, boolean isNew) {
+    @Override
+    public void onConversationUpdate(Conversation conversation, boolean isNew) {
         mView.showConversationUpdate(conversation, isNew);
     }
 
@@ -106,7 +109,11 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
         mView.showList(searchResult);
     }
 
-    @Override public void onResetSearch() {
+    /**
+     * Method which provide the search resetting
+     */
+    @Override
+    public void onResetSearch() {
         showAllConversations();
     }
 
@@ -155,12 +162,14 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
         public boolean onMessageReceived(MMXMessage mmxMessage) {
             Logger.debug(TAG, "onMessageReceived");
             ChannelCacheManager.getInstance().handleIncomingMessage(mmxMessage, new NewMessageProcessListener() {
-                @Override public void onProcessSuccess(Conversation conversation, Message message,
-                    boolean isNewChat) {
+                @Override
+                public void onProcessSuccess(Conversation conversation, Message message,
+                                             boolean isNewChat) {
                     onConversationUpdate(conversation, isNewChat);
                 }
 
-                @Override public void onProcessFailure(Throwable throwable) {
+                @Override
+                public void onProcessFailure(Throwable throwable) {
                     Logger.error(TAG, "onProcessFailure", throwable);
                 }
             });

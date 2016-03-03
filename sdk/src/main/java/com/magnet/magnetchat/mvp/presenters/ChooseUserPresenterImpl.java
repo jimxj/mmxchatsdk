@@ -2,6 +2,7 @@ package com.magnet.magnetchat.mvp.presenters;
 
 import android.app.Activity;
 import android.support.annotation.NonNull;
+
 import com.magnet.magnetchat.core.managers.ChannelCacheManager;
 import com.magnet.magnetchat.helpers.ChannelHelper;
 import com.magnet.magnetchat.model.Conversation;
@@ -13,7 +14,7 @@ import com.magnet.max.android.ApiCallback;
 import com.magnet.max.android.ApiError;
 import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;
-import java.lang.ref.WeakReference;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,17 +27,15 @@ public class ChooseUserPresenterImpl implements ChooseUserContract.Presenter {
     private final ChooseUserContract.View mView;
     private Conversation mConversation;
     private ChooseUserContract.ChooseMode mAddmingMode;
-    private WeakReference<Activity> mActivityRef;
     private List<User> mInitUsers;
 
-    public ChooseUserPresenterImpl(ChooseUserContract.View view, Activity activity) {
-        this(view, activity, null);
+    public ChooseUserPresenterImpl(ChooseUserContract.View view) {
+        this(view, null);
     }
 
-    public ChooseUserPresenterImpl(ChooseUserContract.View view, Activity activity, String channelName) {
+    public ChooseUserPresenterImpl(ChooseUserContract.View view, String channelName) {
         this.mView = view;
-        this.mActivityRef = new WeakReference<>(activity);
-        if(null != channelName) {
+        if (null != channelName) {
             mConversation = ChannelCacheManager.getInstance().getConversationByName(channelName);
             mAddmingMode = ChooseUserContract.ChooseMode.MODE_ADD_USER;
         } else {
@@ -46,8 +45,9 @@ public class ChooseUserPresenterImpl implements ChooseUserContract.Presenter {
         onLoadUsers(true);
     }
 
-    @Override public void onLoadUsers(boolean forceUpdate) {
-        if(forceUpdate) {
+    @Override
+    public void onLoadUsers(boolean forceUpdate) {
+        if (forceUpdate) {
             searchUsers("");
         } else {
             mView.updateList(mInitUsers);
@@ -63,9 +63,14 @@ public class ChooseUserPresenterImpl implements ChooseUserContract.Presenter {
     public void searchUsers(@NonNull String query) {
         mView.setProgressIndicator(true);
         User.search(String.format(SEARCH_QUERY, query, query), 100, 0, "lastName:asc",
-            userSearchCallback);
+                userSearchCallback);
     }
 
+    /**
+     * Method which provide the user selection
+     *
+     * @param selectedUsers user list
+     */
     @Override
     public void onUsersSelected(@NonNull List<UserProfile> selectedUsers) {
         if (selectedUsers.size() > 0) {
@@ -82,14 +87,28 @@ public class ChooseUserPresenterImpl implements ChooseUserContract.Presenter {
         }
     }
 
+    /**
+     * Method which provide to adding of the user to the chat
+     *
+     * @param selectedUsers selected users
+     */
+    @Override
     public void onAddUsersToChat(@NonNull List<UserProfile> selectedUsers) {
         mView.setProgressIndicator(true);
         ChannelHelper.addUserToConversation(mConversation, selectedUsers, addUserChannelListener);
     }
 
+    /**
+     * Method which provide the creating of the new chat
+     *
+     * @param selectedUsers selected users
+     */
+    @Override
     public void onNewChat(@NonNull List<UserProfile> selectedUsers) {
-        if(null != mActivityRef.get()) {
-            mActivityRef.get().startActivity(ChatActivity.getIntentForNewChannel(mActivityRef.get(), selectedUsers));
+        Activity activity = mView.getActivity();
+        if (activity != null) {
+            activity.startActivity(ChatActivity.getIntentForNewChannel(activity, selectedUsers));
+            mView.finishSelection();
         }
     }
 
@@ -102,17 +121,19 @@ public class ChooseUserPresenterImpl implements ChooseUserContract.Presenter {
             users.remove(User.getCurrentUser());
             if (mConversation != null) {
                 List<Integer> indexes = new ArrayList<>();
-                for(int i = 0; i < users.size(); i++) {
-                    if(null != mConversation.getSupplier(users.get(i).getUserIdentifier())) {
+                for (int i = 0; i < users.size(); i++) {
+                    if (null != mConversation.getSupplier(users.get(i).getUserIdentifier())) {
                         indexes.add(i);
                     }
                 }
-                for(Integer i : indexes) {
-                    users.remove(i.intValue());
+                for (Integer i : indexes) {
+                    if (i < users.size()) {
+                        users.remove(i.intValue());
+                    }
                 }
             }
 
-            if(null == mInitUsers) {
+            if (null == mInitUsers) {
                 mInitUsers = new ArrayList<>(users);
             }
 

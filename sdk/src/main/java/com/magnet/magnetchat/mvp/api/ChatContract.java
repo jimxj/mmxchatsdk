@@ -3,67 +3,128 @@
  */
 package com.magnet.magnetchat.mvp.api;
 
+import android.app.Activity;
 import android.location.Location;
 import android.net.Uri;
+import android.support.annotation.NonNull;
+
 import com.magnet.magnetchat.model.Conversation;
 import com.magnet.magnetchat.model.Message;
 import com.magnet.max.android.UserProfile;
+
 import java.util.List;
 
 public interface ChatContract {
 
-  interface View {
+    interface View {
 
-    /**
-     * Show or hide the progress bar
-     *
-     * @param active
-     */
-    void setProgressIndicator(boolean active);
+        /**
+         * Show or hide the progress bar
+         *
+         * @param active
+         */
+        void setProgressIndicator(boolean active);
 
-    void showMessages(List<Message> messages);
+        /**
+         * Method which provide to show the messages
+         *
+         * @param messages messages list
+         */
+        void showMessages(List<Message> messages);
 
-    void showRecipients(List<UserProfile> recipients);
+        /**
+         * Method which provide to show the recipients
+         *
+         * @param recipients recipients list
+         */
+        void showRecipients(List<UserProfile> recipients);
 
-    void showNewMessage(Message message);
+        /**
+         * Method whihc provide to show of the new message
+         *
+         * @param message new message
+         */
+        void showNewMessage(Message message);
 
-    void showImagePicker();
+        /**
+         * Method which provide to show of the image picker
+         */
+        void showImagePicker();
 
-    void clearInput();
+        /**
+         * Method which provide to clearing of the input field
+         */
+        void clearInput();
 
-    void setSendEnabled(boolean enabled);
+        /**
+         * Method which provide the enabling of the send button
+         *
+         * @param enabled is need enable
+         */
+        void setSendEnabled(boolean enabled);
 
-    //void showLocationPicker();
+        //void showLocationPicker();
 
-    void showLocation(Message message);
+        /**
+         * Method whihc provide to show of the location
+         *
+         * @param message message
+         */
+        void showLocation(Message message);
 
-    void showImage(Message message);
-  }
+        /**
+         * Method which provide to show of the image message
+         *
+         * @param message image message
+         */
+        void showImage(Message message);
 
-  interface Presenter {
+        /**
+         * Method which provide the getting of the activity
+         *
+         * @return current activity
+         */
+        @NonNull
+        Activity getActivity();
+    }
 
-    void onLoadMessages(boolean forceUpdate);
+    interface Presenter {
 
-    void onLoadRecipients(boolean forceUpdate);
+        /**
+         * Method which provide the action when Activity/Fragment call onResume method
+         * (WARNING: Should be call in the onCreate method)
+         */
+        void onResume();
 
-    void onNewMessage(Message message);
+        /**
+         * Method which provide the action when Activity/Fragment call onPause method
+         * (WARNING: Should be call in the onPause method)
+         */
+        void onPause();
 
-    void onReadMessage();
 
-    void onSendText(String text);
+        void onLoadMessages(boolean forceUpdate);
 
-    void onSendImages(Uri[] uris);
+        void onLoadRecipients(boolean forceUpdate);
 
-    void onSendLocation(Location location);
+        void onNewMessage(Message message);
 
-    void onMessageClick(Message message);
+        void onReadMessage();
 
-    void onMessageLongClick(Message message);
+        void onSendText(String text);
 
-    void onChatDetials();
+        void onSendImages(Uri[] uris);
 
-    Conversation getCurrentConversation();
+        void onSendLocation(Location location);
 
-  }
+        void onMessageClick(Message message);
+
+        void onMessageLongClick(Message message);
+
+        void onChatDetails();
+
+        Conversation getCurrentConversation();
+
+    }
 
 }
