@@ -8,31 +8,34 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import com.magnet.magnetchat.R;
-import com.magnet.magnetchat.helpers.UserHelper;
 import com.magnet.magnetchat.model.Conversation;
+import com.magnet.magnetchat.mvp.api.ChatDetailsContract;
+import com.magnet.magnetchat.mvp.presenters.ChatDetailsPresenterImpl;
 import com.magnet.magnetchat.ui.adapters.UsersAdapter;
 import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;
 import com.magnet.max.android.util.StringUtil;
-import com.magnet.mmx.client.api.ListResult;
 import com.magnet.mmx.client.api.MMXChannel;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 
 
-public class DetailsActivity extends BaseActivity {
+public class ChatDetailsActivity extends BaseActivity implements ChatDetailsContract.View {
 
     public static final String TAG_CHANNEL = "channel";
 
     RecyclerView listView;
+    UsersAdapter mUserAdapter;
 
     ProgressBar detailsProgress;
+    LinearLayout llAddRecipients;
 
-    private MMXChannel currentChannel;
+    ChatDetailsContract.Presenter mPresenter;
+
+
 
     @Override
     protected int getLayoutResource() {
@@ -45,12 +48,11 @@ public class DetailsActivity extends BaseActivity {
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
-        setTitle("Details");
+        setTitle("Chat Details");
 
         detailsProgress = (ProgressBar) findViewById(R.id.detailsProgress);
         listView = (RecyclerView) findViewById(R.id.detailsSubscribersList);
@@ -60,34 +62,18 @@ public class DetailsActivity extends BaseActivity {
         layoutManager.setReverseLayout(false);
         listView.setLayoutManager(layoutManager);
 
-        currentChannel = getIntent().getParcelableExtra(TAG_CHANNEL);
+        llAddRecipients = (LinearLayout) findViewById(R.id.llAddRecipients);
+
+        MMXChannel currentChannel = getIntent().getParcelableExtra(TAG_CHANNEL);
         if (currentChannel != null) {
-            detailsProgress.setVisibility(View.VISIBLE);
-            currentChannel.getAllSubscribers(100, 0, new MMXChannel.OnFinishedListener<ListResult<User>>() {
-                @Override public void onSuccess(ListResult<User> userListResult) {
-                    onComplete();
+            if(StringUtil.isStringValueEqual(currentChannel.getOwnerId(), User.getCurrentUserId())) {
+                llAddRecipients.setVisibility(View.VISIBLE);
 
-                    List<UserProfile> userProfiles = new ArrayList<>(userListResult.items.size());
-                    for(User u : userListResult.items) {
-                        if(!u.getUserIdentifier().equals(User.getCurrentUserId())) {
-                            userProfiles.add(u);
-                        }
-                    }
-                    Collections.sort(userProfiles, UserHelper.getUserProfileComparator());
-                    bindAdapter(userProfiles);
-                }
+                setOnClickListeners(llAddRecipients);
+            }
 
-                @Override
-                public void onFailure(MMXChannel.FailureCode failureCode, Throwable throwable) {
-                    onComplete();
-
-                    exit(failureCode.toString());
-                }
-
-                private void onComplete() {
-                    detailsProgress.setVisibility(View.GONE);
-                }
-            });
+            mPresenter = new ChatDetailsPresenterImpl(this, currentChannel, this);
+            mPresenter.onLoadRecipients(true);
         } else {
             exit("Channel not set");
         }
@@ -95,7 +81,9 @@ public class DetailsActivity extends BaseActivity {
 
     @Override
     public void onClick(View v) {
-
+        if(v.getId() == R.id.llAddRecipients) {
+            mPresenter.onAddRecipients();
+        }
     }
 
     @Override
@@ -110,28 +98,34 @@ public class DetailsActivity extends BaseActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private UsersAdapter.AddUserListener addUserListener = new UsersAdapter.AddUserListener() {
-        @Override
-        public void addUser() {
-            startActivity(ChooseUserActivity.getIntentToAddUserToChannel(DetailsActivity.this, currentChannel.getName()));
-            finish();
-        }
-    };
-
     public static Intent createIntentForChannel(Context context, Conversation conversation) {
-        Intent intent = new Intent(context, DetailsActivity.class);
+        Intent intent = new Intent(context, ChatDetailsActivity.class);
         intent.putExtra(TAG_CHANNEL, conversation.getChannel());
         return intent;
     }
 
-    private void bindAdapter(List<UserProfile> users) {
-        UsersAdapter adapter = new UsersAdapter(this, users, StringUtil.isStringValueEqual(currentChannel.getOwnerId(), User.getCurrentUserId()) ? addUserListener : null);
-        listView.setAdapter(adapter);
-    }
 
     private void exit(String error) {
         showMessage("Couldn't load channel due to " + error + ". Please try later");
         finish();
     }
 
+    @Override public void setProgressIndicator(boolean active) {
+        if (detailsProgress != null) {
+            detailsProgress.setVisibility(active ? View.VISIBLE : View.INVISIBLE);
+        }
+    }
+
+    @Override public void showRecipients(List<UserProfile> recipients) {
+        if(null == mUserAdapter) {
+            mUserAdapter = new UsersAdapter(this, recipients);
+            listView.setAdapter(mUserAdapter);
+        } else {
+            mUserAdapter.swapData(recipients);
+        }
+    }
+
+    @Override public void finishDetails() {
+        finish();
+    }
 }

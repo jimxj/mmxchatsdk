@@ -11,6 +11,8 @@ import com.magnet.magnetchat.core.managers.InternetConnectionManager;
 import com.magnet.magnetchat.core.managers.MMXManager;
 import com.magnet.magnetchat.core.managers.SharedPreferenceManager;
 import com.magnet.magnetchat.core.managers.TypeFaceManager;
+import com.magnet.max.android.Max;
+import com.magnet.max.android.config.MaxAndroidPropertiesConfig;
 
 public class ChatSampleApplication extends MultiDexApplication {
 
@@ -19,6 +21,10 @@ public class ChatSampleApplication extends MultiDexApplication {
   @Override
   public void onCreate() {
     super.onCreate();
+
+    //Initialization of the MagnetMax
+    Max.init(this, new MaxAndroidPropertiesConfig(this, com.magnet.magnetchat.R.raw.magnetmax));
+
     instance = this;
     onManagersInitialization();
   }

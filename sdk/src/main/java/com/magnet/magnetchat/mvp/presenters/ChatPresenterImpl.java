@@ -3,44 +3,49 @@
  */
 package com.magnet.magnetchat.mvp.presenters;
 
+import android.app.Activity;
 import android.location.Location;
 import android.net.Uri;
-
 import com.magnet.magnetchat.core.managers.ChannelCacheManager;
 import com.magnet.magnetchat.helpers.ChannelHelper;
 import com.magnet.magnetchat.helpers.FileHelper;
 import com.magnet.magnetchat.model.Conversation;
 import com.magnet.magnetchat.model.Message;
 import com.magnet.magnetchat.mvp.api.ChatContract;
+import com.magnet.magnetchat.ui.activities.ChatDetailsActivity;
 import com.magnet.magnetchat.util.Logger;
 import com.magnet.magnetchat.util.Utils;
 import com.magnet.max.android.Max;
 import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;
 import com.magnet.mmx.client.api.MMXChannel;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ChatPresenterImpl implements ChatContract.Presenter {
   protected static final String TAG = "ChatPresenterImpl";
 
-  protected ChatContract.View mView;
+  protected final ChatContract.View mView;
+  protected WeakReference<Activity> mActivityRef;
 
-  private Conversation mCurrentConversation;
-  private List<UserProfile> mRecipients;
+  protected Conversation mCurrentConversation;
+  protected final List<UserProfile> mRecipients;
 
-  public ChatPresenterImpl(ChatContract.View view, Conversation conversation) {
+  public ChatPresenterImpl(ChatContract.View view, Conversation conversation, Activity activity) {
     this.mView = view;
-    mCurrentConversation = conversation;
-    mRecipients = conversation.getSuppliersList();
+    this.mCurrentConversation = conversation;
+    this.mRecipients = conversation.getSuppliersList();
+    this.mActivityRef = new WeakReference<>(activity);
 
     mView.showMessages(conversation.getMessages());
     mView.showRecipients(conversation.getSuppliersList());
   }
 
-  public ChatPresenterImpl(ChatContract.View view, final ArrayList<UserProfile> recipients) {
+  public ChatPresenterImpl(ChatContract.View view, final ArrayList<UserProfile> recipients, Activity activity) {
     this.mView = view;
     this.mRecipients = recipients;
+    this.mActivityRef = new WeakReference<>(activity);
 
     mView.showRecipients(mRecipients);
 
@@ -58,22 +63,25 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
       @Override
       public void onChannelExists(MMXChannel channel) {
         mCurrentConversation = ChannelCacheManager.getInstance().getConversationByName(channel.getName());
-        if(null == mCurrentConversation) {
+        if (null == mCurrentConversation) {
           ChannelHelper.getChannelDetails(channel, new ChannelHelper.OnReadChannelDetailListener() {
             @Override public void onSuccessFinish(Conversation conversation) {
               addNewConversation(conversation);
             }
 
             @Override public void onFailure(Throwable throwable) {
-
+              mView.setProgressIndicator(false);
             }
           });
+        } else {
+          mView.setProgressIndicator(false);
         }
       }
 
       @Override
       public void onFailureCreated(Throwable throwable) {
         Utils.showMessage("Can't create conversation");
+        mView.setProgressIndicator(false);
       }
 
       private void addNewConversation(Conversation conversation) {
@@ -87,7 +95,25 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
   }
 
   @Override public void onLoadMessages(boolean forceUpdate) {
+    if(forceUpdate) {
+      //TODO :
+    } else {
+      if (null != mCurrentConversation && mCurrentConversation.hasUnreadMessage()) {
+        mView.showMessages(mCurrentConversation.getMessages());
+        mCurrentConversation.setHasUnreadMessage(false);
+      }
+    }
+  }
 
+  @Override public void onLoadRecipients(boolean forceUpdate) {
+    if(forceUpdate) {
+      //TODO :
+    } else {
+      if(null != mCurrentConversation && mCurrentConversation.hasRecipientsUpdate()) {
+        mView.showRecipients(mCurrentConversation.getSuppliersList());
+        mCurrentConversation.setHasRecipientsUpdate(false);
+      }
+    }
   }
 
   @Override public void onNewMessage(Message message) {
@@ -102,12 +128,6 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
   @Override public void onReadMessage() {
     if(null != mCurrentConversation) {
       mCurrentConversation.setHasUnreadMessage(false);
-    }
-  }
-
-  @Override public void onRefreshMessages() {
-    if(null != mCurrentConversation) {
-      mView.showMessages(mCurrentConversation.getMessages());
     }
   }
 
@@ -147,6 +167,12 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
 
   @Override public void onMessageLongClick(Message message) {
 
+  }
+
+  @Override public void onChatDetials() {
+    if (mCurrentConversation != null && null != mActivityRef.get()) {
+      mActivityRef.get().startActivity(ChatDetailsActivity.createIntentForChannel(mActivityRef.get(), mCurrentConversation));
+    }
   }
 
   @Override public Conversation getCurrentConversation() {

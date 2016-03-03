@@ -194,7 +194,7 @@ public class EditProfileActivity extends BaseActivity {
   @Override
   public void onBackPressed() {
     showProgress(false);
-    startActivity(ChatListActivity.class, true);
+    startActivity(HomeActivity.class, true);
 
   }
 

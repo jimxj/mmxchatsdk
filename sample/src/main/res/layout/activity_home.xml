@@ -32,4 +32,11 @@
       android:id="@+id/btnChats"
       android:layout_centerVertical="true"
       android:layout_centerHorizontal="true"/>
+  <Button
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="Logout"
+      android:id="@+id/btnLogout"
+      android:layout_below="@+id/btnChats"
+      android:layout_centerHorizontal="true"/>
 </RelativeLayout>

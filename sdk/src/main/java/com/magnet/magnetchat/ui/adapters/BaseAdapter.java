@@ -3,9 +3,7 @@ package com.magnet.magnetchat.ui.adapters;
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
-
 import com.magnet.magnetchat.callbacks.OnRecyclerViewItemClickListener;
-
 import java.util.List;
 
 public abstract class BaseAdapter<V extends RecyclerView.ViewHolder, T> extends RecyclerView.Adapter<V> {
@@ -37,6 +35,21 @@ public abstract class BaseAdapter<V extends RecyclerView.ViewHolder, T> extends 
     @Override
     public int getItemCount() {
         return mData.size();
+    }
+
+    public void addItem(T item) {
+        if(!mData.contains(item)) {
+            mData.add(0, item);
+
+            notifyItemInserted(0);
+        }
+    }
+
+    public void updateItem(T item) {
+        int position = mData.indexOf(item);
+        if(position > -1) {
+            notifyItemChanged(position);
+        }
     }
 
     public void setOnClickListener(OnRecyclerViewItemClickListener onConversationLongClick) {

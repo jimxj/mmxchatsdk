@@ -1,7 +1,6 @@
 package com.magnet.magnetchat.ui.views.section.chat;
 
 import android.graphics.Typeface;
-
 import com.magnet.magnetchat.ui.views.abs.ViewProperty;
 
 /**

@@ -1,18 +1,20 @@
 package com.magnet.magnetchat.mvp.presenters;
 
+import android.app.Activity;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-
 import com.magnet.magnetchat.core.managers.ChannelCacheManager;
 import com.magnet.magnetchat.helpers.ChannelHelper;
 import com.magnet.magnetchat.model.Conversation;
 import com.magnet.magnetchat.mvp.api.ChooseUserContract;
+import com.magnet.magnetchat.ui.activities.ChatActivity;
 import com.magnet.magnetchat.util.Logger;
+import com.magnet.magnetchat.util.Utils;
 import com.magnet.max.android.ApiCallback;
 import com.magnet.max.android.ApiError;
 import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;
-
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -21,20 +23,35 @@ import java.util.List;
 public class ChooseUserPresenterImpl implements ChooseUserContract.Presenter {
 
     private final String SEARCH_QUERY = "firstName:%s* OR lastName:%s*";
-    private final ChooseUserContract.View view;
-    private Conversation conversation;
+    private final ChooseUserContract.View mView;
+    private Conversation mConversation;
+    private ChooseUserContract.ChooseMode mAddmingMode;
+    private WeakReference<Activity> mActivityRef;
+    private List<User> mInitUsers;
 
-    public ChooseUserPresenterImpl(ChooseUserContract.View view) {
-        this.view = view;
+    public ChooseUserPresenterImpl(ChooseUserContract.View view, Activity activity) {
+        this(view, activity, null);
     }
 
-    /**
-     * Method which provide the action when Activity of Fragment call onResume method
-     * (WARNING: Should locate in the onResume method)
-     */
-    @Override
-    public void onResume() {
+    public ChooseUserPresenterImpl(ChooseUserContract.View view, Activity activity, String channelName) {
+        this.mView = view;
+        this.mActivityRef = new WeakReference<>(activity);
+        if(null != channelName) {
+            mConversation = ChannelCacheManager.getInstance().getConversationByName(channelName);
+            mAddmingMode = ChooseUserContract.ChooseMode.MODE_ADD_USER;
+        } else {
+            mAddmingMode = ChooseUserContract.ChooseMode.MODE_NEW_CHAT;
+        }
 
+        onLoadUsers(true);
+    }
+
+    @Override public void onLoadUsers(boolean forceUpdate) {
+        if(forceUpdate) {
+            searchUsers("");
+        } else {
+            mView.updateList(mInitUsers);
+        }
     }
 
     /**
@@ -44,47 +61,70 @@ public class ChooseUserPresenterImpl implements ChooseUserContract.Presenter {
      */
     @Override
     public void searchUsers(@NonNull String query) {
-        view.switchSearchUserProgress(true);
-        User.search(String.format(SEARCH_QUERY, query, query), 100, 0, "lastName:asc", apiCallback);
-    }
-
-    /**
-     * Method which provide to setting of the current conversation
-     *
-     * @param conversation
-     */
-    @Override
-    public void setConversation(@Nullable Conversation conversation) {
-        this.conversation = conversation;
+        mView.setProgressIndicator(true);
+        User.search(String.format(SEARCH_QUERY, query, query), 100, 0, "lastName:asc",
+            userSearchCallback);
     }
 
     @Override
-    public void addUserToChannel(@NonNull List<UserProfile> userList) {
-        view.switchSearchUserProgress(true);
-        ChannelHelper.addUserToConversation(conversation, userList, addUserChannelListener);
+    public void onUsersSelected(@NonNull List<UserProfile> selectedUsers) {
+        if (selectedUsers.size() > 0) {
+            switch (mAddmingMode) {
+                case MODE_ADD_USER:
+                    onAddUsersToChat(selectedUsers);
+                    break;
+                case MODE_NEW_CHAT:
+                    onNewChat(selectedUsers);
+                    break;
+            }
+        } else {
+            Utils.showMessage("No contact was selected");
+        }
+    }
+
+    public void onAddUsersToChat(@NonNull List<UserProfile> selectedUsers) {
+        mView.setProgressIndicator(true);
+        ChannelHelper.addUserToConversation(mConversation, selectedUsers, addUserChannelListener);
+    }
+
+    public void onNewChat(@NonNull List<UserProfile> selectedUsers) {
+        if(null != mActivityRef.get()) {
+            mActivityRef.get().startActivity(ChatActivity.getIntentForNewChannel(mActivityRef.get(), selectedUsers));
+        }
     }
 
     /**
      * Callback which provide to user search
      */
-    private final ApiCallback<List<User>> apiCallback = new ApiCallback<List<User>>() {
+    private final ApiCallback<List<User>> userSearchCallback = new ApiCallback<List<User>>() {
         @Override
         public void success(List<User> users) {
             users.remove(User.getCurrentUser());
-            if (conversation != null) {
-                for (UserProfile user : conversation.getSuppliersList()) {
-                    users.remove(user);
+            if (mConversation != null) {
+                List<Integer> indexes = new ArrayList<>();
+                for(int i = 0; i < users.size(); i++) {
+                    if(null != mConversation.getSupplier(users.get(i).getUserIdentifier())) {
+                        indexes.add(i);
+                    }
+                }
+                for(Integer i : indexes) {
+                    users.remove(i.intValue());
                 }
             }
-            view.switchSearchUserProgress(false);
+
+            if(null == mInitUsers) {
+                mInitUsers = new ArrayList<>(users);
+            }
+
+            mView.setProgressIndicator(false);
             Logger.debug("find users", "success");
-            view.updateList(users);
+            mView.updateList(users);
         }
 
         @Override
         public void failure(ApiError apiError) {
-            view.switchSearchUserProgress(false);
-            view.showInformationMessage("Can't find users");
+            mView.setProgressIndicator(false);
+            Utils.showMessage("Can't find users");
             Logger.error("find users", apiError);
         }
     };
@@ -95,28 +135,26 @@ public class ChooseUserPresenterImpl implements ChooseUserContract.Presenter {
     private final ChannelHelper.OnAddUserListener addUserChannelListener = new ChannelHelper.OnAddUserListener() {
         @Override
         public void onSuccessAdded() {
-            view.switchSearchUserProgress(false);
-            view.closeActivity();
+            mView.setProgressIndicator(false);
+            mView.finishSelection();
         }
 
         @Override
         public void onUserSetExists(String channelSetName) {
-            view.switchSearchUserProgress(false);
-            Conversation anotherConversation = ChannelCacheManager.getInstance().getConversationByName(channelSetName);
-            view.startAnotherConversation(anotherConversation);
+
         }
 
         @Override
         public void onWasAlreadyAdded() {
-            view.switchSearchUserProgress(false);
-            view.showInformationMessage("User was already added");
-            view.closeActivity();
+            mView.setProgressIndicator(false);
+            Utils.showMessage("Contact was already added");
+            mView.finishSelection();
         }
 
         @Override
         public void onFailure(Throwable throwable) {
-            view.switchSearchUserProgress(false);
-            view.showInformationMessage("Can't add user to channel");
+            mView.setProgressIndicator(false);
+            Utils.showMessage("Can't add contact to channel");
         }
     };
 }
