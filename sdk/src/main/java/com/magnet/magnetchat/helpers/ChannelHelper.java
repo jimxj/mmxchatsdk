@@ -62,7 +62,8 @@ public class ChannelHelper {
     }
 
     public static void getSubscriptionDetails(final int offset, final int limit, final MMXChannel.OnFinishedListener<List<ChannelDetail>> listener) {
-        if(null != ChannelCacheManager.getInstance().getAllSubscriptions()) {
+        boolean needToRefreshSubscriptions = 0 == offset || null == ChannelCacheManager.getInstance().getAllSubscriptions();
+        if(!needToRefreshSubscriptions) {
             getChannelDetails(ChannelCacheManager.getInstance().getSubscriptions(offset, limit), listener);
         } else {
             MMXChannel.getAllSubscriptions(new MMXChannel.OnFinishedListener<List<MMXChannel>>() {
