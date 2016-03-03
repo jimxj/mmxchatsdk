@@ -9,7 +9,6 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.SearchView;
 import com.magnet.magnetchat.R;
-import com.magnet.magnetchat.core.managers.TypeFaceManager;
 
 /**
  * Created by dlernatovich on 2/10/16.
@@ -46,7 +45,7 @@ public class CustomSearchView extends SearchView {
 
             searchPlate.setHint("Search messages");
             searchPlate.setTextSize(TypedValue.COMPLEX_UNIT_PX, getResources().getDimension(R.dimen.text_14));
-            searchPlate.setTypeface(TypeFaceManager.getInstance().getBarriolFont());
+            //searchPlate.setTypeface(TypeFaceManager.getInstance().getBarriolFont());
             searchPlate.setImeOptions(EditorInfo.IME_ACTION_SEARCH);
 
 //            LinearLayout editFrame = (LinearLayout) findViewById(searchEditFrameID);

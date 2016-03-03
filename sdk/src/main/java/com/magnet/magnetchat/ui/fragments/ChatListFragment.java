@@ -12,20 +12,20 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.widget.SearchView;
-
+import com.magnet.magnetchat.Constants;
 import com.magnet.magnetchat.R;
+import com.magnet.magnetchat.callbacks.EndlessRecyclerViewScrollListener;
+import com.magnet.magnetchat.callbacks.OnRecyclerViewItemClickListener;
 import com.magnet.magnetchat.core.managers.ChannelCacheManager;
 import com.magnet.magnetchat.helpers.ChannelHelper;
 import com.magnet.magnetchat.model.Conversation;
 import com.magnet.magnetchat.mvp.api.ChatListContract;
-import com.magnet.magnetchat.callbacks.OnRecyclerViewItemClickListener;
 import com.magnet.magnetchat.mvp.presenters.ChatListPresenterImpl;
 import com.magnet.magnetchat.ui.activities.ChatActivity;
 import com.magnet.magnetchat.ui.activities.ChooseUserActivity;
 import com.magnet.magnetchat.ui.adapters.ChatsAdapter;
 import com.magnet.magnetchat.ui.custom.CustomSearchView;
 import com.magnet.magnetchat.ui.views.DividerItemDecoration;
-
 import java.util.List;
 
 public class ChatListFragment extends BaseFragment implements ChatListContract.View {
@@ -57,13 +57,19 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
         conversationsList.setHasFixedSize(true);
         conversationsList.setLayoutManager(layoutManager);
         conversationsList.addItemDecoration(new DividerItemDecoration(getActivity(), R.drawable.divider));
+        conversationsList.addOnScrollListener(new EndlessRecyclerViewScrollListener(layoutManager) {
+            @Override public void onLoadMore(int page, int totalItemsCount) {
+                Log.d(TAG, "------------------onLoadMore : " + page + "/" + totalItemsCount + "," + presenter.getAllConversations().size() + "------------------\n");
+                presenter.onLoadConversations(totalItemsCount, Constants.CONVERSATION_PAGE_SIZE);
+            }
+        });
 
         // Setup refresh listener which triggers new data loading
         swipeContainer = (SwipeRefreshLayout) containerView.findViewById(R.id.swipeContainer);
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                presenter.onLoadConversations(true);
+                presenter.onLoadConversations(0, Constants.CONVERSATION_PAGE_SIZE);
             }
         });
         swipeContainer.setColorSchemeResources(R.color.colorPrimaryDark, R.color.colorPrimary, R.color.colorAccent);
@@ -80,7 +86,7 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
             @Override
             public void run() {
                 swipeContainer.setRefreshing(true);
-                presenter.onLoadConversations(true);
+                presenter.onLoadConversations(0, Constants.CONVERSATION_PAGE_SIZE);
             }
         });
     }
@@ -105,7 +111,7 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
             search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
                 @Override
                 public boolean onQueryTextSubmit(String query) {
-                    presenter.onSearchMessage(query);
+                    presenter.onSearchConversation(query);
                     return true;
                 }
 
@@ -113,7 +119,7 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
                 public boolean onQueryTextChange(String newText) {
                     if (newText.isEmpty()) {
                         hideKeyboard();
-                        presenter.onLoadConversations(false);
+                        presenter.onResetSearch();
                     }
                     return false;
                 }
@@ -123,7 +129,7 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
                 @Override
                 public boolean onClose() {
                     search.onActionViewCollapsed();
-                    presenter.onLoadConversations(false);
+                    presenter.onResetSearch();
                     return true;
                 }
             });
@@ -135,7 +141,7 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
     public void onClick(View v) {
         super.onClick(v);
         if (v.getId() == R.id.fabHomeCreateMessage) {
-            showNewChat();
+            createNewChat();
         }
     }
 
@@ -219,13 +225,19 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
         swipeContainer.setRefreshing(active);
     }
 
-    private void showChatList(List<Conversation> chatList) {
-        showList(chatList);
+    @Override
+    public void createNewChat() {
+        startActivity(ChooseUserActivity.getIntentToCreateChannel(getActivity()));
     }
 
-    @Override
-    public void showNewChat() {
-        startActivity(ChooseUserActivity.getIntentToCreateChannel(getActivity()));
+    @Override public void showConversationUpdate(Conversation conversation, boolean isNew) {
+        if(null != adapter) {
+            if(isNew) {
+                adapter.addItem(conversation);
+            } else {
+                adapter.updateItem(conversation);
+            }
+        }
     }
 
     @Override

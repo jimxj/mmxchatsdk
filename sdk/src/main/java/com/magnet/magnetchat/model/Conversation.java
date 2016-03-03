@@ -26,6 +26,7 @@ public class Conversation {
     private Map<String, UserProfile> suppliers;
     private List<Message> messages;
     private boolean hasUnreadMessage;
+    private boolean hasRecipientsUpdate;
     private MMXChannel channel;
     private Date lastActiveTime;
     private UserProfile owner;
@@ -83,11 +84,20 @@ public class Conversation {
     public void addSupplier(UserProfile user) {
         if (getSuppliers().get(user.getUserIdentifier()) == null) {
             getSuppliers().put(user.getUserIdentifier(), user);
+            hasRecipientsUpdate = true;
         }
     }
 
     public boolean hasUnreadMessage() {
         return hasUnreadMessage;
+    }
+
+    public boolean hasRecipientsUpdate() {
+        return hasRecipientsUpdate;
+    }
+
+    public void setHasRecipientsUpdate(boolean hasRecipientsUpdate) {
+        this.hasRecipientsUpdate = hasRecipientsUpdate;
     }
 
     public void setHasUnreadMessage(boolean hasUnreadMessage) {

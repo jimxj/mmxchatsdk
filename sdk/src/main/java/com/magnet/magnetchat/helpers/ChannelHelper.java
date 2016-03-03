@@ -16,9 +16,7 @@ import com.magnet.mmx.client.api.ChannelMatchType;
 import com.magnet.mmx.client.api.ListResult;
 import com.magnet.mmx.client.api.MMXChannel;
 import com.magnet.mmx.client.api.MMXMessage;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -63,29 +61,33 @@ public class ChannelHelper {
         void onFailure(Throwable throwable);
     }
 
-    public static void getAllSubscriptionDetails(final MMXChannel.OnFinishedListener<List<ChannelDetail>> listener) {
-        MMXChannel.getAllSubscriptions(new MMXChannel.OnFinishedListener<List<MMXChannel>>() {
-            @Override
-            public void onSuccess(final List<MMXChannel> channels) {
-                Logger.debug(TAG, "getAllSubscriptionDetails success : " + channels);
-                //ChannelCacheManager.getInstance().resetConversations();
-                if (null != channels && channels.size() > 0) {
-                    getChannelDetails(channels, listener);
-                } else {
-                    if (listener != null) {
-                        listener.onSuccess(null);
+    public static void getSubscriptionDetails(final int offset, final int limit, final MMXChannel.OnFinishedListener<List<ChannelDetail>> listener) {
+        boolean needToRefreshSubscriptions = 0 == offset || null == ChannelCacheManager.getInstance().getAllSubscriptions();
+        if(!needToRefreshSubscriptions) {
+            getChannelDetails(ChannelCacheManager.getInstance().getSubscriptions(offset, limit), listener);
+        } else {
+            MMXChannel.getAllSubscriptions(new MMXChannel.OnFinishedListener<List<MMXChannel>>() {
+                @Override public void onSuccess(final List<MMXChannel> channels) {
+                    Logger.debug(TAG, "getSubscriptionDetails success : " + channels);
+                    //ChannelCacheManager.getInstance().resetConversations();
+                    if (null != channels && channels.size() > 0) {
+                        ChannelCacheManager.getInstance().setAllSubscriptions(channels);
+                        getChannelDetails(ChannelCacheManager.getInstance().getSubscriptions(offset, limit), listener);
+                    } else {
+                        if (listener != null) {
+                            listener.onSuccess(null);
+                        }
                     }
                 }
-            }
 
-            @Override
-            public void onFailure(MMXChannel.FailureCode failureCode, Throwable throwable) {
-                Logger.error(TAG, throwable, "getAllSubscriptionDetails failed");
-                if (listener != null) {
-                    listener.onFailure(failureCode, throwable);
+                @Override public void onFailure(MMXChannel.FailureCode failureCode, Throwable throwable) {
+                    Logger.error(TAG, throwable, "getSubscriptionDetails failed");
+                    if (listener != null) {
+                        listener.onFailure(failureCode, throwable);
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
 
@@ -280,34 +282,6 @@ public class ChannelHelper {
                 }
             }
         });
-    }
-
-    public static void receiveMessage(final MMXMessage mmxMessage) {
-        Logger.debug("new message");
-        MMXChannel channel = mmxMessage.getChannel();
-        if (channel != null) {
-            String channelName = channel.getName();
-            Conversation conversation;
-            conversation = ChannelCacheManager.getInstance().getConversationByName(channelName);
-
-            checkMessageConversation(mmxMessage, conversation);
-        }
-    }
-
-    private static void checkMessageConversation(final MMXMessage mmxMessage, Conversation conversation) {
-        if (conversation != null) {
-            conversation.addMessage(Message.createMessageFrom(mmxMessage));
-        } else {
-            getChannelDetails(mmxMessage.getChannel(), new OnReadChannelDetailListener() {
-                @Override public void onSuccessFinish(Conversation conversation) {
-
-                }
-
-                @Override public void onFailure(Throwable throwable) {
-
-                }
-            });
-        }
     }
 
     public static void unsubscribeFromChannel(final Conversation conversation, final OnLeaveChannelListener listener) {

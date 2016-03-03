@@ -1,11 +1,7 @@
 package com.magnet.magnetchat.mvp.api;
 
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-
-import com.magnet.magnetchat.model.Conversation;
 import com.magnet.max.android.UserProfile;
-
 import java.util.List;
 
 /**
@@ -13,21 +9,16 @@ import java.util.List;
  */
 public interface ChooseUserContract {
 
-    interface View {
+    enum ChooseMode {MODE_NEW_CHAT, MODE_ADD_USER}
 
-        /**
-         * Method which provide the show message
-         *
-         * @param message current message
-         */
-        void showInformationMessage(@NonNull String message);
+    interface View {
 
         /**
          * Method which provide to switching of the search user progress
          *
-         * @param isNeedShow
+         * @param active
          */
-        void switchSearchUserProgress(boolean isNeedShow);
+        void setProgressIndicator(boolean active);
 
         /**
          * Method which provide the list updating from the list of users object
@@ -39,24 +30,16 @@ public interface ChooseUserContract {
         /**
          * Method which provide the closing of the Activity
          */
-        void closeActivity();
-
-        /**
-         * Method which provide to start of the another conversation
-         *
-         * @param anotherConversation conversation object
-         */
-        void startAnotherConversation(@Nullable Conversation anotherConversation);
+        void finishSelection();
 
     }
 
     interface Presenter {
 
         /**
-         * Method which provide the action when Activity of Fragment call onResume method
-         * (WARNING: Should locate in the onResume method)
+         * Method which provide to getting of the reading channels
          */
-        void onResume();
+        void onLoadUsers(boolean forceUpdate);
 
         /**
          * Method which provide the searching of the user by query
@@ -65,20 +48,11 @@ public interface ChooseUserContract {
          */
         void searchUsers(@NonNull String query);
 
-        /**
-         * Method which provide to setting of the current conversation
-         *
-         * @param conversation
-         */
-        void setConversation(@Nullable Conversation conversation);
+        void onUsersSelected(@NonNull final List<UserProfile> userList);
 
-        /**
-         * Method which provide to add the users to the channel
-         *
-         * @param userList user list
-         */
-        void addUserToChannel(@NonNull final List<UserProfile> userList);
+        void onAddUsersToChat(@NonNull List<UserProfile> selectedUsers);
 
+        void onNewChat(@NonNull List<UserProfile> selectedUsers);
     }
 
 }

@@ -7,7 +7,6 @@ import android.support.v7.widget.AppCompatTextView;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.ImageView;
-
 import com.magnet.magnetchat.R;
 import com.magnet.magnetchat.core.managers.InternetConnectionManager;
 import com.magnet.magnetchat.helpers.UserHelper;
@@ -17,7 +16,6 @@ import com.magnet.magnetchat.util.Logger;
 import com.magnet.max.android.ApiError;
 import com.magnet.max.android.User;
 import com.magnet.mmx.client.api.MMX;
-
 import java.net.SocketTimeoutException;
 
 /**

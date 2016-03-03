@@ -1,7 +1,6 @@
 package com.magnet.magnetchat.mvp.api;
 
 import com.magnet.magnetchat.model.Conversation;
-
 import java.util.List;
 
 /**
@@ -18,6 +17,7 @@ public interface ChatListContract {
          */
         void showList(List<Conversation> conversations);
 
+
         /**
          * Method which provide the list updating
          */
@@ -26,7 +26,9 @@ public interface ChatListContract {
         /**
          * Method which provide to show of the new chat
          */
-        void showNewChat();
+        void createNewChat();
+
+        void showConversationUpdate(Conversation conversation, boolean isNew);
 
         /**
          * Method which provide the conversation details
@@ -55,14 +57,18 @@ public interface ChatListContract {
         /**
          * Method which provide to getting of the reading channels
          */
-        void onLoadConversations(boolean forceUpdate);
+        void onLoadConversations(int offset, int limit);
+
+        void onConversationUpdate(Conversation conversation, boolean isNew);
 
         /**
          * Method which provide to show of the messages by query
          *
          * @param query search query
          */
-        void onSearchMessage(final String query);
+        void onSearchConversation(final String query);
+
+        void onResetSearch();
 
         /**
          * Method which provide the action when user click on the conversation channel

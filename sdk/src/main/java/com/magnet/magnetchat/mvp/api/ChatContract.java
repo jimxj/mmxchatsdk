@@ -7,7 +7,6 @@ import android.location.Location;
 import android.net.Uri;
 import com.magnet.magnetchat.model.Conversation;
 import com.magnet.magnetchat.model.Message;
-import com.magnet.max.android.Attachment;
 import com.magnet.max.android.UserProfile;
 import java.util.List;
 
@@ -39,19 +38,17 @@ public interface ChatContract {
     void showLocation(Message message);
 
     void showImage(Message message);
-
-    void showChatDetails(Conversation conversation);
   }
 
   interface Presenter {
 
     void onLoadMessages(boolean forceUpdate);
 
+    void onLoadRecipients(boolean forceUpdate);
+
     void onNewMessage(Message message);
 
     void onReadMessage();
-
-    void onRefreshMessages();
 
     void onSendText(String text);
 
@@ -62,6 +59,8 @@ public interface ChatContract {
     void onMessageClick(Message message);
 
     void onMessageLongClick(Message message);
+
+    void onChatDetials();
 
     Conversation getCurrentConversation();
 
