@@ -6,13 +6,9 @@ import android.util.Log;
 import android.view.View;
 import com.magnet.magnetchat.R;
 import com.magnet.magnetchat.callbacks.BaseActivityCallback;
-import com.magnet.magnetchat.core.managers.ChannelCacheManager;
 import com.magnet.magnetchat.ui.fragments.BaseFragment;
 import com.magnet.magnetchat.ui.fragments.ChatListFragment;
 import com.magnet.max.android.User;
-import com.magnet.mmx.client.api.MMX;
-import com.magnet.mmx.client.api.MMXChannel;
-import com.magnet.mmx.client.api.MMXMessage;
 
 public class ChatListActivity extends BaseActivity implements BaseActivityCallback {
     private static final String TAG = ChatListActivity.class.getSimpleName();
@@ -49,12 +45,6 @@ public class ChatListActivity extends BaseActivity implements BaseActivityCallba
         }
     }
 
-    @Override
-    protected void onPause() {
-        MMX.unregisterListener(homeMessageReceiver);
-        super.onPause();
-    }
-
     /**
      * method which provide the setting of the current fragment co container mView
      *
@@ -69,19 +59,6 @@ public class ChatListActivity extends BaseActivity implements BaseActivityCallba
     public void onReceiveFragmentEvent(Event event) {
 
     }
-
-    /**
-     * Receiver which check if drawer button should show indicator
-     */
-    private MMX.EventListener homeMessageReceiver = new MMX.EventListener() {
-        @Override
-        public boolean onMessageReceived(MMXMessage mmxMessage) {
-            if (mmxMessage != null && mmxMessage.getChannel() != null) {
-
-            }
-            return false;
-        }
-    };
 
     @Override public void onClick(View v) {
 
