@@ -47,8 +47,46 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
      * Method which provide to getting of the reading channels
      */
     @Override
-    public void onLoadConversations(int offset, int limit) {
-        ChannelHelper.getSubscriptionDetails(offset, limit, channelsListener);
+    public void onLoadConversations(final int offset, int limit) {
+        ChannelHelper.getSubscriptionDetails(offset, limit, new MMXChannel.OnFinishedListener<List<ChannelDetail>>() {
+            @Override
+            public void onSuccess(List<ChannelDetail> channelDetails) {
+                List<Conversation> newConversations = new ArrayList<Conversation>();
+                if (null != channelDetails) {
+                    for (ChannelDetail cd : channelDetails) {
+                        Conversation c = new Conversation(cd);
+                        ChannelCacheManager.getInstance().addConversation(c);
+                        newConversations.add(c);
+                    }
+                }
+
+                mConversations.addAll(newConversations);
+
+                if(offset == 0) {
+                    showAllConversations();
+                }
+
+                finishGetChannels();
+            }
+
+            @Override
+            public void onFailure(MMXChannel.FailureCode failureCode, Throwable throwable) {
+                handleError(failureCode.toString(), throwable);
+                finishGetChannels();
+            }
+
+            private void finishGetChannels() {
+                isLoadingWhenCreating = false;
+                mView.setProgressIndicator(false);
+            }
+
+            private void handleError(String message, Throwable throwable) {
+                Logger.error(TAG, "Can't get conversations due to "
+                    + message
+                    + ", throwable : \n"
+                    + throwable);
+            }
+        });
     }
 
     @Override
@@ -212,46 +250,6 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
         @Override
         public void onReceive(Context context, Intent intent) {
             showAllConversations();
-        }
-    };
-
-    /**
-     * Listener which provide the listening of the watch dog notification for channel creation
-     */
-    private final MMXChannel.OnFinishedListener<List<ChannelDetail>> channelsListener = new MMXChannel.OnFinishedListener<List<ChannelDetail>>() {
-        @Override
-        public void onSuccess(List<ChannelDetail> channelDetails) {
-            if (null != channelDetails) {
-                for (ChannelDetail cd : channelDetails) {
-                    Conversation c = new Conversation(cd);
-                    ChannelCacheManager.getInstance().addConversation(c);
-                }
-            }
-
-            mConversations.clear();
-            mConversations.addAll(ChannelCacheManager.getInstance().getConversations());
-
-            showAllConversations();
-
-            finishGetChannels();
-        }
-
-        @Override
-        public void onFailure(MMXChannel.FailureCode failureCode, Throwable throwable) {
-            handleError(failureCode.toString(), throwable);
-            finishGetChannels();
-        }
-
-        private void finishGetChannels() {
-            isLoadingWhenCreating = false;
-            mView.setProgressIndicator(false);
-        }
-
-        private void handleError(String message, Throwable throwable) {
-            Logger.error(TAG, "Can't get conversations due to "
-                    + message
-                    + ", throwable : \n"
-                    + throwable);
         }
     };
 
