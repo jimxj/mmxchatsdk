@@ -133,7 +133,7 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
     public void onClick(View v) {
         super.onClick(v);
         if (v.getId() == R.id.fabHomeCreateMessage) {
-            showNewChat();
+            createNewChat();
         }
     }
 
@@ -217,13 +217,19 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
         swipeContainer.setRefreshing(active);
     }
 
-    private void showChatList(List<Conversation> chatList) {
-        showList(chatList);
+    @Override
+    public void createNewChat() {
+        startActivity(ChooseUserActivity.getIntentToCreateChannel(getActivity()));
     }
 
-    @Override
-    public void showNewChat() {
-        startActivity(ChooseUserActivity.getIntentToCreateChannel(getActivity()));
+    @Override public void showConversationUpdate(Conversation conversation, boolean isNew) {
+        if(null != adapter) {
+            if(isNew) {
+                adapter.addItem(conversation);
+            } else {
+                adapter.updateItem(conversation);
+            }
+        }
     }
 
     @Override

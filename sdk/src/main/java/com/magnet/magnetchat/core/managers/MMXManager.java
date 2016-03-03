@@ -32,8 +32,6 @@ public class MMXManager {
 
 
     private MMXManager(Context context) {
-        //Initialization of the MagnetMax
-        Max.init(context, new MaxAndroidPropertiesConfig(context, R.raw.magnetmax));
         MMX.registerListener(eventListener);
         MMX.registerWakeupBroadcast(context, new Intent("MMX_WAKEUP_ACTION"));
         com.magnet.mmx.client.common.Log.setLoggable(null, com.magnet.mmx.client.common.Log.VERBOSE);
@@ -48,7 +46,6 @@ public class MMXManager {
      *
      * @param context application context
      * @return
-     * @see com.magnet.magnetchat.core.application.CurrentApplication
      */
     public static MMXManager getInstance(Context context) {
         if (instance == null) {
@@ -96,7 +93,7 @@ public class MMXManager {
         @Override
         public boolean onMessageReceived(MMXMessage mmxMessage) {
             Logger.debug("onMessageReceived", mmxMessage);
-            ChannelHelper.receiveMessage(mmxMessage);
+            ChannelCacheManager.getInstance().handleIncomingMessage(mmxMessage, null);
             if ((mmxMessage.getSender() != null)
                     && (!mmxMessage.getSender().getUserIdentifier().equals(User.getCurrentUserId()))) {
                 if (mmxMessage.getChannel() != null) {

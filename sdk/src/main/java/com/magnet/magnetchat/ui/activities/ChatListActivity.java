@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.View;
 import com.magnet.magnetchat.R;
 import com.magnet.magnetchat.callbacks.BaseActivityCallback;
+import com.magnet.magnetchat.core.managers.ChannelCacheManager;
 import com.magnet.magnetchat.ui.fragments.BaseFragment;
 import com.magnet.magnetchat.ui.fragments.ChatListFragment;
 import com.magnet.max.android.User;
@@ -17,8 +18,6 @@ public class ChatListActivity extends BaseActivity implements BaseActivityCallba
     private static final String TAG = ChatListActivity.class.getSimpleName();
 
     Toolbar toolbar;
-
-    private int unreadSupport = 0;
 
     @Override
     protected int getLayoutResource() {
@@ -72,14 +71,13 @@ public class ChatListActivity extends BaseActivity implements BaseActivityCallba
     }
 
     /**
-     * Receiver which check if drawer button should show indicator, that support section has unread message
+     * Receiver which check if drawer button should show indicator
      */
     private MMX.EventListener homeMessageReceiver = new MMX.EventListener() {
         @Override
         public boolean onMessageReceived(MMXMessage mmxMessage) {
             if (mmxMessage != null && mmxMessage.getChannel() != null) {
-                MMXChannel channel = mmxMessage.getChannel();
-                unreadSupport++;
+
             }
             return false;
         }

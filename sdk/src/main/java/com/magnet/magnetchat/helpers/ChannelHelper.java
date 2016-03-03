@@ -280,34 +280,6 @@ public class ChannelHelper {
         });
     }
 
-    public static void receiveMessage(final MMXMessage mmxMessage) {
-        Logger.debug("new message");
-        MMXChannel channel = mmxMessage.getChannel();
-        if (channel != null) {
-            String channelName = channel.getName();
-            Conversation conversation;
-            conversation = ChannelCacheManager.getInstance().getConversationByName(channelName);
-
-            checkMessageConversation(mmxMessage, conversation);
-        }
-    }
-
-    private static void checkMessageConversation(final MMXMessage mmxMessage, Conversation conversation) {
-        if (conversation != null) {
-            conversation.addMessage(Message.createMessageFrom(mmxMessage));
-        } else {
-            getChannelDetails(mmxMessage.getChannel(), new OnReadChannelDetailListener() {
-                @Override public void onSuccessFinish(Conversation conversation) {
-
-                }
-
-                @Override public void onFailure(Throwable throwable) {
-
-                }
-            });
-        }
-    }
-
     public static void unsubscribeFromChannel(final Conversation conversation, final OnLeaveChannelListener listener) {
         final MMXChannel channel = conversation.getChannel();
         if (channel != null) {

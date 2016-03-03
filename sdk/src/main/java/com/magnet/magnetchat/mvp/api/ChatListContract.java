@@ -17,6 +17,7 @@ public interface ChatListContract {
          */
         void showList(List<Conversation> conversations);
 
+
         /**
          * Method which provide the list updating
          */
@@ -25,7 +26,9 @@ public interface ChatListContract {
         /**
          * Method which provide to show of the new chat
          */
-        void showNewChat();
+        void createNewChat();
+
+        void showConversationUpdate(Conversation conversation, boolean isNew);
 
         /**
          * Method which provide the conversation details
@@ -55,6 +58,8 @@ public interface ChatListContract {
          * Method which provide to getting of the reading channels
          */
         void onLoadConversations(boolean forceUpdate);
+
+        void onConversationUpdate(Conversation conversation, boolean isNew);
 
         /**
          * Method which provide to show of the messages by query

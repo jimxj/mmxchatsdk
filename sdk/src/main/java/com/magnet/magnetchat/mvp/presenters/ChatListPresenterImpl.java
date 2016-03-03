@@ -4,9 +4,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import com.magnet.magnetchat.callbacks.NewMessageProcessListener;
 import com.magnet.magnetchat.core.managers.ChannelCacheManager;
 import com.magnet.magnetchat.helpers.ChannelHelper;
 import com.magnet.magnetchat.model.Conversation;
+import com.magnet.magnetchat.model.Message;
 import com.magnet.magnetchat.mvp.api.ChatListContract;
 import com.magnet.magnetchat.util.Logger;
 import com.magnet.magnetchat.util.Utils;
@@ -49,6 +51,10 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
         } else {
             showAllConversations();
         }
+    }
+
+    @Override public void onConversationUpdate(Conversation conversation, boolean isNew) {
+        mView.showConversationUpdate(conversation, isNew);
     }
 
     /**
@@ -148,7 +154,16 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
         @Override
         public boolean onMessageReceived(MMXMessage mmxMessage) {
             Logger.debug(TAG, "onMessageReceived");
-            showAllConversations();
+            ChannelCacheManager.getInstance().handleIncomingMessage(mmxMessage, new NewMessageProcessListener() {
+                @Override public void onProcessSuccess(Conversation conversation, Message message,
+                    boolean isNewChat) {
+                    onConversationUpdate(conversation, isNewChat);
+                }
+
+                @Override public void onProcessFailure(Throwable throwable) {
+                    Logger.error(TAG, "onProcessFailure", throwable);
+                }
+            });
             return false;
         }
 

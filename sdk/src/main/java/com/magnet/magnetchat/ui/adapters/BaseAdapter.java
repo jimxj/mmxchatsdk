@@ -37,6 +37,21 @@ public abstract class BaseAdapter<V extends RecyclerView.ViewHolder, T> extends 
         return mData.size();
     }
 
+    public void addItem(T item) {
+        if(!mData.contains(item)) {
+            mData.add(0, item);
+
+            notifyItemInserted(0);
+        }
+    }
+
+    public void updateItem(T item) {
+        int position = mData.indexOf(item);
+        if(position > -1) {
+            notifyItemChanged(position);
+        }
+    }
+
     public void setOnClickListener(OnRecyclerViewItemClickListener onConversationLongClick) {
         this.mOnClickListener = onConversationLongClick;
     }
