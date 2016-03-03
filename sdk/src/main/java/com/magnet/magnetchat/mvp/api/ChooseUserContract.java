@@ -1,7 +1,10 @@
 package com.magnet.magnetchat.mvp.api;
 
+import android.app.Activity;
 import android.support.annotation.NonNull;
+
 import com.magnet.max.android.UserProfile;
+
 import java.util.List;
 
 /**
@@ -32,6 +35,13 @@ public interface ChooseUserContract {
          */
         void finishSelection();
 
+        /**
+         * Method which provide the getting of the activity
+         *
+         * @return current activity
+         */
+        Activity getActivity();
+
     }
 
     interface Presenter {
@@ -48,10 +58,25 @@ public interface ChooseUserContract {
          */
         void searchUsers(@NonNull String query);
 
+        /**
+         * Method which provide the user selection
+         *
+         * @param userList user list
+         */
         void onUsersSelected(@NonNull final List<UserProfile> userList);
 
+        /**
+         * Method which provide to adding of the user to the chat
+         *
+         * @param selectedUsers selected users
+         */
         void onAddUsersToChat(@NonNull List<UserProfile> selectedUsers);
 
+        /**
+         * Method which provide the creating of the new chat
+         *
+         * @param selectedUsers selected users
+         */
         void onNewChat(@NonNull List<UserProfile> selectedUsers);
     }
 
