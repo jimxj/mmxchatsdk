@@ -45,12 +45,8 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
      * Method which provide to getting of the reading channels
      */
     @Override
-    public void onLoadConversations(boolean forceUpdate) {
-        if (forceUpdate) {
-            ChannelHelper.getAllSubscriptionDetails(channelsListener);
-        } else {
-            showAllConversations();
-        }
+    public void onLoadConversations(int offset, int limit) {
+        ChannelHelper.getSubscriptionDetails(offset, limit, channelsListener);
     }
 
     @Override public void onConversationUpdate(Conversation conversation, boolean isNew) {
@@ -94,7 +90,7 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
      * @param query search query
      */
     @Override
-    public void onSearchMessage(String query) {
+    public void onSearchConversation(String query) {
         final List<Conversation> searchResult = new ArrayList<>();
         for (Conversation conversation : getAllConversations()) {
             for (UserProfile userProfile : conversation.getSuppliersList()) {
@@ -108,6 +104,10 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
             Utils.showMessage(Max.getApplicationContext(), "Nothing found");
         }
         mView.showList(searchResult);
+    }
+
+    @Override public void onResetSearch() {
+        showAllConversations();
     }
 
     /**

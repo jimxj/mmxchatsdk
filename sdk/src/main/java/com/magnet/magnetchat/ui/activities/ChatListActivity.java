@@ -25,7 +25,7 @@ public class ChatListActivity extends BaseActivity implements BaseActivityCallba
         super.onCreate(savedInstanceState);
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
-        //setSupportActionBar(toolbar);
+        setSupportActionBar(toolbar);
         toolbar.setTitle(User.getCurrentUser().getDisplayName());
 
         setFragment();

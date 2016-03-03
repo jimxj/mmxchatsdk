@@ -61,29 +61,32 @@ public class ChannelHelper {
         void onFailure(Throwable throwable);
     }
 
-    public static void getAllSubscriptionDetails(final MMXChannel.OnFinishedListener<List<ChannelDetail>> listener) {
-        MMXChannel.getAllSubscriptions(new MMXChannel.OnFinishedListener<List<MMXChannel>>() {
-            @Override
-            public void onSuccess(final List<MMXChannel> channels) {
-                Logger.debug(TAG, "getAllSubscriptionDetails success : " + channels);
-                //ChannelCacheManager.getInstance().resetConversations();
-                if (null != channels && channels.size() > 0) {
-                    getChannelDetails(channels, listener);
-                } else {
-                    if (listener != null) {
-                        listener.onSuccess(null);
+    public static void getSubscriptionDetails(final int offset, final int limit, final MMXChannel.OnFinishedListener<List<ChannelDetail>> listener) {
+        if(null != ChannelCacheManager.getInstance().getAllSubscriptions()) {
+            getChannelDetails(ChannelCacheManager.getInstance().getSubscriptions(offset, limit), listener);
+        } else {
+            MMXChannel.getAllSubscriptions(new MMXChannel.OnFinishedListener<List<MMXChannel>>() {
+                @Override public void onSuccess(final List<MMXChannel> channels) {
+                    Logger.debug(TAG, "getSubscriptionDetails success : " + channels);
+                    //ChannelCacheManager.getInstance().resetConversations();
+                    if (null != channels && channels.size() > 0) {
+                        ChannelCacheManager.getInstance().setAllSubscriptions(channels);
+                        getChannelDetails(ChannelCacheManager.getInstance().getSubscriptions(offset, limit), listener);
+                    } else {
+                        if (listener != null) {
+                            listener.onSuccess(null);
+                        }
                     }
                 }
-            }
 
-            @Override
-            public void onFailure(MMXChannel.FailureCode failureCode, Throwable throwable) {
-                Logger.error(TAG, throwable, "getAllSubscriptionDetails failed");
-                if (listener != null) {
-                    listener.onFailure(failureCode, throwable);
+                @Override public void onFailure(MMXChannel.FailureCode failureCode, Throwable throwable) {
+                    Logger.error(TAG, throwable, "getSubscriptionDetails failed");
+                    if (listener != null) {
+                        listener.onFailure(failureCode, throwable);
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
 

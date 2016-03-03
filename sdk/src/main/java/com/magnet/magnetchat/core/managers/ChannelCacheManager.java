@@ -24,6 +24,8 @@ public class ChannelCacheManager {
 
     private static ChannelCacheManager _instance;
 
+    private List<MMXChannel> allSubscriptions;
+
     /**
      * Key is channel name
      */
@@ -52,6 +54,31 @@ public class ChannelCacheManager {
         }
 
         return _instance;
+    }
+
+    public void setAllSubscriptions(List<MMXChannel> allSubscriptions) {
+        this.allSubscriptions = allSubscriptions;
+    }
+
+    public List<MMXChannel> getAllSubscriptions() {
+        return allSubscriptions;
+    }
+
+    public List<MMXChannel> getSubscriptions(int offset, int limit) {
+        if (null != allSubscriptions) {
+            int size = allSubscriptions.size();
+
+            if (limit > 0) {
+                if (offset >= 0 && offset < size) {
+                    return (offset + limit) > size ? allSubscriptions.subList(offset, size)
+                        : allSubscriptions.subList(offset, offset + limit);
+                }
+            } else {
+                return allSubscriptions;
+            }
+        }
+
+        return Collections.EMPTY_LIST;
     }
 
     public List<Conversation> getConversations() {

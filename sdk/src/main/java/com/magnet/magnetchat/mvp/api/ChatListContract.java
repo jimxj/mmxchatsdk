@@ -57,7 +57,7 @@ public interface ChatListContract {
         /**
          * Method which provide to getting of the reading channels
          */
-        void onLoadConversations(boolean forceUpdate);
+        void onLoadConversations(int offset, int limit);
 
         void onConversationUpdate(Conversation conversation, boolean isNew);
 
@@ -66,7 +66,9 @@ public interface ChatListContract {
          *
          * @param query search query
          */
-        void onSearchMessage(final String query);
+        void onSearchConversation(final String query);
+
+        void onResetSearch();
 
         /**
          * Method which provide the action when user click on the conversation channel

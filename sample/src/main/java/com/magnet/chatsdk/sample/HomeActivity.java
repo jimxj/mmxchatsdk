@@ -10,12 +10,17 @@ import butterknife.ButterKnife;
 import butterknife.InjectView;
 import butterknife.OnClick;
 import com.magnet.magnetchat.ui.activities.ChatListActivity;
+import com.magnet.max.android.ApiCallback;
+import com.magnet.max.android.ApiError;
 import com.magnet.max.android.User;
 
 public class HomeActivity extends AppCompatActivity {
 
   @InjectView(R.id.btnChats)
   Button btnChats;
+
+  @InjectView(R.id.btnLogout)
+  Button btnLogout;
 
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -33,5 +38,19 @@ public class HomeActivity extends AppCompatActivity {
   @OnClick(R.id.btnChats)
   public void onChatsButtonClick(View v) {
     startActivity(new Intent(this, ChatListActivity.class));
+  }
+
+  @OnClick(R.id.btnLogout)
+  public void onLogoutClick(View v) {
+    User.logout(new ApiCallback<Boolean>() {
+      @Override public void success(Boolean aBoolean) {
+        startActivity(new Intent(HomeActivity.this, LoginActivity.class));
+        finish();
+      }
+
+      @Override public void failure(ApiError apiError) {
+
+      }
+    });
   }
 }
