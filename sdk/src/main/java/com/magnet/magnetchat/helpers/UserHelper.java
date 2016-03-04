@@ -10,6 +10,7 @@ import com.magnet.max.android.UserProfile;
 import com.magnet.max.android.auth.model.UserRegistrationInfo;
 import com.magnet.max.android.util.StringUtil;
 import com.magnet.mmx.client.api.MMX;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -22,6 +23,7 @@ public class UserHelper {
 
     private static final int MAX_USER_NAMES_LENGTH = 22;
 
+    private static final String USER_NAMES_SUFIX = "...";
 
     /**
      * Login listener
@@ -176,13 +178,7 @@ public class UserHelper {
      * @return display name
      */
     public static String getDisplayName(UserProfile user) {
-        if (user == null) {
-            return "";
-        }
-        if (StringUtil.isNotEmpty(user.getDisplayName())) {
-            return user.getDisplayName();
-        }
-        return String.format("%s %s", user.getFirstName(), user.getLastName());
+        return getDisplayNames(Arrays.asList(user));
     }
 
     /**
@@ -193,23 +189,31 @@ public class UserHelper {
      */
     public static String getDisplayNames(List<UserProfile> userList) {
         StringBuilder users = new StringBuilder();
-        if (userList.size() == 1) {
-            return userList.get(0).getDisplayName();
-        }
         for (int i = 0; i < userList.size(); i++) {
             if (userList.get(i) != null) {
                 users.append(userList.get(i).getDisplayName());
-                if (users.length() < MAX_USER_NAMES_LENGTH && i != userList.size() - 1) {
+                if (users.length() < MAX_USER_NAMES_LENGTH - 2 && i != userList.size() - 1) {
                     users.append(", ");
                 } else {
-                    if (users.length() >= MAX_USER_NAMES_LENGTH) {
-                        users.append(" ...");
-                        break;
-                    }
+                    break;
                 }
             }
         }
-        return users.toString();
+        return truncateRecipientsName(users.toString());
+    }
+
+    public static String truncateRecipientsName(String s) {
+        return truncateString(s, MAX_USER_NAMES_LENGTH, USER_NAMES_SUFIX);
+    }
+
+    public static String truncateString(String s ,int length, String sufix) {
+        if(StringUtil.isNotEmpty(s)) {
+            if(s.length() > length) {
+                return s.substring(0, length) + sufix;
+            }
+        }
+
+        return s;
     }
 
     /**
