@@ -103,14 +103,13 @@ public class ChannelCacheManager {
         if (null != conversation) {
             Conversation existingConversation = getConversationByName(conversation.getChannel().getName());
             if (existingConversation == null) {
-                if (allSubscriptions != null) {
-                    if (!allSubscriptions.contains(conversation.getChannel())) {
-                        if (allSubscriptions.size() >= conversations.size()) {
-                            allSubscriptions.add(conversations.size(), conversation.getChannel());
-                        }
+                if (allSubscriptions != null && !allSubscriptions.contains(conversation.getChannel())) {
+                    if (allSubscriptions.size() >= conversations.size()) {
+                        allSubscriptions.add(conversations.size(), conversation.getChannel());
                     }
-                    conversations.put(conversation.getChannel().getName(), conversation);
                 }
+
+                conversations.put(conversation.getChannel().getName(), conversation);
                 //TODO : handling new message
                 //conversation.setHasUnreadMessage(true);
                 //conversation.setLastActiveTime(new Date());
