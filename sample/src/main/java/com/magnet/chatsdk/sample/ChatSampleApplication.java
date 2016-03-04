@@ -43,9 +43,6 @@ public class ChatSampleApplication extends MultiDexApplication {
    */
   private void onManagersInitialization() {
     ChatSDK.init(this);
-    SharedPreferenceManager.getInstance(this);
-    InternetConnectionManager.getInstance(this);
-    ChannelCacheManager.getInstance();
   }
 
 
