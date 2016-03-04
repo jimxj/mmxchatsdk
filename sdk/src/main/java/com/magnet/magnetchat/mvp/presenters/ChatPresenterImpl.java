@@ -8,6 +8,7 @@ import android.location.Location;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 
+import android.util.Log;
 import com.magnet.magnetchat.core.managers.ChannelCacheManager;
 import com.magnet.magnetchat.helpers.ChannelHelper;
 import com.magnet.magnetchat.helpers.FileHelper;
@@ -20,6 +21,8 @@ import com.magnet.magnetchat.util.Utils;
 import com.magnet.max.android.Max;
 import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;
+import com.magnet.mmx.client.api.ChannelDetailOptions;
+import com.magnet.mmx.client.api.ListResult;
 import com.magnet.mmx.client.api.MMX;
 import com.magnet.mmx.client.api.MMXChannel;
 import com.magnet.mmx.client.api.MMXMessage;
@@ -65,7 +68,9 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
             public void onChannelExists(MMXChannel channel) {
                 mCurrentConversation = ChannelCacheManager.getInstance().getConversationByName(channel.getName());
                 if (null == mCurrentConversation) {
-                    ChannelHelper.getChannelDetails(channel, new ChannelHelper.OnReadChannelDetailListener() {
+                    ChannelHelper.getChannelDetails(channel,
+                        null,
+                        new ChannelHelper.OnReadChannelDetailListener() {
                         @Override
                         public void onSuccessFinish(Conversation conversation) {
                             addNewConversation(conversation);
@@ -90,7 +95,6 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
             private void addNewConversation(Conversation conversation) {
                 mCurrentConversation = conversation;
                 ChannelCacheManager.getInstance().addConversation(mCurrentConversation);
-                ChannelCacheManager.getInstance().setConversationListUpdated();
                 mView.setProgressIndicator(false);
                 mView.showMessages(mCurrentConversation.getMessages());
             }
@@ -128,6 +132,29 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
     }
 
     @Override
+    public void onLoadMessages(final int offset, final int limit) {
+        if(null != mCurrentConversation) {
+            List<Message> requestedMessages = mCurrentConversation.getMessages(offset, limit);
+            if(requestedMessages.size() < limit) {
+                mCurrentConversation.getChannel().getMessages(null, null, limit, offset, false, new MMXChannel.OnFinishedListener<ListResult<MMXMessage>>() {
+                    @Override public void onSuccess(ListResult<MMXMessage> mmxMessageListResult) {
+                        if (null != mmxMessageListResult) {
+                            mCurrentConversation.insertMessages(mmxMessageListResult.items);
+                            mView.refreshMessages(offset, limit);
+                        }
+                    }
+
+                    @Override public void onFailure(MMXChannel.FailureCode failureCode, Throwable throwable) {
+                        Log.e(TAG, "onLoadMessages : " + offset + "/" + limit, throwable);
+                    }
+                });
+            } else {
+                Log.d(TAG, "-----messages were already loaded");
+            }
+        }
+    }
+
+    @Override
     public void onLoadRecipients(boolean forceUpdate) {
         if (forceUpdate) {
             //TODO :
@@ -142,9 +169,7 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
     @Override
     public void onNewMessage(Message message) {
         if (null != mCurrentConversation) {
-            mCurrentConversation.addMessage(message);
-            mCurrentConversation.setHasUnreadMessage(false);
-
+            mCurrentConversation.addMessage(message, false);
             mView.showNewMessage(message);
         }
     }

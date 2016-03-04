@@ -32,6 +32,8 @@ public interface ChatContract {
          */
         void showMessages(List<Message> messages);
 
+        void refreshMessages(int offset, int limit);
+
         /**
          * Method which provide to show the recipients
          *
@@ -104,6 +106,8 @@ public interface ChatContract {
 
 
         void onLoadMessages(boolean forceUpdate);
+
+        void onLoadMessages(int offset, int limit);
 
         void onLoadRecipients(boolean forceUpdate);
 

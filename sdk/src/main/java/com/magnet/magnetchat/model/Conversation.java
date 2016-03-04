@@ -24,7 +24,7 @@ public class Conversation {
     private static final String TAG = Conversation.class.getSimpleName();
 
     private Map<String, UserProfile> suppliers;
-    private List<Message> messages;
+    private List<Message> mMessages = new ArrayList();
     private boolean hasUnreadMessage;
     private boolean hasRecipientsUpdate;
     private MMXChannel channel;
@@ -60,7 +60,6 @@ public class Conversation {
         this.channel = channelDetail.getChannel();
 
         //Logger.debug(TAG, "channel subscribers ", channelDetail.getSubscribers(), " channel ", channel.getName());
-        owner = channelDetail.getOwner();
         addChannelDetailData(channelDetail);
     }
 
@@ -82,9 +81,11 @@ public class Conversation {
     }
 
     public void addSupplier(UserProfile user) {
-        if (getSuppliers().get(user.getUserIdentifier()) == null) {
-            getSuppliers().put(user.getUserIdentifier(), user);
-            hasRecipientsUpdate = true;
+        if (user != null && !user.equals(User.getCurrentUser())) {
+            if (getSuppliers().get(user.getUserIdentifier()) == null) {
+                getSuppliers().put(user.getUserIdentifier(), user);
+                hasRecipientsUpdate = true;
+            }
         }
     }
 
@@ -128,29 +129,68 @@ public class Conversation {
     }
 
     public List<Message> getMessages() {
-        if (messages == null) {
-            messages = new ArrayList<>();
-        }
-        return messages;
+        return mMessages;
     }
 
-    public boolean addMessage(Message message) {
-        if (!getMessages().contains(message)) {
-            messages.add(message);
-
-            User sender = message.getMmxMessage().getSender();
-            if (sender != null && !sender.equals(User.getCurrentUser())) {
-                if (getSupplier(sender.getUserIdentifier()) == null) {
-                    addSupplier(sender);
-                }
-                setHasUnreadMessage(true);
-
-                lastActiveTime = new Date();
+    public List<Message> getMessages(int offset, int limit) {
+        if (limit > 0) {
+            int size = mMessages.size();
+            if (offset >= 0 && offset < size) {
+                return (offset + limit) > size ? mMessages.subList(offset, size)
+                    : mMessages.subList(offset, offset + limit);
             }
+        } else {
+            // return a copy
+            return new ArrayList<>(mMessages);
+        }
+
+        return Collections.EMPTY_LIST;
+    }
+
+    public boolean addMessage(Message message, boolean isNewMessage) {
+        if (!mMessages.contains(message)) {
+            mMessages.add(message);
+
+            addSupplier(message.getMmxMessage().getSender());
+
+            if(isNewMessage) {
+                setHasUnreadMessage(true);
+            }
+
+            lastActiveTime = new Date();
+
             return true;
         }
 
         return false;
+    }
+
+    public boolean addMessages(List<MMXMessage> mmxMessages) {
+        return addMessages(mmxMessages, false);
+    }
+
+    public boolean addMessages(List<MMXMessage> mmxMessages, boolean isNew) {
+        boolean addedResult = false;
+        if(null != mmxMessages && ! mmxMessages.isEmpty()) {
+            for(MMXMessage mmxMessage : mmxMessages) {
+                boolean thisAddResult = addMessage(Message.createMessageFrom(mmxMessage), isNew);
+                addedResult = addedResult || thisAddResult;
+            }
+        }
+
+        return addedResult;
+    }
+
+    public boolean insertMessages(List<MMXMessage> mmxMessages) {
+        boolean addedResult = false;
+        if(null != mmxMessages && ! mmxMessages.isEmpty()) {
+            for(MMXMessage mmxMessage : mmxMessages) {
+                boolean thisAddResult = insertMessage(Message.createMessageFrom(mmxMessage));
+                addedResult = addedResult || thisAddResult;
+            }
+        }
+
+        return addedResult;
     }
 
     /**
@@ -158,6 +198,7 @@ public class Conversation {
      * @param channelDetail
      */
     public void addChannelDetailData(ChannelDetail channelDetail) {
+        owner = channelDetail.getOwner();
         for (UserProfile up : channelDetail.getSubscribers()) {
             if (owner == null && up.getUserIdentifier().equals(channel.getOwnerId())) {
                 owner = up;
@@ -168,9 +209,7 @@ public class Conversation {
         }
 
         //Logger.debug(TAG, "channel messages ", channelDetail.getMessages(), " channel ", channel.getName());
-        for (MMXMessage mmxMessage : channelDetail.getMessages()) {
-            this.addMessage(Message.createMessageFrom(mmxMessage));
-        }
+        this.addMessages(channelDetail.getMessages());
     }
 
     public boolean mergeFrom(Conversation conversation) {
@@ -186,7 +225,7 @@ public class Conversation {
             }
 
             for (Message message : conversation.getMessages()) {
-                newMessageAdded = newMessageAdded || this.addMessage(message);
+                newMessageAdded = newMessageAdded || this.addMessage(message, false);
             }
         }
 
@@ -251,7 +290,7 @@ public class Conversation {
             @Override
             public void onSuccess(String s) {
                 Logger.debug("send message", "success");
-                addMessage(message);
+                addMessage(message, false);
                 listener.onSuccessSend(message);
             }
 
@@ -269,11 +308,23 @@ public class Conversation {
         return owner.getUserIdentifier();
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return new StringBuilder("conversation : {\n").append("channel : ").append(channel).append("\n")
             .append("messages : ").append(Arrays.toString(getMessages().toArray())).append("\n")
             .append("suppliers : ").append(Arrays.toString(getSuppliers().values().toArray())).append("\n")
             .append("}").toString();
     }
 
+    private boolean insertMessage(Message message) {
+        if (!mMessages.contains(message)) {
+            mMessages.add(0, message);
+
+            addSupplier(message.getMmxMessage().getSender());
+
+            return true;
+        }
+
+        return false;
+    }
 }
