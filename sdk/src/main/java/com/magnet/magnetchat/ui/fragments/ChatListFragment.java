@@ -14,7 +14,7 @@ import android.view.View;
 import android.widget.SearchView;
 import com.magnet.magnetchat.Constants;
 import com.magnet.magnetchat.R;
-import com.magnet.magnetchat.callbacks.EndlessRecyclerViewScrollListener;
+import com.magnet.magnetchat.callbacks.EndlessLinearRecyclerViewScrollListener;
 import com.magnet.magnetchat.callbacks.OnRecyclerViewItemClickListener;
 import com.magnet.magnetchat.core.managers.ChannelCacheManager;
 import com.magnet.magnetchat.helpers.ChannelHelper;
@@ -57,9 +57,9 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
         conversationsList.setHasFixedSize(true);
         conversationsList.setLayoutManager(layoutManager);
         conversationsList.addItemDecoration(new DividerItemDecoration(getActivity(), R.drawable.divider));
-        conversationsList.addOnScrollListener(new EndlessRecyclerViewScrollListener(layoutManager) {
+        conversationsList.addOnScrollListener(new EndlessLinearRecyclerViewScrollListener(layoutManager) {
             @Override public void onLoadMore(int page, int totalItemsCount) {
-                Log.d(TAG, "------------------onLoadMore : " + page + "/" + totalItemsCount + "," + presenter.getAllConversations().size() + "------------------\n");
+                Log.d(TAG, "------------onLoadMore channel : " + page + "/" + totalItemsCount + "\n");
                 presenter.onLoadConversations(totalItemsCount, Constants.CONVERSATION_PAGE_SIZE);
             }
         });
@@ -72,7 +72,7 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
                 presenter.onLoadConversations(0, Constants.CONVERSATION_PAGE_SIZE);
             }
         });
-        swipeContainer.setColorSchemeResources(R.color.colorPrimaryDark, R.color.colorPrimary, R.color.colorAccent);
+        swipeContainer.setColorSchemeResources(R.color.primary_dark, R.color.primary, R.color.accent);
 
         fabCreateMessage = (FloatingActionButton) containerView.findViewById(R.id.fabHomeCreateMessage);
         fabCreateMessage.setVisibility(View.VISIBLE);

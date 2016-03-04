@@ -27,7 +27,9 @@ import android.widget.TextView;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
+import com.magnet.magnetchat.Constants;
 import com.magnet.magnetchat.R;
+import com.magnet.magnetchat.callbacks.EndlessLinearRecyclerViewScrollListener;
 import com.magnet.magnetchat.callbacks.OnRecyclerViewItemClickListener;
 import com.magnet.magnetchat.core.managers.ChannelCacheManager;
 import com.magnet.magnetchat.helpers.PermissionHelper;
@@ -77,7 +79,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
     TextView sendMessageButton;
     Toolbar toolbar;
 
-    ChatContract.Presenter presenter;
+    ChatContract.Presenter mPresenter;
 
     @Override
     protected int getLayoutResource() {
@@ -115,12 +117,18 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
         layoutManager.setStackFromEnd(true);
         layoutManager.setReverseLayout(false);
         messagesListView.setLayoutManager(layoutManager);
+        messagesListView.addOnScrollListener(new EndlessLinearRecyclerViewScrollListener(layoutManager) {
+            @Override public void onLoadMore(int page, int totalItemsCount) {
+                Log.d(TAG, "------------onLoadMore Message: " + page + "/" + totalItemsCount + "," + mPresenter.getCurrentConversation().getMessages().size() + "\n");
+                mPresenter.onLoadMessages(totalItemsCount, Constants.MESSAGE_PAGE_SIZE);
+            }
+        });
 
         channelName = getIntent().getStringExtra(TAG_CHANNEL_NAME);
         if (null != channelName) {
             Conversation currentConversation = ChannelCacheManager.getInstance().getConversationByName(channelName);
             if (currentConversation != null) {
-                presenter = new ChatPresenterImpl(this, currentConversation);
+                mPresenter = new ChatPresenterImpl(this, currentConversation);
             } else {
                 showMessage("Can load the conversation");
                 finish();
@@ -129,7 +137,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
         } else {
             ArrayList<UserProfile> recipients = getIntent().getParcelableArrayListExtra(TAG_CREATE_WITH_RECIPIENTS);
             if (recipients != null) {
-                presenter = new ChatPresenterImpl(this, recipients);
+                mPresenter = new ChatPresenterImpl(this, recipients);
             } else {
                 showMessage("Can load the conversation");
                 finish();
@@ -147,7 +155,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
             String text = getSimpleText(editMessage);
             if (text != null && !text.isEmpty()) {
                 sendMessageButton.setEnabled(false);
-                presenter.onSendText(text);
+                mPresenter.onSendText(text);
             }
         } else if (v.getId() == R.id.chatAddAttachment) {
             showAttachmentDialog();
@@ -160,7 +168,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
             attachmentDialog.dismiss();
         }
 
-        presenter.onPause();
+        mPresenter.onPause();
 
         super.onPause();
     }
@@ -168,10 +176,10 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
     @Override
     protected void onResume() {
         super.onResume();
-        presenter.onLoadRecipients(false);
-        presenter.onLoadMessages(false);
+        mPresenter.onLoadRecipients(false);
+        mPresenter.onLoadMessages(false);
 
-        presenter.onResume();
+        mPresenter.onResume();
     }
 
     @Override
@@ -195,7 +203,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.menuChatOpenDetails) {
-            presenter.onChatDetails();
+            mPresenter.onChatDetails();
         } else if (item.getItemId() == android.R.id.home) {
             onBackPressed();
         }
@@ -224,7 +232,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
             mAdapter.setmOnClickListener(new OnRecyclerViewItemClickListener() {
                 @Override
                 public void onClick(int position) {
-                    presenter.onMessageClick(mAdapter.getItem(position));
+                    mPresenter.onMessageClick(mAdapter.getItem(position));
                 }
 
                 @Override
@@ -235,6 +243,17 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
             messagesListView.setAdapter(mAdapter);
         } else {
             mAdapter.swapData(messages);
+        }
+    }
+
+    @Override
+    public void refreshMessages(int offset, int limit) {
+        if(null != mAdapter) {
+            if(offset >= 0 && limit > 0) {
+                mAdapter.notifyItemRangeInserted(offset, limit);
+            } else {
+                mAdapter.notifyDataSetChanged();
+            }
         }
     }
 
@@ -365,7 +384,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
                 Uri[] uris = new Uri[parcelableUris.length];
                 System.arraycopy(parcelableUris, 0, uris, 0, parcelableUris.length);
 
-                presenter.onSendImages(uris);
+                mPresenter.onSendImages(uris);
             }
         }
     }
@@ -447,7 +466,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
         }
         Location currentLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
         if (currentLocation != null) {
-            presenter.onSendLocation(currentLocation);
+            mPresenter.onSendLocation(currentLocation);
         } else {
             showMessage("Can't get location");
         }
