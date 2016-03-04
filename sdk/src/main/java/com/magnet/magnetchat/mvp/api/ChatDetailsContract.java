@@ -1,6 +1,7 @@
 package com.magnet.magnetchat.mvp.api;
 
 import com.magnet.max.android.UserProfile;
+
 import java.util.List;
 
 /**
@@ -8,26 +9,33 @@ import java.util.List;
  */
 public interface ChatDetailsContract {
 
-  interface View {
-    /**
-     * Show or hide the progress bar
-     *
-     * @param active
-     */
-    void setProgressIndicator(boolean active);
+    interface View {
+        /**
+         * Show or hide the progress bar
+         *
+         * @param active
+         */
+        void setProgressIndicator(boolean active);
 
-    void showRecipients(List<UserProfile> recipients);
+        void showRecipients(List<UserProfile> recipients);
 
-    void finishDetails();
-  }
+        void finishDetails();
+    }
 
-  interface Presenter {
+    interface Presenter {
 
-    /**
-     * Method which provide to getting of the reading channels
-     */
-    void onLoadRecipients(boolean forceUpdate);
+        /**
+         * Method which provide to getting of the reading channels
+         */
+        void onLoadRecipients(boolean forceUpdate);
 
-    void onAddRecipients();
-  }
+        void onAddRecipients();
+
+        /**
+         * Method which provide to check if this channel relative to user
+         *
+         * @return
+         */
+        boolean isOwnerChannel();
+    }
 }

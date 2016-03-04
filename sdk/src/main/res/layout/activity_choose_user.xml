@@ -94,12 +94,13 @@
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/registerSaveBtn"
-        android:layout_width="@dimen/dimen_60"
-        android:layout_height="@dimen/dimen_60"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/dimen_10"
-        app:backgroundTint="@color/accent"
         android:foregroundGravity="bottom"
-        android:src="@drawable/ic_add_message_floater" />
+        android:src="@drawable/ic_add_message_floating_button"
+        app:backgroundTint="@color/accent"
+        app:fabSize="normal" />
 
 </android.support.design.widget.CoordinatorLayout>

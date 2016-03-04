@@ -16,4 +16,5 @@
     <string name="text_remember_me">Remember me</string>
     <string name="text_sign_in">Sign in</string>
     <string name="text_create_account">Create account</string>
+    <string name="text_add_user">Add user</string>
 </resources>

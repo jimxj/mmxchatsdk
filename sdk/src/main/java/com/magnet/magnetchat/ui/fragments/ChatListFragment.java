@@ -12,6 +12,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.widget.SearchView;
+
 import com.magnet.magnetchat.Constants;
 import com.magnet.magnetchat.R;
 import com.magnet.magnetchat.callbacks.EndlessLinearRecyclerViewScrollListener;
@@ -26,6 +27,7 @@ import com.magnet.magnetchat.ui.activities.ChooseUserActivity;
 import com.magnet.magnetchat.ui.adapters.ChatsAdapter;
 import com.magnet.magnetchat.ui.custom.CustomSearchView;
 import com.magnet.magnetchat.ui.views.DividerItemDecoration;
+
 import java.util.List;
 
 public class ChatListFragment extends BaseFragment implements ChatListContract.View {
@@ -58,7 +60,8 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
         conversationsList.setLayoutManager(layoutManager);
         conversationsList.addItemDecoration(new DividerItemDecoration(getActivity(), R.drawable.divider));
         conversationsList.addOnScrollListener(new EndlessLinearRecyclerViewScrollListener(layoutManager) {
-            @Override public void onLoadMore(int page, int totalItemsCount) {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount) {
                 Log.d(TAG, "------------onLoadMore channel : " + page + "/" + totalItemsCount + "\n");
                 presenter.onLoadConversations(totalItemsCount, Constants.CONVERSATION_PAGE_SIZE);
             }
@@ -158,7 +161,8 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
             if (adapter == null) {
                 adapter = new ChatsAdapter(getActivity(), conversations);
                 adapter.setOnClickListener(new OnRecyclerViewItemClickListener() {
-                    @Override public void onClick(int position) {
+                    @Override
+                    public void onClick(int position) {
                         Conversation conversation = adapter.getItem(position);
                         if (conversation != null) {
                             Log.d(TAG, "Channel " + conversation.getChannel().getName() + " is selected");
@@ -166,7 +170,8 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
                         }
                     }
 
-                    @Override public void onLongClick(int position) {
+                    @Override
+                    public void onLongClick(int position) {
                         Conversation conversation = adapter.getItem(position);
                         if (conversation != null) {
                             presenter.onConversationLongClick(conversation);
@@ -230,9 +235,10 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
         startActivity(ChooseUserActivity.getIntentToCreateChannel(getActivity()));
     }
 
-    @Override public void showConversationUpdate(Conversation conversation, boolean isNew) {
-        if(null != adapter) {
-            if(isNew) {
+    @Override
+    public void showConversationUpdate(Conversation conversation, boolean isNew) {
+        if (null != adapter) {
+            if (isNew) {
                 adapter.addItem(conversation);
             } else {
                 adapter.updateItem(conversation);
@@ -245,7 +251,8 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
         startActivity(ChatActivity.getIntentWithChannel(getActivity(), conversation));
     }
 
-    @Override public void showLeaveConfirmation(Conversation conversation) {
+    @Override
+    public void showLeaveConfirmation(Conversation conversation) {
         showLeaveDialog(conversation);
     }
 

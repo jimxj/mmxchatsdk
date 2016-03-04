@@ -12,15 +12,15 @@
 
     <style name="MagnetChatSDKTheme.Toolbar" parent="ThemeOverlay.AppCompat.ActionBar">
         <!-- Customize color of navigation drawer icon and back arrow -->
-        <item name="colorControlNormal">@color/accent</item>
-        <item name="actionMenuTextColor">@color/accent</item>
+        <item name="colorControlNormal">@android:color/white</item>
+        <item name="actionMenuTextColor">@android:color/white</item>
     </style>
 
     <style name="MagnetChatSDKTheme.Toolbar.Title" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
         <!-- Set proper title size -->
         <item name="android:textSize">@dimen/abc_text_size_title_material_toolbar</item>
         <!-- Set title color -->
-        <item name="android:textColor">@color/accent</item>
+        <item name="android:textColor">@android:color/white</item>
     </style>
 
     <style name="Titles">
