@@ -189,6 +189,8 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
      * Method which provide to showing of the all conversations
      */
     private void showAllConversations() {
+        mConversations.clear();
+        mConversations.addAll(ChannelCacheManager.getInstance().getConversations());
         mView.showList(mConversations);
     }
 

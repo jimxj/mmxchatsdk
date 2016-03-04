@@ -2,6 +2,7 @@ package com.magnet.magnetchat.helpers;
 
 import android.content.Intent;
 
+import com.magnet.magnetchat.Constants;
 import com.magnet.magnetchat.core.managers.ChannelCacheManager;
 import com.magnet.magnetchat.model.Conversation;
 import com.magnet.magnetchat.util.Logger;
@@ -103,9 +104,12 @@ public class ChannelHelper {
     //    getChannelDetails(Arrays.asList(channel), listener);
     //}
 
-    public static void getChannelDetails(final MMXChannel channel, final OnReadChannelDetailListener listener) {
+    public static void getChannelDetails(final MMXChannel channel, ChannelDetailOptions options, final OnReadChannelDetailListener listener) {
+        if(null == options) {
+            options = new ChannelDetailOptions.Builder().numOfMessages(Constants.PRE_FETCHED_MESSAGE_SIZE).numOfSubcribers(Constants.PRE_FETCHED_SUBSCRIBER_SIZE).build();
+        }
         MMXChannel.getChannelDetail(Arrays.asList(channel),
-                new ChannelDetailOptions.Builder().numOfMessages(50).numOfSubcribers(10).build(),
+                options,
                 new MMXChannel.OnFinishedListener<List<ChannelDetail>>() {
                     @Override
                     public void onSuccess(List<ChannelDetail> channelDetails) {
@@ -144,7 +148,7 @@ public class ChannelHelper {
 
     public static void getChannelDetails(final List<MMXChannel> channels, final MMXChannel.OnFinishedListener<List<ChannelDetail>> listener) {
         MMXChannel.getChannelDetail(channels,
-                new ChannelDetailOptions.Builder().numOfMessages(50).numOfSubcribers(10).build(),
+                new ChannelDetailOptions.Builder().numOfMessages(Constants.PRE_FETCHED_MESSAGE_SIZE).numOfSubcribers(Constants.PRE_FETCHED_SUBSCRIBER_SIZE).build(),
                 listener);
         //MMXChannel.getChannelDetail(channels,
         //        new ChannelDetailOptions.Builder().numOfMessages(50).numOfSubcribers(10).build(),

@@ -8,7 +8,13 @@ import android.support.v7.widget.StaggeredGridLayoutManager;
 /**
  * Copyright (c) 2012-2016 Magnet Systems. All rights reserved.
  */
-public abstract class EndlessRecyclerViewScrollListener extends RecyclerView.OnScrollListener {
+public abstract class EndlessLinearRecyclerViewScrollListener extends RecyclerView.OnScrollListener {
+
+  public enum ScrollDirection {
+    UP,
+    DOWN
+  }
+
   // The minimum amount of items to have below your current scroll position
   // before loading more.
   private int visibleThreshold = 10;
@@ -20,21 +26,22 @@ public abstract class EndlessRecyclerViewScrollListener extends RecyclerView.OnS
   private boolean loading = true;
   // Sets the starting page index
   private int startingPageIndex = 0;
+  // The scroll direction to monitor, default is Down
+  private ScrollDirection scrollDirection;
 
-  RecyclerView.LayoutManager mLayoutManager;
+  LinearLayoutManager mLayoutManager;
 
-  public EndlessRecyclerViewScrollListener(LinearLayoutManager layoutManager) {
+  public EndlessLinearRecyclerViewScrollListener(LinearLayoutManager layoutManager) {
     this.mLayoutManager = layoutManager;
+    this.scrollDirection = layoutManager.getStackFromEnd() ? ScrollDirection.UP : ScrollDirection.DOWN;
   }
 
-  public EndlessRecyclerViewScrollListener(GridLayoutManager layoutManager) {
-    this.mLayoutManager = layoutManager;
-    visibleThreshold = visibleThreshold * layoutManager.getSpanCount();
+  public ScrollDirection getScrollDirection() {
+    return null != scrollDirection ? scrollDirection : ScrollDirection.DOWN;
   }
 
-  public EndlessRecyclerViewScrollListener(StaggeredGridLayoutManager layoutManager) {
-    this.mLayoutManager = layoutManager;
-    visibleThreshold = visibleThreshold * layoutManager.getSpanCount();
+  public void setScrollDirection(ScrollDirection scrollDirection) {
+    this.scrollDirection = scrollDirection;
   }
 
   public int getLastVisibleItem(int[] lastVisibleItemPositions) {
@@ -55,18 +62,12 @@ public abstract class EndlessRecyclerViewScrollListener extends RecyclerView.OnS
   // but first we check if we are waiting for the previous load to finish.
   @Override
   public void onScrolled(RecyclerView view, int dx, int dy) {
-    int lastVisibleItemPosition = 0;
-    int totalItemCount = mLayoutManager.getItemCount();
-
-    if (mLayoutManager instanceof StaggeredGridLayoutManager) {
-      int[] lastVisibleItemPositions = ((StaggeredGridLayoutManager) mLayoutManager).findLastVisibleItemPositions(null);
-      // get maximum element within the list
-      lastVisibleItemPosition = getLastVisibleItem(lastVisibleItemPositions);
-    } else if (mLayoutManager instanceof LinearLayoutManager) {
-      lastVisibleItemPosition = ((LinearLayoutManager) mLayoutManager).findLastVisibleItemPosition();
-    } else if (mLayoutManager instanceof GridLayoutManager) {
-      lastVisibleItemPosition = ((GridLayoutManager) mLayoutManager).findLastVisibleItemPosition();
+    // Check the scrolling direction first
+    if((dy > 0 && getScrollDirection() == ScrollDirection.DOWN) || (dy < 0 && getScrollDirection() == ScrollDirection.UP)) {
+      return;
     }
+
+    int totalItemCount = mLayoutManager.getItemCount();
 
     // If the total item count is zero and the previous isn't, assume the
     // list is invalidated and should be reset back to initial state
@@ -89,7 +90,7 @@ public abstract class EndlessRecyclerViewScrollListener extends RecyclerView.OnS
     // the visibleThreshold and need to reload more data.
     // If we do need to reload some more data, we execute onLoadMore to fetch the data.
     // threshold should reflect how many total columns there are too
-    if (!loading && (lastVisibleItemPosition + visibleThreshold) > totalItemCount) {
+    if (!loading && shouldLoadMore()) {
       currentPage++;
       onLoadMore(currentPage, totalItemCount);
       loading = true;
@@ -98,5 +99,18 @@ public abstract class EndlessRecyclerViewScrollListener extends RecyclerView.OnS
 
   // Defines the process for actually loading more data based on page
   public abstract void onLoadMore(int page, int totalItemsCount);
+
+  private int getLastVisiblePosition() {
+    return getScrollDirection() == ScrollDirection.DOWN ? mLayoutManager.findLastVisibleItemPosition() : mLayoutManager.findFirstVisibleItemPosition();
+  }
+
+  private boolean shouldLoadMore() {
+    int lastVisibleItemPosition = getLastVisiblePosition();
+    if(getScrollDirection() == ScrollDirection.DOWN) {
+      return (lastVisibleItemPosition + visibleThreshold) > mLayoutManager.getItemCount();
+    } else {
+      return lastVisibleItemPosition < visibleThreshold;
+    }
+  }
 
 }

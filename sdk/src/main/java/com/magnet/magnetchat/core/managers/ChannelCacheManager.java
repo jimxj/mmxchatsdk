@@ -58,6 +58,10 @@ public class ChannelCacheManager {
     }
 
     public void setAllSubscriptions(List<MMXChannel> allSubscriptions) {
+        if(null != this.allSubscriptions) {
+            this.allSubscriptions.clear();
+            conversations.clear();
+        }
         this.allSubscriptions = allSubscriptions;
     }
 
@@ -99,7 +103,14 @@ public class ChannelCacheManager {
         if (null != conversation) {
             Conversation existingConversation = getConversationByName(conversation.getChannel().getName());
             if (existingConversation == null) {
+                if(!allSubscriptions.contains(conversation.getChannel())) {
+                    if (allSubscriptions.size() >= conversations.size()) {
+                        allSubscriptions.add(conversations.size(), conversation.getChannel());
+                    }
+                }
+
                 conversations.put(conversation.getChannel().getName(), conversation);
+
                 //TODO : handling new message
                 //conversation.setHasUnreadMessage(true);
                 //conversation.setLastActiveTime(new Date());
@@ -162,16 +173,16 @@ public class ChannelCacheManager {
             Conversation conversation = ChannelCacheManager.getInstance().getConversationByName(channelName);
             final Message message = Message.createMessageFrom(mmxMessage);
             if (conversation != null) {
-                conversation.addMessage(message);
+                conversation.addMessage(message, true);
                 if (null != listener) {
                     listener.onProcessSuccess(conversation, message, false);
                 }
             } else {
-                ChannelHelper.getChannelDetails(mmxMessage.getChannel(), new ChannelHelper.OnReadChannelDetailListener() {
+                ChannelHelper.getChannelDetails(mmxMessage.getChannel(), null, new ChannelHelper.OnReadChannelDetailListener() {
                     @Override
                     public void onSuccessFinish(Conversation conversation) {
                         addConversation(conversation);
-                        conversation.addMessage(message);
+                        conversation.addMessage(message, true);
 
                         if (null != listener) {
                             listener.onProcessSuccess(conversation, message, true);
