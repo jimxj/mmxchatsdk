@@ -27,9 +27,7 @@ import android.widget.TextView;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
-import com.magnet.magnetchat.Constants;
 import com.magnet.magnetchat.R;
-import com.magnet.magnetchat.callbacks.EndlessLinearRecyclerViewScrollListener;
 import com.magnet.magnetchat.callbacks.OnRecyclerViewItemClickListener;
 import com.magnet.magnetchat.core.managers.ChannelCacheManager;
 import com.magnet.magnetchat.helpers.PermissionHelper;
@@ -117,12 +115,14 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
         layoutManager.setStackFromEnd(true);
         layoutManager.setReverseLayout(false);
         messagesListView.setLayoutManager(layoutManager);
-        messagesListView.addOnScrollListener(new EndlessLinearRecyclerViewScrollListener(layoutManager) {
-            @Override public void onLoadMore(int page, int totalItemsCount) {
-                Log.d(TAG, "------------onLoadMore Message: " + page + "/" + totalItemsCount + "," + mPresenter.getCurrentConversation().getMessages().size() + "\n");
-                mPresenter.onLoadMessages(totalItemsCount, Constants.MESSAGE_PAGE_SIZE);
-            }
-        });
+        
+        //TODO:Infinity scroll implementation (with crash for now)
+//        messagesListView.addOnScrollListener(new EndlessLinearRecyclerViewScrollListener(layoutManager) {
+//            @Override public void onLoadMore(int page, int totalItemsCount) {
+//                Log.d(TAG, "------------onLoadMore Message: " + page + "/" + totalItemsCount + "," + mPresenter.getCurrentConversation().getMessages().size() + "\n");
+//                mPresenter.onLoadMessages(totalItemsCount, Constants.MESSAGE_PAGE_SIZE);
+//            }
+//        });
 
         channelName = getIntent().getStringExtra(TAG_CHANNEL_NAME);
         if (null != channelName) {
@@ -248,8 +248,8 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
 
     @Override
     public void refreshMessages(int offset, int limit) {
-        if(null != mAdapter) {
-            if(offset >= 0 && limit > 0) {
+        if (null != mAdapter) {
+            if (offset >= 0 && limit > 0) {
                 mAdapter.notifyItemRangeInserted(offset, limit);
             } else {
                 mAdapter.notifyDataSetChanged();
