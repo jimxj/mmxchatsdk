@@ -5,11 +5,11 @@ package com.magnet.magnetchat;
  */
 public interface Constants {
 
-  int CONVERSATION_PAGE_SIZE = 5;
+  int CONVERSATION_PAGE_SIZE = 20;
 
-  int MESSAGE_PAGE_SIZE = 5;
+  int MESSAGE_PAGE_SIZE = 30;
 
-  int PRE_FETCHED_MESSAGE_SIZE = 10;
+  int PRE_FETCHED_MESSAGE_SIZE = 30;
 
   int PRE_FETCHED_SUBSCRIBER_SIZE = 10;
 
