@@ -72,7 +72,7 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
                 presenter.onLoadConversations(0, Constants.CONVERSATION_PAGE_SIZE);
             }
         });
-        swipeContainer.setColorSchemeResources(R.color.colorPrimaryDark, R.color.colorPrimary, R.color.colorAccent);
+        swipeContainer.setColorSchemeResources(R.color.primary_dark, R.color.primary, R.color.accent);
 
         fabCreateMessage = (FloatingActionButton) containerView.findViewById(R.id.fabHomeCreateMessage);
         fabCreateMessage.setVisibility(View.VISIBLE);

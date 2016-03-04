@@ -21,7 +21,7 @@ public class SnackNotificationHelper {
                     public void onClick(View v) {
                     }
                 })
-                .setActionTextColor(currentView.getResources().getColor(R.color.colorAccent));
+                .setActionTextColor(currentView.getResources().getColor(R.color.accent));
         View view = snackbar.getView();
         //TextView tv = (TextView) view.findViewById(android.support.design.R.id.snackbar_text);
         //if (tv != null) {
