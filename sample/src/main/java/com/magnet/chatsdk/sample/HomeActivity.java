@@ -37,6 +37,7 @@ public class HomeActivity extends AppCompatActivity {
 
   @OnClick(R.id.btnChats)
   public void onChatsButtonClick(View v) {
+    //TODO
     startActivity(new Intent(this, ChatListActivity.class));
   }
 
