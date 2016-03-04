@@ -62,4 +62,8 @@
             android:textSize="@dimen/text_16"
             android:textStyle="bold" />
     </LinearLayout>
+    <View
+        android:layout_width="match_parent"
+        android:background="@android:color/darker_gray"
+        android:layout_height="1px"/>
 </LinearLayout>

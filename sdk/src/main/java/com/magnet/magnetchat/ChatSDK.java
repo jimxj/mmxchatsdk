@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Vibrator;
+
 import com.magnet.magnetchat.core.managers.ChannelCacheManager;
 import com.magnet.magnetchat.helpers.UserHelper;
 import com.magnet.magnetchat.util.Logger;
@@ -16,7 +17,6 @@ import com.magnet.mmx.client.api.MMXChannel;
 import com.magnet.mmx.client.api.MMXMessage;
 
 /**
- * Created by dlernatovich on 2/8/16.
  * Class which provide to management of the MMX functional
  */
 public class ChatSDK {

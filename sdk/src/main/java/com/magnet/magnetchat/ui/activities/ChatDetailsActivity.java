@@ -6,21 +6,21 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+
 import com.magnet.magnetchat.R;
 import com.magnet.magnetchat.model.Conversation;
 import com.magnet.magnetchat.mvp.api.ChatDetailsContract;
 import com.magnet.magnetchat.mvp.presenters.ChatDetailsPresenterImpl;
 import com.magnet.magnetchat.ui.adapters.UsersAdapter;
-import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;
-import com.magnet.max.android.util.StringUtil;
 import com.magnet.mmx.client.api.MMXChannel;
-import java.util.List;
 
+import java.util.List;
 
 
 public class ChatDetailsActivity extends BaseActivity implements ChatDetailsContract.View {
@@ -34,7 +34,6 @@ public class ChatDetailsActivity extends BaseActivity implements ChatDetailsCont
     LinearLayout llAddRecipients;
 
     ChatDetailsContract.Presenter mPresenter;
-
 
 
     @Override
@@ -66,11 +65,11 @@ public class ChatDetailsActivity extends BaseActivity implements ChatDetailsCont
 
         MMXChannel currentChannel = getIntent().getParcelableExtra(TAG_CHANNEL);
         if (currentChannel != null) {
-            if(StringUtil.isStringValueEqual(currentChannel.getOwnerId(), User.getCurrentUserId())) {
-                llAddRecipients.setVisibility(View.VISIBLE);
-
-                setOnClickListeners(llAddRecipients);
-            }
+//            if (StringUtil.isStringValueEqual(currentChannel.getOwnerId(), User.getCurrentUserId())) {
+//                llAddRecipients.setVisibility(View.VISIBLE);
+//
+//                setOnClickListeners(llAddRecipients);
+//            }
 
             mPresenter = new ChatDetailsPresenterImpl(this, currentChannel, this);
             mPresenter.onLoadRecipients(true);
@@ -81,20 +80,42 @@ public class ChatDetailsActivity extends BaseActivity implements ChatDetailsCont
 
     @Override
     public void onClick(View v) {
-        if(v.getId() == R.id.llAddRecipients) {
+        if (v.getId() == R.id.llAddRecipients) {
             mPresenter.onAddRecipients();
         }
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            // Respond to the action bar's Up/Home button
-            case android.R.id.home:
-                //NavUtils.navigateUpFromSameTask(this);
-                finish();
-                return true;
+    public boolean onCreateOptionsMenu(Menu menu) {
+        if (mPresenter.isOwnerChannel() == false) {
+            return true;
         }
+        int menuId = R.menu.menu_chat_details;
+        getMenuInflater().inflate(menuId, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        int itemID = item.getItemId();
+        if (itemID == android.R.id.home) {
+            finish();
+        } else if (itemID == R.id.menuItemAddUser) {
+            mPresenter.onAddRecipients();
+        }
+
+//        switch (item.getItemId()) {
+//            // Respond to the action bar's Up/Home button
+//            case android.R.id.home:
+//                //NavUtils.navigateUpFromSameTask(this);
+//                finish();
+//                return true;
+//            case :
+//
+//            default:
+//                break;
+//        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -110,14 +131,16 @@ public class ChatDetailsActivity extends BaseActivity implements ChatDetailsCont
         finish();
     }
 
-    @Override public void setProgressIndicator(boolean active) {
+    @Override
+    public void setProgressIndicator(boolean active) {
         if (detailsProgress != null) {
             detailsProgress.setVisibility(active ? View.VISIBLE : View.INVISIBLE);
         }
     }
 
-    @Override public void showRecipients(List<UserProfile> recipients) {
-        if(null == mUserAdapter) {
+    @Override
+    public void showRecipients(List<UserProfile> recipients) {
+        if (null == mUserAdapter) {
             mUserAdapter = new UsersAdapter(this, recipients);
             listView.setAdapter(mUserAdapter);
         } else {
@@ -125,7 +148,8 @@ public class ChatDetailsActivity extends BaseActivity implements ChatDetailsCont
         }
     }
 
-    @Override public void finishDetails() {
+    @Override
+    public void finishDetails() {
         finish();
     }
 }

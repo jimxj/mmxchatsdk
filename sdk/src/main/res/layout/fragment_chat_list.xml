@@ -20,14 +20,15 @@
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fabHomeCreateMessage"
-        android:layout_width="@dimen/dimen_60"
-        android:layout_height="@dimen/dimen_60"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:layout_margin="@dimen/dimen_10"
         android:foregroundGravity="bottom"
-        android:src="@drawable/ic_add_message_floater"
+        android:src="@drawable/ic_add_message_floating_button"
         android:visibility="gone"
-        app:backgroundTint="@color/accent" />
+        app:backgroundTint="@color/accent"
+        app:fabSize="normal" />
 
 </RelativeLayout>
