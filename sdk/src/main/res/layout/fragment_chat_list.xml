@@ -28,6 +28,6 @@
         android:foregroundGravity="bottom"
         android:src="@drawable/ic_add_message_floater"
         android:visibility="gone"
-        app:backgroundTint="@color/FABBackground" />
+        app:backgroundTint="@color/accent" />
 
 </RelativeLayout>
