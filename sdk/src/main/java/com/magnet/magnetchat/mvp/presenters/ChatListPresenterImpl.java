@@ -60,10 +60,12 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
                     }
                 }
 
-                mConversations.addAll(newConversations);
-
                 if(offset == 0) {
-                    showAllConversations();
+                    mConversations.clear();
+                    mConversations.addAll(ChannelCacheManager.getInstance().getConversations());
+                    mView.showList(mConversations);
+                } else {
+                    mConversations.addAll(newConversations);
                 }
 
                 finishGetChannels();

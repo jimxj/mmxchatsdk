@@ -8,9 +8,8 @@ import android.support.multidex.MultiDex;
 import android.support.multidex.MultiDexApplication;
 import com.magnet.magnetchat.core.managers.ChannelCacheManager;
 import com.magnet.magnetchat.core.managers.InternetConnectionManager;
-import com.magnet.magnetchat.core.managers.MMXManager;
+import com.magnet.magnetchat.ChatSDK;
 import com.magnet.magnetchat.core.managers.SharedPreferenceManager;
-import com.magnet.magnetchat.core.managers.TypeFaceManager;
 import com.magnet.max.android.Max;
 import com.magnet.max.android.config.MaxAndroidPropertiesConfig;
 
@@ -43,7 +42,7 @@ public class ChatSampleApplication extends MultiDexApplication {
    * Method which provide the Managers initialization
    */
   private void onManagersInitialization() {
-    MMXManager.getInstance(this);
+    ChatSDK.init(this);
     SharedPreferenceManager.getInstance(this);
     InternetConnectionManager.getInstance(this);
     ChannelCacheManager.getInstance();
