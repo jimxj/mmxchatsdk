@@ -50,7 +50,8 @@ public class ChooseUserPresenterImpl implements ChooseUserContract.Presenter {
         mDefaultQueryResults = new ArrayList<>();
     }
 
-    @Override public void onLoadUsers(int offset, int limit) {
+    @Override
+    public void onLoad(int offset, int limit) {
         if(mCurrentQuery.isDefault() && ((offset + limit) < mDefaultQueryResults.size())) {
             mView.showUsers(mDefaultQueryResults.subList(offset, limit), 0 != offset);
         } else {
@@ -64,13 +65,22 @@ public class ChooseUserPresenterImpl implements ChooseUserContract.Presenter {
      * @param query current query
      */
     @Override
-    public void onSearchUsers(@NonNull String query, String order) {
+    public void onSearch(@NonNull String query, String order) {
         mCurrentQuery = new ChooseUserContract.UserQuery(query, order, false);
         queryUser(mCurrentQuery, 0, Constants.USER_PAGE_SIZE);
     }
 
-    @Override public void onResetSearch() {
+    @Override
+    public void onSearchReset() {
         mView.showUsers(mDefaultQueryResults, false);
+    }
+
+    @Override public void onItemSelect(int position, User item) {
+
+    }
+
+    @Override public void onItemLongClick(int position, User item) {
+
     }
 
     /**

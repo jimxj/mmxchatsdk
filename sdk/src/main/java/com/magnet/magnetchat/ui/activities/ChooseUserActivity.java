@@ -74,7 +74,7 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
         userList.addOnScrollListener(new EndlessLinearRecyclerViewScrollListener(userListLayoutManager) {
             @Override public void onLoadMore(int page, int totalItemsCount) {
                 Log.d(TAG, "------------onLoadMore User: " + page + "/" + totalItemsCount + "\n");
-                mPresenter.onLoadUsers(totalItemsCount, Constants.USER_PAGE_SIZE);
+                mPresenter.onLoad(totalItemsCount, Constants.USER_PAGE_SIZE);
             }
         });
 
@@ -94,7 +94,7 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
             mPresenter = new ChooseUserPresenterImpl(this);
         }
 
-        mPresenter.onLoadUsers(0, Constants.USER_PAGE_SIZE);
+        mPresenter.onLoad(0, Constants.USER_PAGE_SIZE);
     }
 
     @Override
@@ -121,7 +121,7 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
                 public boolean onClose() {
                     search.onActionViewCollapsed();
                     hideKeyboard();
-                    mPresenter.onResetSearch();
+                    mPresenter.onSearchReset();
                     return true;
                 }
             });
@@ -211,7 +211,7 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
         @Override
         public boolean onQueryTextSubmit(String query) {
             hideKeyboard();
-            mPresenter.onSearchUsers(UserHelper.createNameQuery(query), ChooseUserContract.DEFAULT_USER_ORDER);
+            mPresenter.onSearch(UserHelper.createNameQuery(query), ChooseUserContract.DEFAULT_USER_ORDER);
             return true;
         }
 
@@ -219,7 +219,7 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
         public boolean onQueryTextChange(String newText) {
             if (newText.isEmpty()) {
                 hideKeyboard();
-                mPresenter.onResetSearch();
+                mPresenter.onSearchReset();
             }
             return true;
         }

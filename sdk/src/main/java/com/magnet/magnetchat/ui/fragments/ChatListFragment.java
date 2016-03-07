@@ -63,7 +63,7 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
             @Override
             public void onLoadMore(int page, int totalItemsCount) {
                 Log.d(TAG, "------------onLoadMore channel : " + page + "/" + totalItemsCount + "\n");
-                presenter.onLoadConversations(totalItemsCount, Constants.CONVERSATION_PAGE_SIZE);
+                presenter.onLoad(totalItemsCount, Constants.CONVERSATION_PAGE_SIZE);
             }
         });
 
@@ -72,7 +72,7 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                presenter.onLoadConversations(0, Constants.CONVERSATION_PAGE_SIZE);
+                presenter.onLoad(0, Constants.CONVERSATION_PAGE_SIZE);
             }
         });
         swipeContainer.setColorSchemeResources(R.color.primary_dark, R.color.primary, R.color.accent);
@@ -89,7 +89,7 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
             @Override
             public void run() {
                 swipeContainer.setRefreshing(true);
-                presenter.onLoadConversations(0, Constants.CONVERSATION_PAGE_SIZE);
+                presenter.onLoad(0, Constants.CONVERSATION_PAGE_SIZE);
             }
         });
     }
@@ -114,7 +114,7 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
             search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
                 @Override
                 public boolean onQueryTextSubmit(String query) {
-                    presenter.onSearchConversation(query);
+                    presenter.onSearch(query, null);
                     return true;
                 }
 
@@ -122,7 +122,7 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
                 public boolean onQueryTextChange(String newText) {
                     if (newText.isEmpty()) {
                         hideKeyboard();
-                        presenter.onResetSearch();
+                        presenter.onSearchReset();
                     }
                     return false;
                 }
@@ -132,7 +132,7 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
                 @Override
                 public boolean onClose() {
                     search.onActionViewCollapsed();
-                    presenter.onResetSearch();
+                    presenter.onSearchReset();
                     return true;
                 }
             });
@@ -166,7 +166,7 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
                         Conversation conversation = adapter.getItem(position);
                         if (conversation != null) {
                             Log.d(TAG, "Channel " + conversation.getChannel().getName() + " is selected");
-                            presenter.onConversationClick(conversation);
+                            presenter.onItemSelect(position, conversation);
                         }
                     }
 
@@ -174,7 +174,7 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
                     public void onLongClick(int position) {
                         Conversation conversation = adapter.getItem(position);
                         if (conversation != null) {
-                            presenter.onConversationLongClick(conversation);
+                            presenter.onItemLongClick(position, conversation);
                             showLeaveDialog(conversation);
                         }
                     }

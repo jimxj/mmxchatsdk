@@ -47,7 +47,7 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
      * Method which provide to getting of the reading channels
      */
     @Override
-    public void onLoadConversations(final int offset, int limit) {
+    public void onLoad(final int offset, int limit) {
         ChannelHelper.getSubscriptionDetails(offset, limit, new MMXChannel.OnFinishedListener<List<ChannelDetail>>() {
             @Override
             public void onSuccess(List<ChannelDetail> channelDetails) {
@@ -133,7 +133,7 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
      * @param query search query
      */
     @Override
-    public void onSearchConversation(String query) {
+    public void onSearch(String query, String order) {
         final List<Conversation> searchResult = new ArrayList<>();
         for (Conversation conversation : getAllConversations()) {
             for (UserProfile userProfile : conversation.getSuppliersList()) {
@@ -153,7 +153,7 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
      * Method which provide the search resetting
      */
     @Override
-    public void onResetSearch() {
+    public void onSearchReset() {
         showAllConversations();
     }
 
@@ -163,7 +163,7 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
      * @param conversation channel
      */
     @Override
-    public void onConversationClick(Conversation conversation) {
+    public void onItemSelect(int position, Conversation conversation) {
         mView.showChatDetails(conversation);
     }
 
@@ -173,7 +173,7 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
      * @param conversation channel
      */
     @Override
-    public void onConversationLongClick(Conversation conversation) {
+    public void onItemLongClick(int position, Conversation conversation) {
 
     }
 

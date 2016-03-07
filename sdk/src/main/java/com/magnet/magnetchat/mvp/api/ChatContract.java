@@ -90,7 +90,7 @@ public interface ChatContract {
         Activity getActivity();
     }
 
-    interface Presenter {
+    interface Presenter extends ListPresenter<Message> {
 
         /**
          * Method which provide the action when Activity/Fragment call onResume method
@@ -105,25 +105,17 @@ public interface ChatContract {
         void onPause();
 
 
-        void onLoadMessages(boolean forceUpdate);
-
-        void onLoadMessages(int offset, int limit);
+        void onLoad(boolean forceUpdate);
 
         void onLoadRecipients(boolean forceUpdate);
 
         void onNewMessage(Message message);
-
-        void onReadMessage();
 
         void onSendText(String text);
 
         void onSendImages(Uri[] uris);
 
         void onSendLocation(Location location);
-
-        void onMessageClick(Message message);
-
-        void onMessageLongClick(Message message);
 
         void onChatDetails();
 

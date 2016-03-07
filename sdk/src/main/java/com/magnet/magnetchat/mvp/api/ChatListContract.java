@@ -53,40 +53,9 @@ public interface ChatListContract {
         void setProgressIndicator(boolean active);
     }
 
-    interface Presenter {
-
-        /**
-         * Method which provide to getting of the reading channels
-         */
-        void onLoadConversations(int offset, int limit);
+    interface Presenter extends ListPresenter<Conversation> {
 
         void onConversationUpdate(Conversation conversation, boolean isNew);
-
-        /**
-         * Method which provide to show of the messages by query
-         *
-         * @param query search query
-         */
-        void onSearchConversation(final String query);
-
-        /**
-         * Method which provide the search resetting
-         */
-        void onResetSearch();
-
-        /**
-         * Method which provide the action when user click on the conversation channel
-         *
-         * @param conversation channel
-         */
-        void onConversationClick(Conversation conversation);
-
-        /**
-         * Method which provide the action when user do long click for the conversation
-         *
-         * @param conversation channel
-         */
-        void onConversationLongClick(Conversation conversation);
 
         /**
          * Method which provide the action when activity or fragment call onResume

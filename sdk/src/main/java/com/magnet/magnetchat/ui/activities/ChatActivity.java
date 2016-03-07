@@ -122,7 +122,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
         messagesListView.addOnScrollListener(new EndlessLinearRecyclerViewScrollListener(layoutManager) {
             @Override public void onLoadMore(int page, int totalItemsCount) {
                 Log.d(TAG, "------------onLoadMore Message: " + page + "/" + totalItemsCount + "," + mPresenter.getCurrentConversation().getMessages().size() + "\n");
-                mPresenter.onLoadMessages(totalItemsCount, Constants.MESSAGE_PAGE_SIZE);
+                mPresenter.onLoad(totalItemsCount, Constants.MESSAGE_PAGE_SIZE);
             }
         });
 
@@ -179,7 +179,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
     protected void onResume() {
         super.onResume();
         mPresenter.onLoadRecipients(false);
-        mPresenter.onLoadMessages(false);
+        mPresenter.onLoad(false);
 
         mPresenter.onResume();
     }
@@ -234,7 +234,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
             mAdapter.setmOnClickListener(new OnRecyclerViewItemClickListener() {
                 @Override
                 public void onClick(int position) {
-                    mPresenter.onMessageClick(mAdapter.getItem(position));
+                    mPresenter.onItemSelect(position, mAdapter.getItem(position));
                 }
 
                 @Override

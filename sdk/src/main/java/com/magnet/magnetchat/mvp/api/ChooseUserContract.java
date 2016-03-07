@@ -3,6 +3,7 @@ package com.magnet.magnetchat.mvp.api;
 import android.app.Activity;
 import android.support.annotation.NonNull;
 
+import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;
 
 import java.util.List;
@@ -84,24 +85,7 @@ public interface ChooseUserContract {
 
     }
 
-    interface Presenter {
-
-        /**
-         * Method which provide to getting of the reading channels
-         */
-        void onLoadUsers(int offset, int limit);
-
-        /**
-         * Method which provide the searching of the user by query
-         *
-         * @param query current query
-         */
-        void onSearchUsers(@NonNull String query, String order);
-
-        /**
-         * Method which provide the search resetting
-         */
-        void onResetSearch();
+    interface Presenter extends ListPresenter<User> {
 
         /**
          * Method which provide the user selection

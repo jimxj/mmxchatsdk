@@ -45,6 +45,8 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
 
         mView.showMessages(conversation.getMessages());
         mView.showRecipients(conversation.getSuppliersList());
+
+        onReadMessage();
     }
 
     public ChatPresenterImpl(@NonNull ChatContract.View view, @NonNull final ArrayList<UserProfile> recipients) {
@@ -97,6 +99,8 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
                 ChannelCacheManager.getInstance().addConversation(mCurrentConversation);
                 mView.setProgressIndicator(false);
                 mView.showMessages(mCurrentConversation.getMessages());
+
+                onReadMessage();
             }
         });
     }
@@ -120,7 +124,7 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
     }
 
     @Override
-    public void onLoadMessages(boolean forceUpdate) {
+    public void onLoad(boolean forceUpdate) {
         if (forceUpdate) {
             //TODO :
         } else {
@@ -132,7 +136,7 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
     }
 
     @Override
-    public void onLoadMessages(final int offset, final int limit) {
+    public void onLoad(final int offset, final int limit) {
         if(null != mCurrentConversation) {
             List<Message> requestedMessages = mCurrentConversation.getMessages(offset, limit);
             if(requestedMessages.size() < limit) {
@@ -145,13 +149,29 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
                     }
 
                     @Override public void onFailure(MMXChannel.FailureCode failureCode, Throwable throwable) {
-                        Log.e(TAG, "onLoadMessages : " + offset + "/" + limit, throwable);
+                        Log.e(TAG, "onLoad : " + offset + "/" + limit, throwable);
                     }
                 });
             } else {
                 Log.d(TAG, "-----messages were already loaded");
             }
         }
+    }
+
+    @Override public void onSearch(String query, String sort) {
+
+    }
+
+    @Override public void onSearchReset() {
+
+    }
+
+    @Override public void onItemSelect(int position, Message item) {
+        onOpenAttachment(item);
+    }
+
+    @Override public void onItemLongClick(int position, Message item) {
+
     }
 
     @Override
@@ -174,8 +194,7 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
         }
     }
 
-    @Override
-    public void onReadMessage() {
+    private void onReadMessage() {
         if (null != mCurrentConversation) {
             mCurrentConversation.setHasUnreadMessage(false);
         }
@@ -212,16 +231,6 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
             mView.setSendEnabled(false);
             mCurrentConversation.sendLocation(location, sendMessageListener);
         }
-    }
-
-    @Override
-    public void onMessageClick(Message message) {
-        onOpenAttachment(message);
-    }
-
-    @Override
-    public void onMessageLongClick(Message message) {
-
     }
 
     @Override
