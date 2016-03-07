@@ -6,10 +6,7 @@ package com.magnet.chatsdk.sample;
 import android.content.Context;
 import android.support.multidex.MultiDex;
 import android.support.multidex.MultiDexApplication;
-import com.magnet.magnetchat.core.managers.ChannelCacheManager;
-import com.magnet.magnetchat.core.managers.InternetConnectionManager;
 import com.magnet.magnetchat.ChatSDK;
-import com.magnet.magnetchat.core.managers.SharedPreferenceManager;
 import com.magnet.max.android.Max;
 import com.magnet.max.android.config.MaxAndroidPropertiesConfig;
 
@@ -22,7 +19,7 @@ public class ChatSampleApplication extends MultiDexApplication {
     super.onCreate();
 
     //Initialization of the MagnetMax
-    Max.init(this, new MaxAndroidPropertiesConfig(this, com.magnet.magnetchat.R.raw.magnetmax));
+    Max.init(this, new MaxAndroidPropertiesConfig(this, com.magnet.chatsdk.sample.R.raw.magnetmax));
 
     instance = this;
     onManagersInitialization();
