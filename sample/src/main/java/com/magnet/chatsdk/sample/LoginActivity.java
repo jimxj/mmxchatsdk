@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import com.magnet.magnetchat.ui.activities.BaseActivity;
-import com.magnet.magnetchat.ui.activities.ChatListActivity;
 import com.magnet.magnetchat.ui.views.section.login.LoginView;
 import com.magnet.max.android.ApiError;
 
@@ -37,7 +36,7 @@ public class LoginActivity extends BaseActivity {
     }
 
     private void goToHomeActivity() {
-        startActivity(ChatListActivity.class, true);
+        startActivity(HomeActivity.class, true);
     }
 
     private void goToRegisterActivity() {

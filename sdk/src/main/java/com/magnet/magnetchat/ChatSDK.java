@@ -8,6 +8,8 @@ import android.content.Intent;
 import android.os.Vibrator;
 
 import com.magnet.magnetchat.core.managers.ChannelCacheManager;
+import com.magnet.magnetchat.core.managers.InternetConnectionManager;
+import com.magnet.magnetchat.core.managers.SharedPreferenceManager;
 import com.magnet.magnetchat.helpers.UserHelper;
 import com.magnet.magnetchat.util.Logger;
 import com.magnet.max.android.Max;
@@ -25,6 +27,10 @@ public class ChatSDK {
         MMX.registerListener(eventListener);
         MMX.registerWakeupBroadcast(context, new Intent("MMX_WAKEUP_ACTION"));
         com.magnet.mmx.client.common.Log.setLoggable(null, com.magnet.mmx.client.common.Log.VERBOSE);
+
+        SharedPreferenceManager.getInstance(context);
+        InternetConnectionManager.getInstance(context);
+        ChannelCacheManager.getInstance();
     }
 
     public static void messageNotification(String channelName, String fromUserName) {

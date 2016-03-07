@@ -221,28 +221,28 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
         @Override
         public boolean onMessageAcknowledgementReceived(User from, String messageId) {
             Logger.debug(TAG, "onMessageAcknowledgementReceived");
-            //mView.updateList();
+            //mView.showUsers();
             return false;
         }
 
         @Override
         public boolean onInviteReceived(MMXChannel.MMXInvite invite) {
             Logger.debug(TAG, "onInviteReceived");
-            //mView.updateList();
+            //mView.showUsers();
             return false;
         }
 
         @Override
         public boolean onInviteResponseReceived(MMXChannel.MMXInviteResponse inviteResponse) {
             Logger.debug(TAG, "onInviteResponseReceived");
-            //mView.updateList();
+            //mView.showUsers();
             return false;
         }
 
         @Override
         public boolean onMessageSendError(String messageId, MMXMessage.FailureCode code, String text) {
             Logger.debug("onMessageSendError");
-            //mView.updateList();
+            //mView.showUsers();
             return false;
         }
     };

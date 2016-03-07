@@ -3,8 +3,10 @@ package com.magnet.magnetchat.mvp.presenters;
 import android.app.Activity;
 import android.support.annotation.NonNull;
 
+import com.magnet.magnetchat.Constants;
 import com.magnet.magnetchat.core.managers.ChannelCacheManager;
 import com.magnet.magnetchat.helpers.ChannelHelper;
+import com.magnet.magnetchat.helpers.UserHelper;
 import com.magnet.magnetchat.model.Conversation;
 import com.magnet.magnetchat.mvp.api.ChooseUserContract;
 import com.magnet.magnetchat.ui.activities.ChatActivity;
@@ -22,12 +24,12 @@ import java.util.List;
  * Created by dlernatovich on 3/2/16.
  */
 public class ChooseUserPresenterImpl implements ChooseUserContract.Presenter {
-
-    private final String SEARCH_QUERY = "firstName:%s* OR lastName:%s*";
     private final ChooseUserContract.View mView;
     private Conversation mConversation;
     private ChooseUserContract.ChooseMode mAddmingMode;
-    private List<User> mInitUsers;
+    private List<User> mDefaultQueryResults;
+    private ChooseUserContract.UserQuery mCurrentQuery;
+    private final ChooseUserContract.UserQuery mDefaultQuery;
 
     public ChooseUserPresenterImpl(ChooseUserContract.View view) {
         this(view, null);
@@ -42,15 +44,17 @@ public class ChooseUserPresenterImpl implements ChooseUserContract.Presenter {
             mAddmingMode = ChooseUserContract.ChooseMode.MODE_NEW_CHAT;
         }
 
-        onLoadUsers(true);
+        mDefaultQuery = new ChooseUserContract.UserQuery(UserHelper.createNameQuery(""), ChooseUserContract.DEFAULT_USER_ORDER, true);
+
+        mCurrentQuery = mDefaultQuery;
+        mDefaultQueryResults = new ArrayList<>();
     }
 
-    @Override
-    public void onLoadUsers(boolean forceUpdate) {
-        if (forceUpdate) {
-            searchUsers("");
+    @Override public void onLoadUsers(int offset, int limit) {
+        if(mCurrentQuery.isDefault() && ((offset + limit) < mDefaultQueryResults.size())) {
+            mView.showUsers(mDefaultQueryResults.subList(offset, limit), 0 != offset);
         } else {
-            mView.updateList(mInitUsers);
+            queryUser(mCurrentQuery, offset, limit);
         }
     }
 
@@ -60,10 +64,13 @@ public class ChooseUserPresenterImpl implements ChooseUserContract.Presenter {
      * @param query current query
      */
     @Override
-    public void searchUsers(@NonNull String query) {
-        mView.setProgressIndicator(true);
-        User.search(String.format(SEARCH_QUERY, query, query), 100, 0, "lastName:asc",
-                userSearchCallback);
+    public void onSearchUsers(@NonNull String query, String order) {
+        mCurrentQuery = new ChooseUserContract.UserQuery(query, order, false);
+        queryUser(mCurrentQuery, 0, Constants.USER_PAGE_SIZE);
+    }
+
+    @Override public void onResetSearch() {
+        mView.showUsers(mDefaultQueryResults, false);
     }
 
     /**
@@ -112,43 +119,61 @@ public class ChooseUserPresenterImpl implements ChooseUserContract.Presenter {
         }
     }
 
-    /**
-     * Callback which provide to user search
-     */
-    private final ApiCallback<List<User>> userSearchCallback = new ApiCallback<List<User>>() {
-        @Override
-        public void success(List<User> users) {
-            users.remove(User.getCurrentUser());
-            if (mConversation != null) {
-                List<Integer> indexes = new ArrayList<>();
-                for (int i = 0; i < users.size(); i++) {
-                    if (null != mConversation.getSupplier(users.get(i).getUserIdentifier())) {
-                        indexes.add(i);
-                    }
-                }
-                for (Integer i : indexes) {
-                    if (i < users.size()) {
-                        users.remove(i.intValue());
-                    }
-                }
-            }
+    @Override public ChooseUserContract.UserQuery getDefaultQuery() {
+        return mDefaultQuery;
+    }
 
-            if (null == mInitUsers) {
-                mInitUsers = new ArrayList<>(users);
-            }
+    private void queryUser(final ChooseUserContract.UserQuery userQuery, final int offset, final int limit) {
+        mView.setProgressIndicator(true);
 
-            mView.setProgressIndicator(false);
-            Logger.debug("find users", "success");
-            mView.updateList(users);
+        if(0 == offset) {
+            mCurrentQuery.setCurrentOffset(0);
         }
 
-        @Override
-        public void failure(ApiError apiError) {
-            mView.setProgressIndicator(false);
-            Utils.showMessage("Can't find users");
-            Logger.error("find users", apiError);
-        }
-    };
+        User.search(userQuery.getQuery(), limit, mCurrentQuery.getCurrentOffset(), userQuery.getOrder(), new ApiCallback<List<User>>() {
+            @Override
+            public void success(List<User> users) {
+                if(null != users && !users.isEmpty()) {
+                    mCurrentQuery.addCurrentOffset(users.size());
+
+                    users.remove(User.getCurrentUser());
+                    if (mConversation != null) {
+                        List<Integer> indexes = new ArrayList<>();
+                        for (int i = 0; i < users.size(); i++) {
+                            if (null != mConversation.getSupplier(users.get(i).getUserIdentifier())) {
+                                indexes.add(i);
+                            }
+                        }
+                        for (Integer i : indexes) {
+                            if (i < users.size()) {
+                                users.remove(i.intValue());
+                            }
+                        }
+                    }
+                }
+
+                if(userQuery.isDefault()) {
+                    if(0 == offset) {
+                        mDefaultQueryResults.clear();
+                        mDefaultQueryResults.addAll(users);
+                    } else {
+                        mDefaultQueryResults.addAll(users);
+                    }
+                }
+
+                mView.setProgressIndicator(false);
+                Logger.debug("find users", "success");
+                mView.showUsers(users, 0 != offset);
+            }
+
+            @Override
+            public void failure(ApiError apiError) {
+                mView.setProgressIndicator(false);
+                Utils.showMessage("Can't find users");
+                Logger.error("find users", apiError);
+            }
+        });
+    }
 
     /**
      * Listener which provide to listening of the action when users add to channel

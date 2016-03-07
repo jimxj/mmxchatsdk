@@ -9,6 +9,8 @@ public interface Constants {
 
   int MESSAGE_PAGE_SIZE = 30;
 
+  int USER_PAGE_SIZE = 10;
+
   int PRE_FETCHED_MESSAGE_SIZE = 30;
 
   int PRE_FETCHED_SUBSCRIBER_SIZE = 10;

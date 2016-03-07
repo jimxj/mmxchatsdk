@@ -53,7 +53,7 @@ public class UsersAdapter extends BaseAdapter<UsersAdapter.UserViewHolder, UserP
     }
 
     public UsersAdapter(Context context, List<? extends UserProfile> users) {
-        this(context, convertToUserProfileList(users), null);
+        this(context, UserHelper.convertToUserProfileList(users), null);
     }
 
     public UsersAdapter(Context context, List<UserProfile> users, List<? extends UserProfile> selectedUsers) {
@@ -141,19 +141,4 @@ public class UsersAdapter extends BaseAdapter<UsersAdapter.UserViewHolder, UserP
             view.setBackgroundResource(R.color.itemNotSelected);
         }
     }
-
-    public static List<UserProfile> convertToUserProfileList(List<? extends UserProfile> users) {
-        if(null != users && !users.isEmpty()) {
-            List<UserProfile> userProfiles = new ArrayList<>(users.size());
-            for(UserProfile up : users) {
-                userProfiles.add(up);
-            }
-
-            return userProfiles;
-        } else {
-            return new ArrayList<>();
-        }
-
-    }
-
 }

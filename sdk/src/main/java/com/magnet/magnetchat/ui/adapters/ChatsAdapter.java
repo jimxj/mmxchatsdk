@@ -133,29 +133,53 @@ public class ChatsAdapter extends BaseAdapter<ChatsAdapter.ConversationViewHolde
      * @param user
      * @param viewHolder
      */
-    protected void setUserAvatar(UserProfile user, final ConversationViewHolder viewHolder) {
+    protected void setUserAvatar(final UserProfile user, final ConversationViewHolder viewHolder) {
         if (user != null) {
-            viewHolder.title.setText(user.getDisplayName());
-            viewHolder.viewAvatar.setUserName(user.getDisplayName());
             if (user.getAvatarUrl() != null) {
-                viewHolder.imageAvatar.setVisibility(View.VISIBLE);
                 Glide.with(mContext).load(user.getAvatarUrl()).fitCenter().listener(new RequestListener<String, GlideDrawable>() {
                     @Override
                     public boolean onException(Exception e, String s, Target<GlideDrawable> target,
                         boolean b) {
                         //Log.e("BaseConversation", "failed to load image ", e);
-                        viewHolder.imageAvatar.setVisibility(View.GONE);
+                        showNameAvatar(user.getDisplayName(), viewHolder);
                         return false;
                     }
 
                     @Override public boolean onResourceReady(GlideDrawable glideDrawable, String s,
                         Target<GlideDrawable> target, boolean b, boolean b1) {
+                        showImageAvatar(user.getDisplayName(), viewHolder);
                         return false;
                     }
                 }).into(viewHolder.imageAvatar);
             } else {
-                viewHolder.imageAvatar.setVisibility(View.GONE);
+                showNameAvatar(user.getDisplayName(), viewHolder);
             }
+        } else {
+            showNameAvatar("Unknown User", viewHolder);
+        }
+    }
+
+    private void showImageAvatar(String name, ConversationViewHolder viewHolder) {
+        viewHolder.title.setText(name);
+
+        if(viewHolder.imageAvatar.getVisibility() == View.GONE) {
+            viewHolder.imageAvatar.setVisibility(View.VISIBLE);
+        }
+        if(viewHolder.viewAvatar.getVisibility() != View.GONE) {
+            viewHolder.viewAvatar.setVisibility(View.GONE);
+        }
+    }
+
+    private void showNameAvatar(String name, ConversationViewHolder viewHolder) {
+        viewHolder.title.setText(name);
+
+        viewHolder.viewAvatar.setUserName(name);
+
+        if(viewHolder.viewAvatar.getVisibility() == View.GONE) {
+            viewHolder.viewAvatar.setVisibility(View.VISIBLE);
+        }
+        if(viewHolder.imageAvatar.getVisibility() != View.GONE) {
+            viewHolder.imageAvatar.setVisibility(View.GONE);
         }
     }
 
@@ -175,9 +199,9 @@ public class ChatsAdapter extends BaseAdapter<ChatsAdapter.ConversationViewHolde
                 setUserAvatar(currentUser, viewHolder);
             }
         } else {
-            viewHolder.title.setText(UserHelper.getDisplayNames(conversation.getSuppliersList()));
             if (suppliers.size() > 1) {
                 Glide.with(getContext()).load(R.drawable.user_group).fitCenter().into(viewHolder.imageAvatar);
+                showImageAvatar(UserHelper.getDisplayNames(conversation.getSuppliersList()), viewHolder);
             } else {
                 //If there is one supplier, show his avatar.
                 setUserAvatar(suppliers.get(0), viewHolder);
