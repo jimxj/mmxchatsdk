@@ -117,7 +117,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
         layoutManager.setStackFromEnd(true);
         layoutManager.setReverseLayout(false);
         messagesListView.setLayoutManager(layoutManager);
-        
+
         //TODO:Infinity scroll implementation (with crash for now)
         messagesListView.addOnScrollListener(new EndlessLinearRecyclerViewScrollListener(layoutManager) {
             @Override public void onLoadMore(int page, int totalItemsCount) {
