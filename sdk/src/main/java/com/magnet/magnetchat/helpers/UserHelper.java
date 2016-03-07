@@ -10,6 +10,7 @@ import com.magnet.max.android.UserProfile;
 import com.magnet.max.android.auth.model.UserRegistrationInfo;
 import com.magnet.max.android.util.StringUtil;
 import com.magnet.mmx.client.api.MMX;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -24,6 +25,8 @@ public class UserHelper {
     private static final int MAX_USER_NAMES_LENGTH = 22;
 
     private static final String USER_NAMES_SUFIX = "...";
+
+    private static final String NAME_SEARCH_QUERY = "firstName:%s* OR lastName:%s*";
 
     /**
      * Login listener
@@ -226,6 +229,9 @@ public class UserHelper {
         return email.matches(EMAIL_TEMPLATE);
     }
 
+    public static String createNameQuery(String term) {
+        return String.format(NAME_SEARCH_QUERY, term, term);
+    }
 
     public static Comparator<UserProfile> getUserProfileComparator() {
         return new Comparator<UserProfile>() {
@@ -256,6 +262,19 @@ public class UserHelper {
             str = str.substring(str.indexOf(" ")).trim();
         }
         return str;
+    }
+
+    public static List<UserProfile> convertToUserProfileList(List<? extends UserProfile> users) {
+        if(null != users && !users.isEmpty()) {
+            List<UserProfile> userProfiles = new ArrayList<>(users.size());
+            for(UserProfile up : users) {
+                userProfiles.add(up);
+            }
+
+            return userProfiles;
+        } else {
+            return new ArrayList<>();
+        }
     }
 
 }

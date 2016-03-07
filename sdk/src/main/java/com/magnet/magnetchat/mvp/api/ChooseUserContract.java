@@ -14,6 +14,46 @@ public interface ChooseUserContract {
 
     enum ChooseMode {MODE_NEW_CHAT, MODE_ADD_USER}
 
+    String DEFAULT_USER_ORDER = "lastName:asc";
+
+    class UserQuery {
+        private final String query;
+        private final String order;
+        private final boolean isDefault;
+        private int currentOffset;
+
+        public UserQuery(String query, String order, boolean isDefault) {
+            this.query = query;
+            this.order = order;
+            this.isDefault = isDefault;
+            this.currentOffset = 0;
+        }
+
+        public String getQuery() {
+            return query;
+        }
+
+        public String getOrder() {
+            return order;
+        }
+
+        public boolean isDefault() {
+            return isDefault;
+        }
+
+        public int getCurrentOffset() {
+            return currentOffset;
+        }
+
+        public void setCurrentOffset(int currentOffset) {
+            this.currentOffset = currentOffset;
+        }
+
+        public void addCurrentOffset(int offset) {
+            this.currentOffset += offset;
+        }
+    }
+
     interface View {
 
         /**
@@ -28,7 +68,7 @@ public interface ChooseUserContract {
          *
          * @param users users list
          */
-        void updateList(@NonNull List<? extends UserProfile> users);
+        void showUsers(@NonNull List<? extends UserProfile> users, boolean toAppend);
 
         /**
          * Method which provide the closing of the Activity
@@ -49,14 +89,19 @@ public interface ChooseUserContract {
         /**
          * Method which provide to getting of the reading channels
          */
-        void onLoadUsers(boolean forceUpdate);
+        void onLoadUsers(int offset, int limit);
 
         /**
          * Method which provide the searching of the user by query
          *
          * @param query current query
          */
-        void searchUsers(@NonNull String query);
+        void onSearchUsers(@NonNull String query, String order);
+
+        /**
+         * Method which provide the search resetting
+         */
+        void onResetSearch();
 
         /**
          * Method which provide the user selection
@@ -78,6 +123,9 @@ public interface ChooseUserContract {
          * @param selectedUsers selected users
          */
         void onNewChat(@NonNull List<UserProfile> selectedUsers);
+
+        UserQuery getDefaultQuery();
+
     }
 
 }

@@ -45,6 +45,14 @@ public abstract class BaseAdapter<V extends RecyclerView.ViewHolder, T> extends 
         }
     }
 
+    public void append(List<T> items) {
+        if(null != items && !items.isEmpty()) {
+            int sizeBefore = mData.size();
+            mData.addAll(items);
+            notifyItemRangeInserted(sizeBefore, mData.size());
+        }
+    }
+
     public void updateItem(T item) {
         int position = mData.indexOf(item);
         if(position > -1) {

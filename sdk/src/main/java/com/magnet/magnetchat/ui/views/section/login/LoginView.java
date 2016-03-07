@@ -71,11 +71,11 @@ public class LoginView extends BaseView<LoginViewProperties> {
     @Override
     public void onResume() {
         super.onResume();
-        if (User.getCurrentUser() != null) {
-            switchLoginProgressView(true);
-        } else {
-            switchLoginProgressView(false);
-        }
+        //if (User.getCurrentUser() != null) {
+        //    switchLoginProgressView(true);
+        //} else {
+        //    switchLoginProgressView(false);
+        //}
     }
 
     @Override
