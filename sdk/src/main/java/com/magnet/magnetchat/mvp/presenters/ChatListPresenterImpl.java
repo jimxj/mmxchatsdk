@@ -9,7 +9,6 @@ import com.magnet.magnetchat.callbacks.NewMessageProcessListener;
 import com.magnet.magnetchat.core.managers.ChatManager;
 import com.magnet.magnetchat.helpers.ChannelHelper;
 import com.magnet.magnetchat.model.Chat;
-import com.magnet.magnetchat.model.Message;
 import com.magnet.magnetchat.mvp.api.ChatListContract;
 import com.magnet.magnetchat.util.Logger;
 import com.magnet.magnetchat.util.Utils;
@@ -33,6 +32,7 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
     protected List<Chat> mConversations = new ArrayList<>();
     private boolean isLoadingWhenCreating = false;
     protected ChatListContract.View mView;
+    protected boolean mIsSearchMode;
 
     /**
      * Constructor
@@ -48,11 +48,15 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
      */
     @Override
     public void onLoad(final int offset, int limit) {
+        if(mIsSearchMode) {
+            return;
+        }
+
         ChannelHelper.getSubscriptionDetails(offset, limit, new MMXChannel.OnFinishedListener<List<ChannelDetail>>() {
             @Override
             public void onSuccess(List<ChannelDetail> channelDetails) {
                 List<Chat> newConversations = new ArrayList<Chat>();
-                if (null != channelDetails) {
+                if (null != channelDetails && !channelDetails.isEmpty()) {
                     for (ChannelDetail cd : channelDetails) {
                         Chat c = new Chat(cd);
                         ChatManager.getInstance().addConversation(c);
@@ -60,13 +64,15 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
                     }
                 }
 
-                if(offset == 0) {
-                    mConversations.clear();
-                    mConversations.addAll(ChatManager.getInstance().getConversations());
-                    mView.showList(mConversations);
-                } else {
-                    mConversations.addAll(newConversations);
-                }
+                mView.showList(newConversations, 0 != offset);
+                //
+                //if(offset == 0) {
+                //    mConversations.clear();
+                //    mConversations.addAll(ChatManager.getInstance().getConversations());
+                //    mView.showList(mConversations, );
+                //} else {
+                //    mConversations.addAll(newConversations);
+                //}
 
                 finishGetChannels();
             }
@@ -146,7 +152,9 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
         if (searchResult.isEmpty()) {
             Utils.showMessage(Max.getApplicationContext(), "Nothing found");
         }
-        mView.showList(searchResult);
+        mView.showList(searchResult, false);
+
+        mIsSearchMode = true;
     }
 
     /**
@@ -154,6 +162,7 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
      */
     @Override
     public void onSearchReset() {
+        mIsSearchMode = false;
         showAllConversations();
     }
 
@@ -193,7 +202,7 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
     private void showAllConversations() {
         mConversations.clear();
         mConversations.addAll(ChatManager.getInstance().getConversations());
-        mView.showList(mConversations);
+        mView.showList(mConversations, false);
     }
 
     /**

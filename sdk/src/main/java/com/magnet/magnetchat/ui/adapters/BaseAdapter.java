@@ -102,4 +102,6 @@ public abstract class BaseAdapter<V extends RecyclerView.ViewHolder, T> extends 
     protected Context getContext() {
         return mContext;
     }
+
+
 }

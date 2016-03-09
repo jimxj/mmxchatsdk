@@ -283,7 +283,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
     public void showNewMessage(MMXMessage message) {
         if (mAdapter != null) {
             mAdapter.append(Arrays.asList(Message.createMessageFrom(message)));
-            mAdapter.notifyItemChanged(mAdapter.getItemCount());
+            //mAdapter.notifyItemChanged(mAdapter.getItemCount());
             messagesListView.smoothScrollToPosition(mAdapter.getItemCount());
         }
     }

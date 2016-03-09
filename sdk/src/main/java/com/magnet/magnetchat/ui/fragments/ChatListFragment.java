@@ -149,17 +149,10 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
     }
 
     @Override
-    public void updateList() {
-        if (adapter != null) {
-            adapter.notifyDataSetChanged();
-        }
-    }
-
-    @Override
-    public void showList(List<Chat> conversations) {
+    public void showList(List<Chat> list, boolean toAppend) {
         if (null != getActivity()) {
             if (adapter == null) {
-                adapter = new ChatsAdapter(getActivity(), conversations);
+                adapter = new ChatsAdapter(getActivity(), list);
                 adapter.setOnClickListener(new OnRecyclerViewItemClickListener() {
                     @Override
                     public void onClick(int position) {
@@ -181,7 +174,11 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
                 });
                 conversationsList.setAdapter(adapter);
             } else {
-                adapter.swapData(conversations);
+                if(toAppend) {
+                    adapter.append(list);
+                } else {
+                    adapter.swapData(list);
+                }
             }
         } else {
             Log.w(TAG, "Fragment is detached, won't update list");
@@ -223,6 +220,10 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
             }
         });
         leaveDialog.show();
+    }
+
+    @Override public void setTitle(String title) {
+
     }
 
     @Override

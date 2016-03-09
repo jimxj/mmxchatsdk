@@ -28,6 +28,7 @@ public class Chat extends ChannelDetail {
     //private List<Message> mMessages = new ArrayList();
     private boolean hasUnreadMessage;
     private boolean hasRecipientsUpdate;
+    private boolean hasMessageUpdate;
 
     private Comparator<UserProfile> userProfileComparator = new Comparator<UserProfile>() {
         @Override public int compare(UserProfile lhs, UserProfile rhs) {
@@ -62,21 +63,7 @@ public class Chat extends ChannelDetail {
         this.totalSubscribers = channelDetail.getTotalSubscribers();
 
         //Logger.debug(TAG, "channel subscribers ", channelDetail.getSortedSubscribers(), " channel ", channel.getName());
-        for (UserProfile up : channelDetail.getSubscribers()) {
-            if (owner == null && up.getUserIdentifier().equals(channel.getOwnerId())) {
-                owner = up;
-            }
-            if (!up.getUserIdentifier().equals(User.getCurrentUserId())) {
-                addSubscriber(up);
-            } else {
-                Log.d(TAG, "is owner");
-            }
-        }
-
-        //Logger.debug(TAG, "channel messages ", channelDetail.getMessages(), " channel ", channel.getName());
-        for(MMXMessage mmxMessage : channelDetail.getMessages()) {
-            appendMessage(mmxMessage, false);
-        }
+        mergeFrom(channelDetail.getSubscribers(), channelDetail.getMessages(), true);
     }
 
     protected Chat(MMXChannel channel, List<UserProfile> subscribers, List<MMXMessage> messages,
@@ -127,6 +114,19 @@ public class Chat extends ChannelDetail {
         return hasRecipientsUpdate;
     }
 
+    public boolean hasMessageUpdate() {
+        return hasMessageUpdate;
+    }
+
+    public void resetUpdate() {
+        hasMessageUpdate = false;
+        hasRecipientsUpdate = false;
+    }
+
+    public boolean hasUpdate() {
+        return hasMessageUpdate || hasRecipientsUpdate;
+    }
+
     public void setHasRecipientsUpdate(boolean hasRecipientsUpdate) {
         this.hasRecipientsUpdate = hasRecipientsUpdate;
     }
@@ -157,6 +157,7 @@ public class Chat extends ChannelDetail {
     public boolean addMessage(MMXMessage message, boolean isNewMessage) {
         if (!messages.contains(message)) {
             appendMessage(message, isNewMessage);
+            hasMessageUpdate = true;
             return true;
         }
 
@@ -178,18 +179,12 @@ public class Chat extends ChannelDetail {
     public boolean mergeFrom(Chat conversation) {
         boolean newMessageAdded = false;
         if(null != conversation) {
-            for (UserProfile up : conversation.getSubscribers()) {
-                if (owner == null && up.getUserIdentifier().equals(channel.getOwnerId())) {
-                    owner = up;
-                }
-                if (!up.getUserIdentifier().equals(User.getCurrentUserId())) {
-                    this.addSubscriber(up);
-                }
-            }
+            newMessageAdded = mergeFrom(conversation.getSubscribers(), conversation.getMessages(), false);
+        }
 
-            for (MMXMessage message : conversation.getMessages()) {
-                newMessageAdded = newMessageAdded || this.addMessage(message, false);
-            }
+        if (newMessageAdded) {
+            setHasUnreadMessage(true);
+            setLastPublishedTime(new Date());
         }
 
         return newMessageAdded;
@@ -290,15 +285,35 @@ public class Chat extends ChannelDetail {
         addSubscriber(message.getSender());
 
         if(isNew) {
-            setHasUnreadMessage(true);
+            hasUnreadMessage = true;
             lastPublishedTime = new Date();
         }
     }
 
-    public void appendMessages(List<MMXMessage> messages) {
-        for(MMXMessage mmxMessage : messages) {
-            addMessage(mmxMessage, false);
+    private boolean mergeFrom(List<UserProfile> subscribers, List<MMXMessage> messages, boolean toAppend) {
+        boolean newMessageAdded = false;
+        for (UserProfile up : subscribers) {
+            if (owner == null && up.getUserIdentifier().equals(channel.getOwnerId())) {
+                owner = up;
+            }
+            if (!up.getUserIdentifier().equals(User.getCurrentUserId())) {
+                this.addSubscriber(up);
+            }
         }
+
+        for (MMXMessage message : messages) {
+            if(toAppend) {
+                appendMessage(message, false);
+            } else {
+                if (!messages.contains(message)) {
+                    appendMessage(message, false);
+
+                    newMessageAdded = true;
+                }
+            }
+        }
+
+        return newMessageAdded;
     }
 
     public static final Parcelable.Creator<Chat> CREATOR = new Parcelable.Creator<Chat>() {

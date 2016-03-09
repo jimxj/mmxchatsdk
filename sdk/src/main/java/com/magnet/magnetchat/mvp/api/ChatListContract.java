@@ -9,20 +9,7 @@ import java.util.List;
  */
 public interface ChatListContract {
 
-    interface View {
-
-        /**
-         * Method which provide to show of the list of the conversations
-         *
-         * @param conversations conversation
-         */
-        void showList(List<Chat> conversations);
-
-
-        /**
-         * Method which provide the list updating
-         */
-        void updateList();
+    interface View extends IListView<Chat> {
 
         /**
          * Method which provide to show of the new chat

@@ -18,6 +18,7 @@ import com.magnet.mmx.client.api.ListResult;
 import com.magnet.mmx.client.api.MMXChannel;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -77,7 +78,7 @@ public class ChannelHelper {
                         getChannelDetails(ChatManager.getInstance().getSubscriptions(offset, limit), listener);
                     } else {
                         if (listener != null) {
-                            listener.onSuccess(null);
+                            listener.onSuccess(Collections.EMPTY_LIST);
                         }
                     }
                 }

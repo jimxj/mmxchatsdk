@@ -6,7 +6,6 @@ package com.magnet.magnetchat.core.managers;
 import com.magnet.magnetchat.callbacks.NewMessageProcessListener;
 import com.magnet.magnetchat.helpers.ChannelHelper;
 import com.magnet.magnetchat.model.Chat;
-import com.magnet.magnetchat.model.Message;
 import com.magnet.magnetchat.util.Logger;
 import com.magnet.mmx.client.api.MMXChannel;
 import com.magnet.mmx.client.api.MMXMessage;
@@ -14,7 +13,6 @@ import com.magnet.mmx.client.api.MMXMessage;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +34,7 @@ public class ChatManager {
      */
     private Map<String, MMXMessage> messagesToApproveDeliver;
 
-    private AtomicBoolean isConversationListUpdated = new AtomicBoolean(false);
+    private AtomicBoolean hasNewChat = new AtomicBoolean(false);
 
     private final Comparator<Chat> conversationComparator = new Comparator<Chat>() {
         @Override
@@ -115,33 +113,39 @@ public class ChatManager {
                 //conversation.setLastPublishedTime(new Date());
             } else {
                 boolean newMessageAdded = existingConversation.mergeFrom(conversation);
-                if (newMessageAdded) {
-                    existingConversation.setHasUnreadMessage(true);
-                    existingConversation.setLastPublishedTime(new Date());
-                }
             }
 
-            isConversationListUpdated.set(true);
+            hasNewChat.set(true);
         }
     }
 
     public void removeConversation(String channelName) {
         if (conversations != null && conversations.containsKey(channelName)) {
             conversations.remove(channelName);
-            isConversationListUpdated.set(true);
+            hasNewChat.set(true);
         }
     }
 
     public boolean isConversationListUpdated() {
-        return isConversationListUpdated.get();
+        if(hasNewChat.get()) {
+            return true;
+        }
+
+        for(Chat c : getConversations()) {
+            if(c.hasUpdate()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public void resetConversationListUpdated() {
-        isConversationListUpdated.set(false);
-    }
+        hasNewChat.set(false);
 
-    public void setConversationListUpdated() {
-        isConversationListUpdated.set(true);
+        for(Chat c : getConversations()) {
+            c.resetUpdate();
+        }
     }
 
     public void approveMessage(String messageId) {
@@ -161,7 +165,7 @@ public class ChatManager {
 
     public void resetConversations() {
         conversations.clear();
-        isConversationListUpdated.set(true);
+        hasNewChat.set(true);
     }
 
     public void handleIncomingMessage(final MMXMessage mmxMessage, final NewMessageProcessListener listener) {
