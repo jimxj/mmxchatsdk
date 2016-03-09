@@ -143,9 +143,12 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
     public void onLoad(final int offset, final int limit) {
         if(null != mCurrentConversation) {
             if(mCurrentConversation.getMessages().size() < mCurrentConversation.getTotalMessages()) {
-                mCurrentConversation.getChannel().getMessages(null, null, limit, offset, false, new MMXChannel.OnFinishedListener<ListResult<MMXMessage>>() {
+                mCurrentConversation.getChannel().getMessages(null, null, limit, offset, true, new MMXChannel.OnFinishedListener<ListResult<MMXMessage>>() {
                     @Override public void onSuccess(ListResult<MMXMessage> mmxMessageListResult) {
                         if (null != mmxMessageListResult && !mmxMessageListResult.items.isEmpty()) {
+                            if(0 == offset) {
+                                mCurrentConversation.getMessages().clear();
+                            }
                             mCurrentConversation.insertMessages(mmxMessageListResult.items);
                             mView.showList(mmxMessageListResult.items, 0 != offset);
                         }
@@ -289,7 +292,7 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
             mView.setSendEnabled(true);
 
             ChatManager.getInstance().getMessagesToApproveDeliver().put(message.getId(), message);
-            if (StringUtil.isStringValueEqual(MessageHelper.getMessageSummary(message), Message.TYPE_TEXT)) {
+            if (StringUtil.isStringValueEqual(MessageHelper.getMessageType(message), Message.TYPE_TEXT)) {
                 mView.clearInput();
             }
             onNewMessage(message);

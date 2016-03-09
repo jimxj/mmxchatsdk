@@ -257,7 +257,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
             messagesListView.setAdapter(mAdapter);
         } else {
             if(toAppend){
-                mAdapter.append(Message.fromMMXMessages(messages));
+                mAdapter.insert(Message.fromMMXMessages(messages));
             } else {
                 mAdapter.swapData(Message.fromMMXMessages(messages));
             }

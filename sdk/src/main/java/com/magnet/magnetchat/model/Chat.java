@@ -15,6 +15,7 @@ import com.magnet.mmx.client.api.MMXChannel;
 import com.magnet.mmx.client.api.MMXMessage;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -66,7 +67,7 @@ public class Chat extends ChannelDetail {
                 owner = up;
             }
             if (!up.getUserIdentifier().equals(User.getCurrentUserId())) {
-                this.addSubscriber(up);
+                addSubscriber(up);
             } else {
                 Log.d(TAG, "is owner");
             }
@@ -93,7 +94,16 @@ public class Chat extends ChannelDetail {
     }
 
     public boolean containSubscriber(UserProfile userProfile) {
-        return null != subscribers ? subscribers.contains(userProfile) : false;
+        if(null == subscribers || subscribers.isEmpty()) {
+            return false;
+        }
+        for(UserProfile up : subscribers) {
+            if(up.getUserIdentifier().equals(userProfile.getUserIdentifier())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public List<UserProfile> getSortedSubscribers() {
@@ -103,7 +113,7 @@ public class Chat extends ChannelDetail {
     }
 
     public void addSubscriber(UserProfile user) {
-        if (user != null && !user.equals(User.getCurrentUser()) && !containSubscriber(user)) {
+        if (user != null && !user.getUserIdentifier().equals(User.getCurrentUserId()) && !containSubscriber(user)) {
             subscribers.add(user);
             hasRecipientsUpdate = true;
         }
@@ -128,10 +138,6 @@ public class Chat extends ChannelDetail {
     public void setLastPublishedTime(Date lastActiveTime) {
         this.lastPublishedTime = lastActiveTime;
     }
-
-    //public List<Message> getMessages() {
-    //    return mMessages;
-    //}
 
     public List<MMXMessage> getMessages(int offset, int limit) {
         if (limit > 0) {
@@ -160,8 +166,8 @@ public class Chat extends ChannelDetail {
     public boolean insertMessages(List<MMXMessage> mmxMessages) {
         boolean addedResult = false;
         if(null != mmxMessages && ! mmxMessages.isEmpty()) {
-            for(MMXMessage mmxMessage : mmxMessages) {
-                boolean thisAddResult = insertMessage(mmxMessage);
+            for(int i = mmxMessages.size() - 1; i >=0 ; i--) {
+                boolean thisAddResult = insertMessage(mmxMessages.get(i));
                 addedResult = addedResult || thisAddResult;
             }
         }
@@ -286,6 +292,12 @@ public class Chat extends ChannelDetail {
         if(isNew) {
             setHasUnreadMessage(true);
             lastPublishedTime = new Date();
+        }
+    }
+
+    public void appendMessages(List<MMXMessage> messages) {
+        for(MMXMessage mmxMessage : messages) {
+            addMessage(mmxMessage, false);
         }
     }
 
