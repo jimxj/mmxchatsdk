@@ -6,9 +6,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 
 import com.magnet.magnetchat.callbacks.NewMessageProcessListener;
-import com.magnet.magnetchat.core.managers.ChannelCacheManager;
+import com.magnet.magnetchat.core.managers.ChatManager;
 import com.magnet.magnetchat.helpers.ChannelHelper;
-import com.magnet.magnetchat.model.Conversation;
+import com.magnet.magnetchat.model.Chat;
 import com.magnet.magnetchat.model.Message;
 import com.magnet.magnetchat.mvp.api.ChatListContract;
 import com.magnet.magnetchat.util.Logger;
@@ -30,7 +30,7 @@ import java.util.List;
 public class ChatListPresenterImpl implements ChatListContract.Presenter {
     protected static final String TAG = "ChatListPresenter";
 
-    protected List<Conversation> mConversations = new ArrayList<>();
+    protected List<Chat> mConversations = new ArrayList<>();
     private boolean isLoadingWhenCreating = false;
     protected ChatListContract.View mView;
 
@@ -51,18 +51,18 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
         ChannelHelper.getSubscriptionDetails(offset, limit, new MMXChannel.OnFinishedListener<List<ChannelDetail>>() {
             @Override
             public void onSuccess(List<ChannelDetail> channelDetails) {
-                List<Conversation> newConversations = new ArrayList<Conversation>();
+                List<Chat> newConversations = new ArrayList<Chat>();
                 if (null != channelDetails) {
                     for (ChannelDetail cd : channelDetails) {
-                        Conversation c = new Conversation(cd);
-                        ChannelCacheManager.getInstance().addConversation(c);
+                        Chat c = new Chat(cd);
+                        ChatManager.getInstance().addConversation(c);
                         newConversations.add(c);
                     }
                 }
 
                 if(offset == 0) {
                     mConversations.clear();
-                    mConversations.addAll(ChannelCacheManager.getInstance().getConversations());
+                    mConversations.addAll(ChatManager.getInstance().getConversations());
                     mView.showList(mConversations);
                 } else {
                     mConversations.addAll(newConversations);
@@ -92,7 +92,7 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
     }
 
     @Override
-    public void onConversationUpdate(Conversation conversation, boolean isNew) {
+    public void onConversationUpdate(Chat conversation, boolean isNew) {
         mView.showConversationUpdate(conversation, isNew);
     }
 
@@ -102,9 +102,9 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
      */
     @Override
     public void onResume() {
-        if (!isLoadingWhenCreating && ChannelCacheManager.getInstance().isConversationListUpdated()) {
+        if (!isLoadingWhenCreating && ChatManager.getInstance().isConversationListUpdated()) {
             showAllConversations();
-            ChannelCacheManager.getInstance().resetConversationListUpdated();
+            ChatManager.getInstance().resetConversationListUpdated();
         }
         MMX.registerListener(eventListener);
 
@@ -134,9 +134,9 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
      */
     @Override
     public void onSearch(String query, String order) {
-        final List<Conversation> searchResult = new ArrayList<>();
-        for (Conversation conversation : getAllConversations()) {
-            for (UserProfile userProfile : conversation.getSuppliersList()) {
+        final List<Chat> searchResult = new ArrayList<>();
+        for (Chat conversation : getAllConversations()) {
+            for (UserProfile userProfile : conversation.getSortedSubscribers()) {
                 if (userProfile.getDisplayName() != null && userProfile.getDisplayName().toLowerCase().contains(query.toLowerCase())) {
                     searchResult.add(conversation);
                     break;
@@ -163,7 +163,7 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
      * @param conversation channel
      */
     @Override
-    public void onItemSelect(int position, Conversation conversation) {
+    public void onItemSelect(int position, Chat conversation) {
         mView.showChatDetails(conversation);
     }
 
@@ -173,7 +173,7 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
      * @param conversation channel
      */
     @Override
-    public void onItemLongClick(int position, Conversation conversation) {
+    public void onItemLongClick(int position, Chat conversation) {
 
     }
 
@@ -183,7 +183,7 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
      * @return list of all conversations
      */
     @Override
-    public List<Conversation> getAllConversations() {
+    public List<Chat> getAllConversations() {
         return mConversations;
     }
 
@@ -192,7 +192,7 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
      */
     private void showAllConversations() {
         mConversations.clear();
-        mConversations.addAll(ChannelCacheManager.getInstance().getConversations());
+        mConversations.addAll(ChatManager.getInstance().getConversations());
         mView.showList(mConversations);
     }
 
@@ -203,9 +203,9 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
         @Override
         public boolean onMessageReceived(MMXMessage mmxMessage) {
             Logger.debug(TAG, "onMessageReceived");
-            ChannelCacheManager.getInstance().handleIncomingMessage(mmxMessage, new NewMessageProcessListener() {
+            ChatManager.getInstance().handleIncomingMessage(mmxMessage, new NewMessageProcessListener() {
                 @Override
-                public void onProcessSuccess(Conversation conversation, Message message,
+                public void onProcessSuccess(Chat conversation, MMXMessage message,
                                              boolean isNewChat) {
                     onConversationUpdate(conversation, isNewChat);
                 }

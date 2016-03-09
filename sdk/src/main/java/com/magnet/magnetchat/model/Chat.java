@@ -1,0 +1,301 @@
+package com.magnet.magnetchat.model;
+
+import android.location.Location;
+import android.os.Parcel;
+import android.os.Parcelable;
+import android.util.Log;
+import com.magnet.magnetchat.helpers.MessageHelper;
+import com.magnet.magnetchat.helpers.UserHelper;
+import com.magnet.magnetchat.util.Logger;
+import com.magnet.max.android.Attachment;
+import com.magnet.max.android.User;
+import com.magnet.max.android.UserProfile;
+import com.magnet.mmx.client.api.ChannelDetail;
+import com.magnet.mmx.client.api.MMXChannel;
+import com.magnet.mmx.client.api.MMXMessage;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+public class Chat extends ChannelDetail {
+    private static final String TAG = Chat.class.getSimpleName();
+
+    //private List<Message> mMessages = new ArrayList();
+    private boolean hasUnreadMessage;
+    private boolean hasRecipientsUpdate;
+
+    private Comparator<UserProfile> userProfileComparator = new Comparator<UserProfile>() {
+        @Override public int compare(UserProfile lhs, UserProfile rhs) {
+            return 0 - lhs.getDisplayName().compareTo(rhs.getDisplayName());
+        }
+    };
+
+    public Chat(Parcel source) {
+        super(source);
+    }
+
+    public interface OnSendMessageListener {
+        void onSuccessSend(MMXMessage message);
+
+        void onFailure(Throwable throwable);
+    }
+
+    public Chat(MMXChannel channel, List<UserProfile> subscribers, UserProfile owner) {
+        this(channel, subscribers, null, owner, null);
+
+        for(UserProfile up : subscribers) {
+            addSubscriber(up);
+        }
+    }
+
+    public Chat(ChannelDetail channelDetail) {
+        this(channelDetail.getChannel(), null, //Subscribers will be added below
+            null, // Messages will be added below
+            channelDetail.getOwner(), channelDetail.getLastPublishedTime());
+
+        this.totalMessages = channelDetail.getTotalMessages();
+        this.totalSubscribers = channelDetail.getTotalSubscribers();
+
+        //Logger.debug(TAG, "channel subscribers ", channelDetail.getSortedSubscribers(), " channel ", channel.getName());
+        for (UserProfile up : channelDetail.getSubscribers()) {
+            if (owner == null && up.getUserIdentifier().equals(channel.getOwnerId())) {
+                owner = up;
+            }
+            if (!up.getUserIdentifier().equals(User.getCurrentUserId())) {
+                this.addSubscriber(up);
+            } else {
+                Log.d(TAG, "is owner");
+            }
+        }
+
+        //Logger.debug(TAG, "channel messages ", channelDetail.getMessages(), " channel ", channel.getName());
+        for(MMXMessage mmxMessage : channelDetail.getMessages()) {
+            appendMessage(mmxMessage, false);
+        }
+    }
+
+    protected Chat(MMXChannel channel, List<UserProfile> subscribers, List<MMXMessage> messages,
+        UserProfile owner, Date lastPublishedTime) {
+        this.channel = channel;
+        this.owner = owner;
+        this.lastPublishedTime = null != lastPublishedTime ? lastPublishedTime : new Date();
+        this.messages = null != messages ? messages : new ArrayList<MMXMessage>();
+        this.subscribers = null != subscribers ? subscribers : new ArrayList<UserProfile>();
+    }
+
+    @Override
+    public List<UserProfile> getSubscribers() {
+        return subscribers;
+    }
+
+    public boolean containSubscriber(UserProfile userProfile) {
+        return null != subscribers ? subscribers.contains(userProfile) : false;
+    }
+
+    public List<UserProfile> getSortedSubscribers() {
+        ArrayList<UserProfile> list = new ArrayList<>(getSubscribers());
+        Collections.sort(list, userProfileComparator);
+        return list;
+    }
+
+    public void addSubscriber(UserProfile user) {
+        if (user != null && !user.equals(User.getCurrentUser()) && !containSubscriber(user)) {
+            subscribers.add(user);
+            hasRecipientsUpdate = true;
+        }
+    }
+
+    public boolean hasUnreadMessage() {
+        return hasUnreadMessage;
+    }
+
+    public boolean hasRecipientsUpdate() {
+        return hasRecipientsUpdate;
+    }
+
+    public void setHasRecipientsUpdate(boolean hasRecipientsUpdate) {
+        this.hasRecipientsUpdate = hasRecipientsUpdate;
+    }
+
+    public void setHasUnreadMessage(boolean hasUnreadMessage) {
+        this.hasUnreadMessage = hasUnreadMessage;
+    }
+
+    public void setLastPublishedTime(Date lastActiveTime) {
+        this.lastPublishedTime = lastActiveTime;
+    }
+
+    //public List<Message> getMessages() {
+    //    return mMessages;
+    //}
+
+    public List<MMXMessage> getMessages(int offset, int limit) {
+        if (limit > 0) {
+            int size = messages.size();
+            if (offset >= 0 && offset < size) {
+                return (offset + limit) > size ? messages.subList(offset, size)
+                    : messages.subList(offset, offset + limit);
+            }
+        } else {
+            // return a copy
+            return new ArrayList<>(messages);
+        }
+
+        return Collections.EMPTY_LIST;
+    }
+
+    public boolean addMessage(MMXMessage message, boolean isNewMessage) {
+        if (!messages.contains(message)) {
+            appendMessage(message, isNewMessage);
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean insertMessages(List<MMXMessage> mmxMessages) {
+        boolean addedResult = false;
+        if(null != mmxMessages && ! mmxMessages.isEmpty()) {
+            for(MMXMessage mmxMessage : mmxMessages) {
+                boolean thisAddResult = insertMessage(mmxMessage);
+                addedResult = addedResult || thisAddResult;
+            }
+        }
+
+        return addedResult;
+    }
+
+    public boolean mergeFrom(Chat conversation) {
+        boolean newMessageAdded = false;
+        if(null != conversation) {
+            for (UserProfile up : conversation.getSubscribers()) {
+                if (owner == null && up.getUserIdentifier().equals(channel.getOwnerId())) {
+                    owner = up;
+                }
+                if (!up.getUserIdentifier().equals(User.getCurrentUserId())) {
+                    this.addSubscriber(up);
+                }
+            }
+
+            for (MMXMessage message : conversation.getMessages()) {
+                newMessageAdded = newMessageAdded || this.addMessage(message, false);
+            }
+        }
+
+        return newMessageAdded;
+    }
+
+    public void sendTextMessage(final String text, final OnSendMessageListener listener) {
+        if (channel != null) {
+            Map<String, String> content = Message.makeContent(text);
+            sendMessage(content, listener);
+        } else {
+            throw new Error();
+        }
+    }
+
+    public void sendLocation(Location location, final OnSendMessageListener listener) {
+        if (channel != null) {
+            Map<String, String> content = Message.makeContent(location);
+            sendMessage(content, listener);
+        } else {
+            throw new Error();
+        }
+    }
+
+    public void sendVideo(final String filePath, final String mimeType, final OnSendMessageListener listener) {
+        Logger.debug(TAG, "sending video " + filePath);
+        if (channel != null) {
+            File file = new File(filePath);
+            Attachment attachment = new Attachment(file, mimeType, file.getName(), "From " + UserHelper.getDisplayName(User.getCurrentUser()));
+            Map<String, String> content = Message.makeVideoContent();
+            sendMessage(content, attachment, listener);
+        } else {
+            throw new Error();
+        }
+    }
+
+    public void sendPhoto(final String filePath, final String mimeType, final OnSendMessageListener listener) {
+        Logger.debug(TAG, "sending photo " + filePath);
+        if (channel != null) {
+            File file = new File(filePath);
+            Attachment attachment = new Attachment(file, mimeType, file.getName(), "From " + UserHelper.getDisplayName(User.getCurrentUser()));
+            Map<String, String> content = Message.makePhotoContent();
+            sendMessage(content, attachment, listener);
+        } else {
+            throw new Error();
+        }
+    }
+
+    public String getLastMessageSummary() {
+        if (messages != null && messages.size() > 0) {
+          return MessageHelper.getMessageSummary(messages.get(messages.size() - 1));
+        }
+
+        return "";
+    }
+
+    private void sendMessage(Map<String, String> content, final OnSendMessageListener listener) {
+        sendMessage(content, null, listener);
+    }
+
+    private void sendMessage(Map<String, String> content, Attachment attachment, final OnSendMessageListener listener) {
+        MMXMessage.Builder builder = new MMXMessage.Builder();
+        builder.channel(channel).content(content);
+        if (attachment != null) {
+            builder.attachments(attachment);
+        }
+        final MMXMessage message = builder.build();
+        channel.publish(message, new MMXChannel.OnFinishedListener<String>() {
+            @Override
+            public void onSuccess(String s) {
+                Logger.debug("send message", "success");
+                addMessage(message, false);
+                totalMessages++;
+                listener.onSuccessSend(message);
+            }
+
+            @Override
+            public void onFailure(MMXChannel.FailureCode failureCode, Throwable throwable) {
+                listener.onFailure(throwable);
+            }
+        });
+    }
+
+    private boolean insertMessage(MMXMessage message) {
+        if (!messages.contains(message)) {
+            messages.add(0, message);
+
+            addSubscriber(message.getSender());
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private void appendMessage(MMXMessage message, boolean isNew) {
+        messages.add(message);
+
+        addSubscriber(message.getSender());
+
+        if(isNew) {
+            setHasUnreadMessage(true);
+            lastPublishedTime = new Date();
+        }
+    }
+
+    public static final Parcelable.Creator<Chat> CREATOR = new Parcelable.Creator<Chat>() {
+        public Chat createFromParcel(Parcel source) {
+            return new Chat(source);
+        }
+
+        public Chat[] newArray(int size) {
+            return new Chat[size];
+        }
+    };
+}

@@ -4,10 +4,10 @@ import android.app.Activity;
 import android.support.annotation.NonNull;
 
 import com.magnet.magnetchat.Constants;
-import com.magnet.magnetchat.core.managers.ChannelCacheManager;
+import com.magnet.magnetchat.core.managers.ChatManager;
 import com.magnet.magnetchat.helpers.ChannelHelper;
 import com.magnet.magnetchat.helpers.UserHelper;
-import com.magnet.magnetchat.model.Conversation;
+import com.magnet.magnetchat.model.Chat;
 import com.magnet.magnetchat.mvp.api.ChooseUserContract;
 import com.magnet.magnetchat.ui.activities.ChatActivity;
 import com.magnet.magnetchat.util.Logger;
@@ -25,7 +25,7 @@ import java.util.List;
  */
 public class ChooseUserPresenterImpl implements ChooseUserContract.Presenter {
     private final ChooseUserContract.View mView;
-    private Conversation mConversation;
+    private Chat mConversation;
     private ChooseUserContract.ChooseMode mAddmingMode;
     private List<User> mDefaultQueryResults;
     private ChooseUserContract.UserQuery mCurrentQuery;
@@ -38,7 +38,7 @@ public class ChooseUserPresenterImpl implements ChooseUserContract.Presenter {
     public ChooseUserPresenterImpl(ChooseUserContract.View view, String channelName) {
         this.mView = view;
         if (null != channelName) {
-            mConversation = ChannelCacheManager.getInstance().getConversationByName(channelName);
+            mConversation = ChatManager.getInstance().getConversationByName(channelName);
             mAddmingMode = ChooseUserContract.ChooseMode.MODE_ADD_USER;
         } else {
             mAddmingMode = ChooseUserContract.ChooseMode.MODE_NEW_CHAT;
@@ -150,7 +150,7 @@ public class ChooseUserPresenterImpl implements ChooseUserContract.Presenter {
                     if (mConversation != null) {
                         List<Integer> indexes = new ArrayList<>();
                         for (int i = 0; i < users.size(); i++) {
-                            if (null != mConversation.getSupplier(users.get(i).getUserIdentifier())) {
+                            if (! mConversation.containSubscriber(users.get(i))) {
                                 indexes.add(i);
                             }
                         }

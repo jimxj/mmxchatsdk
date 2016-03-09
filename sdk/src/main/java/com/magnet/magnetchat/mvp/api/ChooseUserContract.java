@@ -85,7 +85,7 @@ public interface ChooseUserContract {
 
     }
 
-    interface Presenter extends ListPresenter<User> {
+    interface Presenter extends IListPresenter<User> {
 
         /**
          * Method which provide the user selection

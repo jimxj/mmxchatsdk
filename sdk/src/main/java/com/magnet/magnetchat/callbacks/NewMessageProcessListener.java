@@ -3,10 +3,12 @@
  */
 package com.magnet.magnetchat.callbacks;
 
-import com.magnet.magnetchat.model.Conversation;
+import com.magnet.magnetchat.model.Chat;
 import com.magnet.magnetchat.model.Message;
+import com.magnet.mmx.client.api.MMX;
+import com.magnet.mmx.client.api.MMXMessage;
 
 public interface NewMessageProcessListener {
-  void onProcessSuccess(Conversation conversation, Message message, boolean isNewChat);
+  void onProcessSuccess(Chat conversation, MMXMessage message, boolean isNewChat);
   void onProcessFailure(Throwable throwable);
 }

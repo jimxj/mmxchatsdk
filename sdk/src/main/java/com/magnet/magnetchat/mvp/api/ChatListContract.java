@@ -1,6 +1,6 @@
 package com.magnet.magnetchat.mvp.api;
 
-import com.magnet.magnetchat.model.Conversation;
+import com.magnet.magnetchat.model.Chat;
 
 import java.util.List;
 
@@ -16,7 +16,7 @@ public interface ChatListContract {
          *
          * @param conversations conversation
          */
-        void showList(List<Conversation> conversations);
+        void showList(List<Chat> conversations);
 
 
         /**
@@ -29,16 +29,16 @@ public interface ChatListContract {
          */
         void createNewChat();
 
-        void showConversationUpdate(Conversation conversation, boolean isNew);
+        void showConversationUpdate(Chat conversation, boolean isNew);
 
         /**
          * Method which provide the conversation details
          *
          * @param conversation current conversation
          */
-        void showChatDetails(Conversation conversation);
+        void showChatDetails(Chat conversation);
 
-        void showLeaveConfirmation(Conversation conversation);
+        void showLeaveConfirmation(Chat conversation);
 
         /**
          * Method which provide the dismissing of the leave dialog
@@ -53,9 +53,9 @@ public interface ChatListContract {
         void setProgressIndicator(boolean active);
     }
 
-    interface Presenter extends ListPresenter<Conversation> {
+    interface Presenter extends IListPresenter<Chat> {
 
-        void onConversationUpdate(Conversation conversation, boolean isNew);
+        void onConversationUpdate(Chat conversation, boolean isNew);
 
         /**
          * Method which provide the action when activity or fragment call onResume
@@ -74,6 +74,6 @@ public interface ChatListContract {
          *
          * @return list of all conversations
          */
-        List<Conversation> getAllConversations();
+        List<Chat> getAllConversations();
     }
 }

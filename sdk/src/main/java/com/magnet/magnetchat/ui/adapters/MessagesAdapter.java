@@ -21,6 +21,7 @@ import com.magnet.magnetchat.ui.views.section.chat.CircleNameView;
 import com.magnet.max.android.Attachment;
 import com.magnet.max.android.User;
 import com.magnet.max.android.util.StringUtil;
+import com.magnet.mmx.client.api.MMXMessage;
 import java.util.Date;
 import java.util.List;
 

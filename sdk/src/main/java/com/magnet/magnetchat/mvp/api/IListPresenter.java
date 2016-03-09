@@ -3,7 +3,7 @@
  */
 package com.magnet.magnetchat.mvp.api;
 
-public interface ListPresenter<T> {
+public interface IListPresenter<T> {
 
   void onLoad(int offset, int limit);
 

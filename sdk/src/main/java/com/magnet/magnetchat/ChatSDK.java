@@ -7,7 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Vibrator;
 
-import com.magnet.magnetchat.core.managers.ChannelCacheManager;
+import com.magnet.magnetchat.core.managers.ChatManager;
 import com.magnet.magnetchat.core.managers.InternetConnectionManager;
 import com.magnet.magnetchat.core.managers.SharedPreferenceManager;
 import com.magnet.magnetchat.helpers.UserHelper;
@@ -30,7 +30,7 @@ public class ChatSDK {
 
         SharedPreferenceManager.getInstance(context);
         InternetConnectionManager.getInstance(context);
-        ChannelCacheManager.getInstance();
+        ChatManager.getInstance();
     }
 
     public static void messageNotification(String channelName, String fromUserName) {
@@ -68,7 +68,7 @@ public class ChatSDK {
         @Override
         public boolean onMessageReceived(MMXMessage mmxMessage) {
             Logger.debug("onMessageReceived", mmxMessage);
-            ChannelCacheManager.getInstance().handleIncomingMessage(mmxMessage, null);
+            ChatManager.getInstance().handleIncomingMessage(mmxMessage, null);
             if ((mmxMessage.getSender() != null)
                     && (!mmxMessage.getSender().getUserIdentifier().equals(User.getCurrentUserId()))) {
                 if (mmxMessage.getChannel() != null) {
@@ -82,7 +82,7 @@ public class ChatSDK {
 
         @Override
         public boolean onMessageAcknowledgementReceived(User from, String messageId) {
-            ChannelCacheManager.getInstance().approveMessage(messageId);
+            ChatManager.getInstance().approveMessage(messageId);
             return false;
         }
     };

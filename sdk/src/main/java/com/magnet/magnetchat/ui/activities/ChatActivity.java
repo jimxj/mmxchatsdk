@@ -31,10 +31,10 @@ import com.magnet.magnetchat.Constants;
 import com.magnet.magnetchat.R;
 import com.magnet.magnetchat.callbacks.EndlessLinearRecyclerViewScrollListener;
 import com.magnet.magnetchat.callbacks.OnRecyclerViewItemClickListener;
-import com.magnet.magnetchat.core.managers.ChannelCacheManager;
+import com.magnet.magnetchat.core.managers.ChatManager;
 import com.magnet.magnetchat.helpers.PermissionHelper;
 import com.magnet.magnetchat.helpers.UserHelper;
-import com.magnet.magnetchat.model.Conversation;
+import com.magnet.magnetchat.model.Chat;
 import com.magnet.magnetchat.model.Message;
 import com.magnet.magnetchat.mvp.api.ChatContract;
 import com.magnet.magnetchat.mvp.presenters.ChatPresenterImpl;
@@ -42,7 +42,9 @@ import com.magnet.magnetchat.ui.adapters.MessagesAdapter;
 import com.magnet.magnetchat.util.Utils;
 import com.magnet.max.android.UserProfile;
 
+import com.magnet.mmx.client.api.MMXMessage;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -101,6 +103,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowTitleEnabled(true);
         }
 
         editMessage = (AppCompatEditText) findViewById(R.id.chatMessageField);
@@ -128,7 +131,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
 
         channelName = getIntent().getStringExtra(TAG_CHANNEL_NAME);
         if (null != channelName) {
-            Conversation currentConversation = ChannelCacheManager.getInstance().getConversationByName(channelName);
+            Chat currentConversation = ChatManager.getInstance().getConversationByName(channelName);
             if (currentConversation != null) {
                 mPresenter = new ChatPresenterImpl(this, currentConversation);
             } else {
@@ -146,6 +149,8 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
                 return;
             }
         }
+
+        mPresenter.onLoad(0, Constants.MESSAGE_PAGE_SIZE);
 
         googleApiClient = new GoogleApiClient.Builder(this).addConnectionCallbacks(connectionCallback)
                 .addOnConnectionFailedListener(connectionFailedListener).addApi(LocationServices.API).build();
@@ -212,6 +217,13 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void setTitle(String title) {
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle(title);
+        }
+    }
+
     /**
      * Show or hide the progress bar
      *
@@ -228,9 +240,9 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
      * @param messages messages list
      */
     @Override
-    public void showMessages(List<Message> messages) {
+    public void showList(List<MMXMessage> messages, boolean toAppend) {
         if (null == mAdapter) {
-            mAdapter = new MessagesAdapter(this, messages);
+            mAdapter = new MessagesAdapter(this, Message.fromMMXMessages(messages));
             mAdapter.setmOnClickListener(new OnRecyclerViewItemClickListener() {
                 @Override
                 public void onClick(int position) {
@@ -244,17 +256,10 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
             });
             messagesListView.setAdapter(mAdapter);
         } else {
-            mAdapter.swapData(messages);
-        }
-    }
-
-    @Override
-    public void refreshMessages(int offset, int limit) {
-        if (null != mAdapter) {
-            if (offset >= 0 && limit > 0) {
-                mAdapter.notifyItemRangeInserted(offset, limit);
+            if(toAppend){
+                mAdapter.append(Message.fromMMXMessages(messages));
             } else {
-                mAdapter.notifyDataSetChanged();
+                mAdapter.swapData(Message.fromMMXMessages(messages));
             }
         }
     }
@@ -266,11 +271,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
      */
     @Override
     public void showRecipients(List<UserProfile> recipients) {
-        if (recipients.size() == 1) {
-            setTitle(UserHelper.getDisplayNames(recipients));
-        } else {
-            setTitle("Group");
-        }
+
     }
 
     /**
@@ -279,8 +280,9 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
      * @param message new message
      */
     @Override
-    public void showNewMessage(Message message) {
+    public void showNewMessage(MMXMessage message) {
         if (mAdapter != null) {
+            mAdapter.append(Arrays.asList(Message.createMessageFrom(message)));
             mAdapter.notifyItemChanged(mAdapter.getItemCount());
             messagesListView.smoothScrollToPosition(mAdapter.getItemCount());
         }
@@ -474,7 +476,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
         }
     }
 
-    public static Intent getIntentWithChannel(Context context, Conversation conversation) {
+    public static Intent getIntentWithChannel(Context context, Chat conversation) {
         if (null != conversation && null != conversation.getChannel()) {
             Intent intent = new Intent(context, ChatActivity.class);
             intent.putExtra(TAG_CHANNEL_NAME, conversation.getChannel().getName());

@@ -51,45 +51,4 @@ public class InternetConnectionManager {
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
         return networkInfo != null && networkInfo.getType() == type;
     }
-
-    public String downloadFile(String reference, String pathOnSd, String fileName) throws IOException {
-        if (isAnyConnectionAvailable()) {
-            System.setProperty("http.keepAlive", "false");
-            URL url = new URL(reference);
-            try {
-                BufferedInputStream reader = new BufferedInputStream(url.openStream());
-                File file = new File(pathOnSd, url.getFile());
-                if (!file.exists()) {
-                    Logger.debug("downloadFile", file);
-                    FileOutputStream writer = new FileOutputStream(file);
-                    final byte data[] = new byte[1024];
-                    int count;
-                    while ((count = reader.read(data, 0, 1024)) != -1) {
-                        writer.write(data, 0, count);
-                    }
-                    reader.close();
-                    writer.close();
-                }
-                return file.getAbsolutePath();
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-        }
-        return null;
-    }
-
-    public void downloadFileInThread(final String reference, final String pathOnSd, final String fileName) {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    downloadFile(reference, pathOnSd, fileName);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-        thread.start();
-    }
-
 }

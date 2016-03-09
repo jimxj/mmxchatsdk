@@ -4,8 +4,11 @@ import android.location.Location;
 import com.magnet.max.android.Attachment;
 import com.magnet.max.android.User;
 import com.magnet.mmx.client.api.MMXMessage;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -19,10 +22,10 @@ public class Message {
     public static final String TYPE_MAP = "location";
     public static final String TYPE_VIDEO = "video";
 
-    private static final String TAG_TYPE = "type";
-    private static final String TAG_TEXT = "message";
-    private static final String TAG_LONGITUDE = "longitude";
-    private static final String TAG_LATITUDE = "latitude";
+    public static final String TAG_TYPE = "type";
+    public static final String TAG_TEXT = "message";
+    public static final String TAG_LONGITUDE = "longitude";
+    public static final String TAG_LATITUDE = "latitude";
 
     private MMXMessage mmxMessage;
     private boolean isDelivered;
@@ -30,10 +33,6 @@ public class Message {
 
     public MMXMessage getMmxMessage() {
         return mmxMessage;
-    }
-
-    public void setMmxMessage(MMXMessage mmxMessage) {
-        this.mmxMessage = mmxMessage;
     }
 
     public Attachment getAttachment() {
@@ -121,7 +120,8 @@ public class Message {
 
     public static Message createMessageFrom(MMXMessage mmxMessage) {
         Message message = new Message();
-        message.setMmxMessage(mmxMessage);
+        message.creationDate = null != mmxMessage.getTimestamp() ? mmxMessage.getTimestamp() : new Date();
+        message.mmxMessage = mmxMessage;
         return message;
     }
 
@@ -154,5 +154,18 @@ public class Message {
 
     @Override public String toString() {
         return null != mmxMessage ? mmxMessage.toString() : "";
+    }
+
+    public static List<Message> fromMMXMessages(List<MMXMessage> mmxMessageList) {
+        if(null != mmxMessageList && !mmxMessageList.isEmpty()) {
+            List<Message> messages = new ArrayList<>(mmxMessageList.size());
+            for(MMXMessage mmxMessage : mmxMessageList) {
+                messages.add(Message.createMessageFrom(mmxMessage));
+            }
+
+            return messages;
+        } else {
+            return Collections.EMPTY_LIST;
+        }
     }
 }

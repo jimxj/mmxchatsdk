@@ -13,7 +13,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 
 import com.magnet.magnetchat.R;
-import com.magnet.magnetchat.model.Conversation;
+import com.magnet.magnetchat.model.Chat;
 import com.magnet.magnetchat.mvp.api.ChatDetailsContract;
 import com.magnet.magnetchat.mvp.presenters.ChatDetailsPresenterImpl;
 import com.magnet.magnetchat.ui.adapters.UsersAdapter;
@@ -119,7 +119,7 @@ public class ChatDetailsActivity extends BaseActivity implements ChatDetailsCont
         return super.onOptionsItemSelected(item);
     }
 
-    public static Intent createIntentForChannel(Context context, Conversation conversation) {
+    public static Intent createIntentForChannel(Context context, Chat conversation) {
         Intent intent = new Intent(context, ChatDetailsActivity.class);
         intent.putExtra(TAG_CHANNEL, conversation.getChannel());
         return intent;
