@@ -27,6 +27,7 @@ import com.magnet.magnetchat.mvp.presenters.ChooseUserPresenterImpl;
 import com.magnet.magnetchat.ui.adapters.SelectedUsersAdapter;
 import com.magnet.magnetchat.ui.adapters.UsersAdapter;
 import com.magnet.magnetchat.ui.custom.CustomSearchView;
+import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;
 
 import java.util.ArrayList;
@@ -46,7 +47,7 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
 
     private UsersAdapter mAdapter;
     private SelectedUsersAdapter selectedAdapter;
-    private ArrayList<UserProfile> selectedUsers;
+    private ArrayList<User> selectedUsers;
 
     private ChooseUserContract.Presenter mPresenter;
 
@@ -157,17 +158,17 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
      * @param users users list
      */
     @Override
-    public void showUsers(@NonNull List<? extends UserProfile> users, boolean toAppend) {
+    public void showUsers(@NonNull List<User> users, boolean toAppend) {
         if (null == mAdapter) {
             mAdapter =
-                new UsersAdapter(this, UserHelper.convertToUserProfileList(users), selectedUsers);
+                new UsersAdapter(this, users, selectedUsers, mPresenter.getItemComparator());
             userList.setAdapter(mAdapter);
             mAdapter.setOnClickListener(userClickListener);
         } else {
             if(toAppend) {
-                mAdapter.append(UserHelper.convertToUserProfileList(users));
+                mAdapter.addItem(users);
             } else {
-                mAdapter.swapData(UserHelper.convertToUserProfileList(users));
+                mAdapter.swapData(users);
             }
         }
     }
@@ -232,7 +233,7 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
         @Override
         public void onClick(int position) {
             hideKeyboard();
-            UserProfile user = mAdapter.getItem(position);
+            User user = mAdapter.getItem(position);
             if (user != null) {
                 if (selectedUsers.contains(user)) {
                     selectedUsers.remove(user);

@@ -10,13 +10,14 @@ import com.magnet.magnetchat.helpers.UserHelper;
 import com.magnet.magnetchat.model.Chat;
 import com.magnet.magnetchat.mvp.api.ChooseUserContract;
 import com.magnet.magnetchat.ui.activities.ChatActivity;
+import com.magnet.magnetchat.ui.adapters.BaseSortedAdapter;
 import com.magnet.magnetchat.util.Logger;
 import com.magnet.magnetchat.util.Utils;
 import com.magnet.max.android.ApiCallback;
 import com.magnet.max.android.ApiError;
 import com.magnet.max.android.User;
-import com.magnet.max.android.UserProfile;
 
+import com.magnet.max.android.util.StringUtil;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -89,7 +90,7 @@ public class ChooseUserPresenterImpl implements ChooseUserContract.Presenter {
      * @param selectedUsers user list
      */
     @Override
-    public void onUsersSelected(@NonNull List<UserProfile> selectedUsers) {
+    public void onUsersSelected(@NonNull List<User> selectedUsers) {
         if (selectedUsers.size() > 0) {
             switch (mAddmingMode) {
                 case MODE_ADD_USER:
@@ -110,7 +111,7 @@ public class ChooseUserPresenterImpl implements ChooseUserContract.Presenter {
      * @param selectedUsers selected users
      */
     @Override
-    public void onAddUsersToChat(@NonNull List<UserProfile> selectedUsers) {
+    public void onAddUsersToChat(@NonNull List<User> selectedUsers) {
         mView.setProgressIndicator(true);
         ChannelHelper.addUserToConversation(mConversation, selectedUsers, addUserChannelListener);
     }
@@ -121,7 +122,7 @@ public class ChooseUserPresenterImpl implements ChooseUserContract.Presenter {
      * @param selectedUsers selected users
      */
     @Override
-    public void onNewChat(@NonNull List<UserProfile> selectedUsers) {
+    public void onNewChat(@NonNull List<User> selectedUsers) {
         Activity activity = mView.getActivity();
         if (activity != null) {
             activity.startActivity(ChatActivity.getIntentForNewChannel(activity, selectedUsers));
@@ -129,8 +130,13 @@ public class ChooseUserPresenterImpl implements ChooseUserContract.Presenter {
         }
     }
 
-    @Override public ChooseUserContract.UserQuery getDefaultQuery() {
+    @Override
+    public ChooseUserContract.UserQuery getDefaultQuery() {
         return mDefaultQuery;
+    }
+
+    @Override public BaseSortedAdapter.ItemComparator<User> getItemComparator() {
+        return userItemComparator;
     }
 
     private void queryUser(final ChooseUserContract.UserQuery userQuery, final int offset, final int limit) {
@@ -211,6 +217,25 @@ public class ChooseUserPresenterImpl implements ChooseUserContract.Presenter {
         public void onFailure(Throwable throwable) {
             mView.setProgressIndicator(false);
             Utils.showMessage("Can't add contact to channel");
+        }
+    };
+
+    private final BaseSortedAdapter.ItemComparator<User> userItemComparator = new BaseSortedAdapter.ItemComparator<User>() {
+        @Override public int compare(User o1, User o2) {
+            if(StringUtil.isStringValueEqual(o1.getLastName(), o2.getLastName())){
+                return Utils.compareString(o1.getFirstName(), o2.getFirstName());
+            } else {
+                return Utils.compareString(o1.getLastName(), o2.getLastName());
+            }
+        }
+
+        @Override public boolean areContentsTheSame(User o1, User o2) {
+            return areItemsTheSame(o1, o2)
+                && o1.getDisplayName().equalsIgnoreCase(o2.getDisplayName());
+        }
+
+        @Override public boolean areItemsTheSame(User item1, User item2) {
+            return item1.getUserIdentifier().equals(item2.getUserIdentifier());
         }
     };
 }

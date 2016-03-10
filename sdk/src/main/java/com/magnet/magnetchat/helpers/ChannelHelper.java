@@ -187,7 +187,7 @@ public class ChannelHelper {
         //        });
     }
 
-    public static void addUserToConversation(final Chat conversation, final List<UserProfile> userList, final OnAddUserListener listener) {
+    public static void addUserToConversation(final Chat conversation, final List<User> userList, final OnAddUserListener listener) {
         Set<User> userSet = new HashSet<>();
         for (UserProfile user : userList) {
             if (!conversation.containSubscriber(user)) {

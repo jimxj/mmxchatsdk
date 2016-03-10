@@ -9,6 +9,7 @@ import android.util.Log;
 import com.magnet.magnetchat.helpers.UserHelper;
 import com.magnet.magnetchat.mvp.api.ChatDetailsContract;
 import com.magnet.magnetchat.ui.activities.ChooseUserActivity;
+import com.magnet.magnetchat.ui.adapters.BaseSortedAdapter;
 import com.magnet.magnetchat.util.Utils;
 import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;
@@ -84,4 +85,27 @@ public class ChatDetailsPresenterImpl implements ChatDetailsContract.Presenter {
         }
         return false;
     }
+
+    @Override public BaseSortedAdapter.ItemComparator<UserProfile> getItemComparator() {
+        return userProfileItemComparator;
+    }
+
+    private final BaseSortedAdapter.ItemComparator<UserProfile> userProfileItemComparator = new BaseSortedAdapter.ItemComparator<UserProfile>() {
+        @Override public int compare(UserProfile o1, UserProfile o2) {
+            if(StringUtil.isStringValueEqual(o1.getLastName(), o2.getLastName())){
+                return Utils.compareString(o1.getFirstName(), o2.getFirstName());
+            } else {
+                return Utils.compareString(o1.getLastName(), o2.getLastName());
+            }
+        }
+
+        @Override public boolean areContentsTheSame(UserProfile o1, UserProfile o2) {
+            return areItemsTheSame(o1, o2)
+                && o1.getDisplayName().equalsIgnoreCase(o2.getDisplayName());
+        }
+
+        @Override public boolean areItemsTheSame(UserProfile item1, UserProfile item2) {
+            return item1.getUserIdentifier().equals(item2.getUserIdentifier());
+        }
+    };
 }

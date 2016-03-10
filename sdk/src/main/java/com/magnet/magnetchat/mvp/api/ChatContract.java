@@ -10,6 +10,7 @@ import android.support.annotation.NonNull;
 
 import com.magnet.magnetchat.model.Chat;
 import com.magnet.magnetchat.model.Message;
+import com.magnet.magnetchat.ui.adapters.BaseSortedAdapter;
 import com.magnet.max.android.UserProfile;
 
 import com.magnet.mmx.client.api.MMXMessage;
@@ -105,7 +106,6 @@ public interface ChatContract {
         void onChatDetails();
 
         Chat getCurrentConversation();
-
     }
 
 }

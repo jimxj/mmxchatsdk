@@ -7,6 +7,8 @@ import com.magnet.magnetchat.callbacks.NewMessageProcessListener;
 import com.magnet.magnetchat.helpers.ChannelHelper;
 import com.magnet.magnetchat.model.Chat;
 import com.magnet.magnetchat.util.Logger;
+import com.magnet.max.android.User;
+import com.magnet.max.android.util.StringUtil;
 import com.magnet.mmx.client.api.MMXChannel;
 import com.magnet.mmx.client.api.MMXMessage;
 
@@ -170,7 +172,8 @@ public class ChatManager {
     public void handleIncomingMessage(final MMXMessage mmxMessage, final NewMessageProcessListener listener) {
         Logger.debug(TAG, "handle incoming  new message : " + mmxMessage);
         MMXChannel channel = mmxMessage.getChannel();
-        if (channel != null) {
+        if (channel != null && !StringUtil.isStringValueEqual(mmxMessage.getSender().getUserIdentifier(),
+            User.getCurrentUserId())) {
             final String channelName = channel.getName();
             Chat conversation = ChatManager.getInstance().getConversationByName(channelName);
             if (conversation != null) {

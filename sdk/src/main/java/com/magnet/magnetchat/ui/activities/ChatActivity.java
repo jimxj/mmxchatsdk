@@ -40,6 +40,7 @@ import com.magnet.magnetchat.mvp.api.ChatContract;
 import com.magnet.magnetchat.mvp.presenters.ChatPresenterImpl;
 import com.magnet.magnetchat.ui.adapters.MessagesAdapter;
 import com.magnet.magnetchat.util.Utils;
+import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;
 
 import com.magnet.mmx.client.api.MMXMessage;
@@ -150,7 +151,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
             }
         }
 
-        //mPresenter.onLoad(0, Constants.MESSAGE_PAGE_SIZE);
+        mPresenter.onLoad(0, Constants.MESSAGE_PAGE_SIZE);
 
         googleApiClient = new GoogleApiClient.Builder(this).addConnectionCallbacks(connectionCallback)
                 .addOnConnectionFailedListener(connectionFailedListener).addApi(LocationServices.API).build();
@@ -242,7 +243,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
     @Override
     public void showList(List<MMXMessage> messages, boolean toAppend) {
         if (null == mAdapter) {
-            mAdapter = new MessagesAdapter(this, Message.fromMMXMessages(messages));
+            mAdapter = new MessagesAdapter(this, Message.fromMMXMessages(messages), mPresenter.getItemComparator());
             mAdapter.setmOnClickListener(new OnRecyclerViewItemClickListener() {
                 @Override
                 public void onClick(int position) {
@@ -257,7 +258,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
             messagesListView.setAdapter(mAdapter);
         } else {
             if(toAppend){
-                mAdapter.insert(Message.fromMMXMessages(messages));
+                mAdapter.addItem(Message.fromMMXMessages(messages));
             } else {
                 mAdapter.swapData(Message.fromMMXMessages(messages));
             }
@@ -282,7 +283,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
     @Override
     public void showNewMessage(MMXMessage message) {
         if (mAdapter != null) {
-            mAdapter.append(Message.createMessageFrom(message));
+            mAdapter.addItem(Message.createMessageFrom(message));
             //mAdapter.notifyItemChanged(mAdapter.getItemCount());
             messagesListView.smoothScrollToPosition(mAdapter.getItemCount());
         }
@@ -487,11 +488,11 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
         }
     }
 
-    public static Intent getIntentForNewChannel(Context context, List<UserProfile> recipients) {
+    public static Intent getIntentForNewChannel(Context context, List<User> recipients) {
         Intent intent = new Intent(context, ChatActivity.class);
-        ArrayList<UserProfile> arrayList = null;
+        ArrayList<User> arrayList = null;
         if (recipients instanceof ArrayList) {
-            arrayList = (ArrayList<UserProfile>) recipients;
+            arrayList = (ArrayList<User>) recipients;
         } else {
             arrayList = new ArrayList<>(recipients);
         }

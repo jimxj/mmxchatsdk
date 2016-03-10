@@ -157,15 +157,16 @@ public class Message {
     }
 
     public static List<Message> fromMMXMessages(List<MMXMessage> mmxMessageList) {
+        List<Message> messages = null;
         if(null != mmxMessageList && !mmxMessageList.isEmpty()) {
-            List<Message> messages = new ArrayList<>(mmxMessageList.size());
+            messages = new ArrayList<>(mmxMessageList.size());
             for(MMXMessage mmxMessage : mmxMessageList) {
                 messages.add(Message.createMessageFrom(mmxMessage));
             }
-
-            return messages;
         } else {
-            return Collections.EMPTY_LIST;
+            messages = new ArrayList<>();
         }
+
+        return messages;
     }
 }

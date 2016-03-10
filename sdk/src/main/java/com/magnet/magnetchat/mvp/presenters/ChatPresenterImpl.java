@@ -18,6 +18,7 @@ import com.magnet.magnetchat.model.Chat;
 import com.magnet.magnetchat.model.Message;
 import com.magnet.magnetchat.mvp.api.ChatContract;
 import com.magnet.magnetchat.ui.activities.ChatDetailsActivity;
+import com.magnet.magnetchat.ui.adapters.BaseSortedAdapter;
 import com.magnet.magnetchat.util.Logger;
 import com.magnet.magnetchat.util.Utils;
 import com.magnet.max.android.Max;
@@ -45,7 +46,7 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
         this.mCurrentConversation = conversation;
         this.mRecipients = conversation.getSortedSubscribers();
 
-        mView.showList(conversation.getMessages(), false);
+        //mView.showList(conversation.getMessages(), false);
         mView.showRecipients(conversation.getSortedSubscribers());
         setTitle(conversation.getSortedSubscribers());
 
@@ -160,6 +161,7 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
                 });
             } else {
                 Log.d(TAG, "-----messages were already loaded");
+                mView.showList(mCurrentConversation.getMessages(offset, limit), 0 != offset);
             }
         }
     }
@@ -178,6 +180,10 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
 
     @Override public void onItemLongClick(int position, Message item) {
 
+    }
+
+    @Override public BaseSortedAdapter.ItemComparator<Message> getItemComparator() {
+        return messageItemComparator;
     }
 
     @Override
@@ -331,6 +337,20 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
         @Override
         public boolean onMessageAcknowledgementReceived(User from, String messageId) {
             return true;
+        }
+    };
+
+    private final BaseSortedAdapter.ItemComparator<Message> messageItemComparator = new BaseSortedAdapter.ItemComparator<Message>() {
+        @Override public int compare(Message o1, Message o2) {
+            return (int) (o1.getCreateTime().getTime() - o2.getCreateTime().getTime());
+        }
+
+        @Override public boolean areContentsTheSame(Message o1, Message o2) {
+            return areItemsTheSame(o1, o2);
+        }
+
+        @Override public boolean areItemsTheSame(Message item1, Message item2) {
+            return item1.getMessageId().equals(item2.getMessageId());
         }
     };
 }

@@ -16,6 +16,7 @@ import com.magnet.magnetchat.R;
 import com.magnet.magnetchat.model.Chat;
 import com.magnet.magnetchat.mvp.api.ChatDetailsContract;
 import com.magnet.magnetchat.mvp.presenters.ChatDetailsPresenterImpl;
+import com.magnet.magnetchat.ui.adapters.UserProfilesAdapter;
 import com.magnet.magnetchat.ui.adapters.UsersAdapter;
 import com.magnet.max.android.UserProfile;
 import com.magnet.mmx.client.api.MMXChannel;
@@ -28,7 +29,7 @@ public class ChatDetailsActivity extends BaseActivity implements ChatDetailsCont
     public static final String TAG_CHANNEL = "channel";
 
     RecyclerView listView;
-    UsersAdapter mUserAdapter;
+    UserProfilesAdapter mUserAdapter;
 
     ProgressBar detailsProgress;
     LinearLayout llAddRecipients;
@@ -141,7 +142,7 @@ public class ChatDetailsActivity extends BaseActivity implements ChatDetailsCont
     @Override
     public void showRecipients(List<UserProfile> recipients) {
         if (null == mUserAdapter) {
-            mUserAdapter = new UsersAdapter(this, recipients);
+            mUserAdapter = new UserProfilesAdapter(this, recipients, mPresenter.getItemComparator());
             listView.setAdapter(mUserAdapter);
         } else {
             mUserAdapter.swapData(recipients);

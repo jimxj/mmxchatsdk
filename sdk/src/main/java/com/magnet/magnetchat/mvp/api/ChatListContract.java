@@ -56,8 +56,5 @@ public interface ChatListContract {
          * (WARNING: Should be inside the onPause method)
          */
         void onPause();
-
-
-        BaseSortedAdapter.ItemComparator<Chat> getItemComparator();
     }
 }

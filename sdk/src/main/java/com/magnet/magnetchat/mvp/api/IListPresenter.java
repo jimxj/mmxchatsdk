@@ -17,4 +17,5 @@ public interface IListPresenter<T> {
 
   void onItemLongClick(int position, T item);
 
+  BaseSortedAdapter.ItemComparator<T> getItemComparator();
 }

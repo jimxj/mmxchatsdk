@@ -1,5 +1,7 @@
 package com.magnet.magnetchat.mvp.api;
 
+import com.magnet.magnetchat.ui.adapters.BaseSortedAdapter;
+import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;
 
 import java.util.List;
@@ -37,5 +39,7 @@ public interface ChatDetailsContract {
          * @return
          */
         boolean isOwnerChannel();
+
+        BaseSortedAdapter.ItemComparator<UserProfile> getItemComparator();
     }
 }
