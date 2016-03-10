@@ -5,53 +5,54 @@ package com.magnet.magnetchat.core.managers;
 
 import com.magnet.magnetchat.callbacks.NewMessageProcessListener;
 import com.magnet.magnetchat.helpers.ChannelHelper;
-import com.magnet.magnetchat.model.Conversation;
-import com.magnet.magnetchat.model.Message;
+import com.magnet.magnetchat.model.Chat;
 import com.magnet.magnetchat.util.Logger;
+import com.magnet.max.android.User;
+import com.magnet.max.android.util.StringUtil;
 import com.magnet.mmx.client.api.MMXChannel;
 import com.magnet.mmx.client.api.MMXMessage;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class ChannelCacheManager {
+public class ChatManager {
     private static final String TAG = "ChannelCacheManager";
 
-    private static ChannelCacheManager _instance;
+    private static ChatManager _instance;
 
     private List<MMXChannel> allSubscriptions;
 
     /**
      * Key is channel name
      */
-    private Map<String, Conversation> conversations;
+    private Map<String, Chat> conversations;
     /**
      * Key is channel owner id
      */
-    private Map<String, Message> messagesToApproveDeliver;
+    private Map<String, MMXMessage> messagesToApproveDeliver;
 
-    private AtomicBoolean isConversationListUpdated = new AtomicBoolean(false);
+    private AtomicBoolean hasNewChat = new AtomicBoolean(false);
 
-    private final Comparator<Conversation> conversationComparator = new Comparator<Conversation>() {
+    private final Comparator<Chat> conversationComparator = new Comparator<Chat>() {
         @Override
-        public int compare(Conversation lhs, Conversation rhs) {
-            return 0 - lhs.getLastActiveTime().compareTo(rhs.getLastActiveTime());
+        public int compare(Chat lhs, Chat rhs) {
+            return 0 - lhs.getLastPublishedTime().compareTo(rhs.getLastPublishedTime());
         }
     };
 
-    private ChannelCacheManager() {
+    private ChatManager() {
         conversations = new HashMap<>();
     }
 
-    public static ChannelCacheManager getInstance() {
+    public static ChatManager getInstance() {
         if (null == _instance) {
-            _instance = new ChannelCacheManager();
+            _instance = new ChatManager();
         }
 
         return _instance;
@@ -86,74 +87,77 @@ public class ChannelCacheManager {
         return Collections.EMPTY_LIST;
     }
 
-    public List<Conversation> getConversations() {
-        ArrayList<Conversation> list = new ArrayList<>(conversations.values());
-        Collections.sort(list, conversationComparator);
-        return list;
+    public Collection<Chat> getConversations() {
+        return conversations.values();
     }
 
-    public Map<String, Message> getMessagesToApproveDeliver() {
+    public Map<String, MMXMessage> getMessagesToApproveDeliver() {
         if (messagesToApproveDeliver == null) {
             messagesToApproveDeliver = new HashMap<>();
         }
         return messagesToApproveDeliver;
     }
 
-    public void addConversation(Conversation conversation) {
+    public void addConversation(Chat conversation) {
         if (null != conversation) {
-            Conversation existingConversation = getConversationByName(conversation.getChannel().getName());
+            Chat existingConversation = getConversationByName(conversation.getChannel().getName());
             if (existingConversation == null) {
-                if (allSubscriptions != null) {
-                    if (!allSubscriptions.contains(conversation.getChannel())) {
-                        if (allSubscriptions.size() >= conversations.size()) {
-                            allSubscriptions.add(conversations.size(), conversation.getChannel());
-                        }
+                if (allSubscriptions != null && !allSubscriptions.contains(conversation.getChannel())) {
+                    if (allSubscriptions.size() >= conversations.size()) {
+                        allSubscriptions.add(conversations.size(), conversation.getChannel());
                     }
-                    conversations.put(conversation.getChannel().getName(), conversation);
                 }
+
+                conversations.put(conversation.getChannel().getName(), conversation);
                 //TODO : handling new message
                 //conversation.setHasUnreadMessage(true);
-                //conversation.setLastActiveTime(new Date());
+                //conversation.setLastPublishedTime(new Date());
             } else {
                 boolean newMessageAdded = existingConversation.mergeFrom(conversation);
-                if (newMessageAdded) {
-                    existingConversation.setHasUnreadMessage(true);
-                    existingConversation.setLastActiveTime(new Date());
-                }
             }
 
-            isConversationListUpdated.set(true);
+            hasNewChat.set(true);
         }
     }
 
     public void removeConversation(String channelName) {
         if (conversations != null && conversations.containsKey(channelName)) {
             conversations.remove(channelName);
-            isConversationListUpdated.set(true);
+            hasNewChat.set(true);
         }
     }
 
     public boolean isConversationListUpdated() {
-        return isConversationListUpdated.get();
+        if(hasNewChat.get()) {
+            return true;
+        }
+
+        for(Chat c : getConversations()) {
+            if(c.hasUpdate()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public void resetConversationListUpdated() {
-        isConversationListUpdated.set(false);
-    }
+        hasNewChat.set(false);
 
-    public void setConversationListUpdated() {
-        isConversationListUpdated.set(true);
+        for(Chat c : getConversations()) {
+            c.resetUpdate();
+        }
     }
 
     public void approveMessage(String messageId) {
-        Message message = getMessagesToApproveDeliver().get(messageId);
+        MMXMessage message = getMessagesToApproveDeliver().get(messageId);
         if (message != null) {
-            message.setIsDelivered(true);
+            //message.setIsDelivered(true);
             messagesToApproveDeliver.remove(messageId);
         }
     }
 
-    public Conversation getConversationByName(String name) {
+    public Chat getConversationByName(String name) {
         if (name == null) {
             return null;
         }
@@ -162,30 +166,30 @@ public class ChannelCacheManager {
 
     public void resetConversations() {
         conversations.clear();
-        isConversationListUpdated.set(true);
+        hasNewChat.set(true);
     }
 
     public void handleIncomingMessage(final MMXMessage mmxMessage, final NewMessageProcessListener listener) {
         Logger.debug(TAG, "handle incoming  new message : " + mmxMessage);
         MMXChannel channel = mmxMessage.getChannel();
-        if (channel != null) {
+        if (channel != null && !StringUtil.isStringValueEqual(mmxMessage.getSender().getUserIdentifier(),
+            User.getCurrentUserId())) {
             final String channelName = channel.getName();
-            Conversation conversation = ChannelCacheManager.getInstance().getConversationByName(channelName);
-            final Message message = Message.createMessageFrom(mmxMessage);
+            Chat conversation = ChatManager.getInstance().getConversationByName(channelName);
             if (conversation != null) {
-                conversation.addMessage(message, true);
+                conversation.addMessage(mmxMessage, true);
                 if (null != listener) {
-                    listener.onProcessSuccess(conversation, message, false);
+                    listener.onProcessSuccess(conversation, mmxMessage, false);
                 }
             } else {
                 ChannelHelper.getChannelDetails(mmxMessage.getChannel(), null, new ChannelHelper.OnReadChannelDetailListener() {
                     @Override
-                    public void onSuccessFinish(Conversation conversation) {
+                    public void onSuccessFinish(Chat conversation) {
                         addConversation(conversation);
-                        conversation.addMessage(message, true);
+                        conversation.addMessage(mmxMessage, true);
 
                         if (null != listener) {
-                            listener.onProcessSuccess(conversation, message, true);
+                            listener.onProcessSuccess(conversation, mmxMessage, true);
                         }
                     }
 

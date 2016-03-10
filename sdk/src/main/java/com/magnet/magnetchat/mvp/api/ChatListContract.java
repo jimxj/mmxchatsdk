@@ -1,7 +1,8 @@
 package com.magnet.magnetchat.mvp.api;
 
-import com.magnet.magnetchat.model.Conversation;
+import com.magnet.magnetchat.model.Chat;
 
+import com.magnet.magnetchat.ui.adapters.BaseSortedAdapter;
 import java.util.List;
 
 /**
@@ -9,36 +10,23 @@ import java.util.List;
  */
 public interface ChatListContract {
 
-    interface View {
-
-        /**
-         * Method which provide to show of the list of the conversations
-         *
-         * @param conversations conversation
-         */
-        void showList(List<Conversation> conversations);
-
-
-        /**
-         * Method which provide the list updating
-         */
-        void updateList();
+    interface View extends IListView<Chat> {
 
         /**
          * Method which provide to show of the new chat
          */
         void createNewChat();
 
-        void showConversationUpdate(Conversation conversation, boolean isNew);
+        void showConversationUpdate(Chat conversation, boolean isNew);
 
         /**
          * Method which provide the conversation details
          *
          * @param conversation current conversation
          */
-        void showChatDetails(Conversation conversation);
+        void showChatDetails(Chat conversation);
 
-        void showLeaveConfirmation(Conversation conversation);
+        void showLeaveConfirmation(Chat conversation);
 
         /**
          * Method which provide the dismissing of the leave dialog
@@ -53,40 +41,9 @@ public interface ChatListContract {
         void setProgressIndicator(boolean active);
     }
 
-    interface Presenter {
+    interface Presenter extends IListPresenter<Chat> {
 
-        /**
-         * Method which provide to getting of the reading channels
-         */
-        void onLoadConversations(int offset, int limit);
-
-        void onConversationUpdate(Conversation conversation, boolean isNew);
-
-        /**
-         * Method which provide to show of the messages by query
-         *
-         * @param query search query
-         */
-        void onSearchConversation(final String query);
-
-        /**
-         * Method which provide the search resetting
-         */
-        void onResetSearch();
-
-        /**
-         * Method which provide the action when user click on the conversation channel
-         *
-         * @param conversation channel
-         */
-        void onConversationClick(Conversation conversation);
-
-        /**
-         * Method which provide the action when user do long click for the conversation
-         *
-         * @param conversation channel
-         */
-        void onConversationLongClick(Conversation conversation);
+        void onConversationUpdate(Chat conversation, boolean isNew);
 
         /**
          * Method which provide the action when activity or fragment call onResume
@@ -99,12 +56,5 @@ public interface ChatListContract {
          * (WARNING: Should be inside the onPause method)
          */
         void onPause();
-
-        /**
-         * Method which provide to getting of the list of the all conversations
-         *
-         * @return list of all conversations
-         */
-        List<Conversation> getAllConversations();
     }
 }

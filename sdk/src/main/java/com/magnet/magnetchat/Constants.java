@@ -7,7 +7,9 @@ public interface Constants {
 
   int CONVERSATION_PAGE_SIZE = 20;
 
-  int MESSAGE_PAGE_SIZE = 30;
+  int MESSAGE_PAGE_SIZE = 10;
+
+  int USER_PAGE_SIZE = 10;
 
   int PRE_FETCHED_MESSAGE_SIZE = 30;
 

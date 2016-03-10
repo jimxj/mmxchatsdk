@@ -32,4 +32,12 @@ public class Utils {
       Toast.makeText(context, message, Toast.LENGTH_LONG).show();
     }
   }
+
+  public static int compareString(String s1, String s2) {
+    if(null == s1) {
+      return null == s2 ? 0 : -1;
+    } else {
+      return null == s2 ? 1 : s1.compareTo(s2);
+    }
+  }
 }

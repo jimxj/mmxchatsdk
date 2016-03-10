@@ -17,9 +17,9 @@ import com.magnet.magnetchat.Constants;
 import com.magnet.magnetchat.R;
 import com.magnet.magnetchat.callbacks.EndlessLinearRecyclerViewScrollListener;
 import com.magnet.magnetchat.callbacks.OnRecyclerViewItemClickListener;
-import com.magnet.magnetchat.core.managers.ChannelCacheManager;
+import com.magnet.magnetchat.core.managers.ChatManager;
 import com.magnet.magnetchat.helpers.ChannelHelper;
-import com.magnet.magnetchat.model.Conversation;
+import com.magnet.magnetchat.model.Chat;
 import com.magnet.magnetchat.mvp.api.ChatListContract;
 import com.magnet.magnetchat.mvp.presenters.ChatListPresenterImpl;
 import com.magnet.magnetchat.ui.activities.ChatActivity;
@@ -40,9 +40,9 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
 
     private FloatingActionButton fabCreateMessage;
 
-    private ChatsAdapter adapter;
+    private ChatsAdapter mAdapter;
 
-    private ChatListContract.Presenter presenter;
+    private ChatListContract.Presenter mPresenter;
 
     @Override
     protected int getLayoutId() {
@@ -63,7 +63,7 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
             @Override
             public void onLoadMore(int page, int totalItemsCount) {
                 Log.d(TAG, "------------onLoadMore channel : " + page + "/" + totalItemsCount + "\n");
-                presenter.onLoadConversations(totalItemsCount, Constants.CONVERSATION_PAGE_SIZE);
+                mPresenter.onLoad(totalItemsCount, Constants.CONVERSATION_PAGE_SIZE);
             }
         });
 
@@ -72,7 +72,7 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                presenter.onLoadConversations(0, Constants.CONVERSATION_PAGE_SIZE);
+                mPresenter.onLoad(0, Constants.CONVERSATION_PAGE_SIZE);
             }
         });
         swipeContainer.setColorSchemeResources(R.color.primary_dark, R.color.primary, R.color.accent);
@@ -83,13 +83,13 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
 
         setHasOptionsMenu(true);
 
-        presenter = new ChatListPresenterImpl(this);
+        mPresenter = new ChatListPresenterImpl(this);
 
         swipeContainer.post(new Runnable() {
             @Override
             public void run() {
                 swipeContainer.setRefreshing(true);
-                presenter.onLoadConversations(0, Constants.CONVERSATION_PAGE_SIZE);
+                mPresenter.onLoad(0, Constants.CONVERSATION_PAGE_SIZE);
             }
         });
     }
@@ -97,12 +97,12 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
     @Override
     public void onResume() {
         super.onResume();
-        presenter.onResume();
+        mPresenter.onResume();
     }
 
     @Override
     public void onPause() {
-        presenter.onPause();
+        mPresenter.onPause();
         super.onPause();
     }
 
@@ -114,7 +114,7 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
             search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
                 @Override
                 public boolean onQueryTextSubmit(String query) {
-                    presenter.onSearchConversation(query);
+                    mPresenter.onSearch(query, null);
                     return true;
                 }
 
@@ -122,7 +122,7 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
                 public boolean onQueryTextChange(String newText) {
                     if (newText.isEmpty()) {
                         hideKeyboard();
-                        presenter.onResetSearch();
+                        mPresenter.onSearchReset();
                     }
                     return false;
                 }
@@ -132,7 +132,7 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
                 @Override
                 public boolean onClose() {
                     search.onActionViewCollapsed();
-                    presenter.onResetSearch();
+                    mPresenter.onSearchReset();
                     return true;
                 }
             });
@@ -149,46 +149,43 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
     }
 
     @Override
-    public void updateList() {
-        if (adapter != null) {
-            adapter.notifyDataSetChanged();
-        }
-    }
-
-    @Override
-    public void showList(List<Conversation> conversations) {
+    public void showList(List<Chat> list, boolean toAppend) {
         if (null != getActivity()) {
-            if (adapter == null) {
-                adapter = new ChatsAdapter(getActivity(), conversations);
-                adapter.setOnClickListener(new OnRecyclerViewItemClickListener() {
+            if (mAdapter == null) {
+                mAdapter = new ChatsAdapter(getActivity(), list, mPresenter.getItemComparator());
+                mAdapter.setOnClickListener(new OnRecyclerViewItemClickListener() {
                     @Override
                     public void onClick(int position) {
-                        Conversation conversation = adapter.getItem(position);
+                        Chat conversation = mAdapter.getItem(position);
                         if (conversation != null) {
                             Log.d(TAG, "Channel " + conversation.getChannel().getName() + " is selected");
-                            presenter.onConversationClick(conversation);
+                            mPresenter.onItemSelect(position, conversation);
                         }
                     }
 
                     @Override
                     public void onLongClick(int position) {
-                        Conversation conversation = adapter.getItem(position);
+                        Chat conversation = mAdapter.getItem(position);
                         if (conversation != null) {
-                            presenter.onConversationLongClick(conversation);
+                            mPresenter.onItemLongClick(position, conversation);
                             showLeaveDialog(conversation);
                         }
                     }
                 });
-                conversationsList.setAdapter(adapter);
+                conversationsList.setAdapter(mAdapter);
             } else {
-                adapter.swapData(conversations);
+                if(toAppend) {
+                    mAdapter.addItem(list);
+                } else {
+                    mAdapter.swapData(list);
+                }
             }
         } else {
             Log.w(TAG, "Fragment is detached, won't update list");
         }
     }
 
-    private void showLeaveDialog(final Conversation conversation) {
+    private void showLeaveDialog(final Chat conversation) {
         if (leaveDialog == null) {
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             builder.setCancelable(false);
@@ -209,9 +206,9 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
                     @Override
                     public void onSuccess() {
                         //setProgressBarVisibility(View.GONE);
-                        ChannelCacheManager.getInstance().removeConversation(conversation.getChannel().getName());
+                        ChatManager.getInstance().removeConversation(conversation.getChannel().getName());
 
-                        removeItem(adapter.getData().indexOf(conversation));
+                        removeItem(mAdapter.getData().indexOf(conversation));
                     }
 
                     @Override
@@ -225,6 +222,10 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
         leaveDialog.show();
     }
 
+    @Override public void setTitle(String title) {
+
+    }
+
     @Override
     public void setProgressIndicator(boolean active) {
         swipeContainer.setRefreshing(active);
@@ -236,23 +237,23 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
     }
 
     @Override
-    public void showConversationUpdate(Conversation conversation, boolean isNew) {
-        if (null != adapter) {
+    public void showConversationUpdate(Chat conversation, boolean isNew) {
+        if (null != mAdapter) {
             if (isNew) {
-                adapter.addItem(conversation);
+                mAdapter.addItem(conversation);
             } else {
-                adapter.updateItem(conversation);
+                mAdapter.addItem(conversation);
             }
         }
     }
 
     @Override
-    public void showChatDetails(Conversation conversation) {
+    public void showChatDetails(Chat conversation) {
         startActivity(ChatActivity.getIntentWithChannel(getActivity(), conversation));
     }
 
     @Override
-    public void showLeaveConfirmation(Conversation conversation) {
+    public void showLeaveConfirmation(Chat conversation) {
         showLeaveDialog(conversation);
     }
 
@@ -265,6 +266,6 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
 
     private void removeItem(int position) {
         conversationsList.removeViewAt(position);
-        adapter.removeItem(position);
+        mAdapter.removeItem(position);
     }
 }

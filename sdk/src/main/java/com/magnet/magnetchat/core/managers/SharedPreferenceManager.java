@@ -12,11 +12,9 @@ public class SharedPreferenceManager {
 
     private static SharedPreferenceManager instance;
 
-    private final WeakReference<Context> applicationReference;
     private SharedPreferences usernamePref;
 
     private SharedPreferenceManager(Context context) {
-        applicationReference = new WeakReference<Context>(context);
         usernamePref = context.getSharedPreferences(USER_PREFERENCE, Context.MODE_PRIVATE);
     }
 

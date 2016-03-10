@@ -37,8 +37,8 @@ public class HomeActivity extends AppCompatActivity {
             toolbar.setTitle(User.getCurrentUser().getDisplayName());
         }
 
-        //getSupportActionBar().setTitle(User.getCurrentUser().getDisplayName());
-    }
+    //getSupportActionBar().setTitle(User.getCurrentUser().getDisplayName());
+  }
 
     @OnClick(R.id.btnChats)
     public void onChatsButtonClick(View v) {

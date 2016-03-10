@@ -1,6 +1,6 @@
 package com.magnet.magnetchat.helpers;
 
-import com.magnet.magnetchat.core.managers.ChannelCacheManager;
+import com.magnet.magnetchat.core.managers.ChatManager;
 import com.magnet.magnetchat.core.managers.SharedPreferenceManager;
 import com.magnet.magnetchat.util.Logger;
 import com.magnet.max.android.ApiCallback;
@@ -10,6 +10,8 @@ import com.magnet.max.android.UserProfile;
 import com.magnet.max.android.auth.model.UserRegistrationInfo;
 import com.magnet.max.android.util.StringUtil;
 import com.magnet.mmx.client.api.MMX;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -22,6 +24,9 @@ public class UserHelper {
 
     private static final int MAX_USER_NAMES_LENGTH = 22;
 
+    private static final String USER_NAMES_SUFIX = "...";
+
+    private static final String NAME_SEARCH_QUERY = "firstName:%s* OR lastName:%s*";
 
     /**
      * Login listener
@@ -154,7 +159,7 @@ public class UserHelper {
         User.logout(new ApiCallback<Boolean>() {
             @Override
             public void success(Boolean aBoolean) {
-                ChannelCacheManager.getInstance().resetConversations();
+                ChatManager.getInstance().resetConversations();
                 Logger.debug("logout", "success");
                 if (listener != null)
                     listener.onSuccess();
@@ -176,13 +181,7 @@ public class UserHelper {
      * @return display name
      */
     public static String getDisplayName(UserProfile user) {
-        if (user == null) {
-            return "";
-        }
-        if (StringUtil.isNotEmpty(user.getDisplayName())) {
-            return user.getDisplayName();
-        }
-        return String.format("%s %s", user.getFirstName(), user.getLastName());
+        return getDisplayNames(Arrays.asList(user));
     }
 
     /**
@@ -193,23 +192,31 @@ public class UserHelper {
      */
     public static String getDisplayNames(List<UserProfile> userList) {
         StringBuilder users = new StringBuilder();
-        if (userList.size() == 1) {
-            return userList.get(0).getDisplayName();
-        }
         for (int i = 0; i < userList.size(); i++) {
             if (userList.get(i) != null) {
                 users.append(userList.get(i).getDisplayName());
-                if (users.length() < MAX_USER_NAMES_LENGTH && i != userList.size() - 1) {
+                if (users.length() < MAX_USER_NAMES_LENGTH - 2 && i != userList.size() - 1) {
                     users.append(", ");
                 } else {
-                    if (users.length() >= MAX_USER_NAMES_LENGTH) {
-                        users.append(" ...");
-                        break;
-                    }
+                    break;
                 }
             }
         }
-        return users.toString();
+        return truncateRecipientsName(users.toString());
+    }
+
+    public static String truncateRecipientsName(String s) {
+        return truncateString(s, MAX_USER_NAMES_LENGTH, USER_NAMES_SUFIX);
+    }
+
+    public static String truncateString(String s ,int length, String sufix) {
+        if(StringUtil.isNotEmpty(s)) {
+            if(s.length() > length) {
+                return s.substring(0, length) + sufix;
+            }
+        }
+
+        return s;
     }
 
     /**
@@ -222,6 +229,9 @@ public class UserHelper {
         return email.matches(EMAIL_TEMPLATE);
     }
 
+    public static String createNameQuery(String term) {
+        return String.format(NAME_SEARCH_QUERY, term, term);
+    }
 
     public static Comparator<UserProfile> getUserProfileComparator() {
         return new Comparator<UserProfile>() {
@@ -252,6 +262,19 @@ public class UserHelper {
             str = str.substring(str.indexOf(" ")).trim();
         }
         return str;
+    }
+
+    public static List<UserProfile> convertToUserProfileList(List<? extends UserProfile> users) {
+        if(null != users && !users.isEmpty()) {
+            List<UserProfile> userProfiles = new ArrayList<>(users.size());
+            for(UserProfile up : users) {
+                userProfiles.add(up);
+            }
+
+            return userProfiles;
+        } else {
+            return new ArrayList<>();
+        }
     }
 
 }

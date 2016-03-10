@@ -9,19 +9,22 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 
 import android.util.Log;
-import com.magnet.magnetchat.core.managers.ChannelCacheManager;
+import com.magnet.magnetchat.core.managers.ChatManager;
 import com.magnet.magnetchat.helpers.ChannelHelper;
 import com.magnet.magnetchat.helpers.FileHelper;
-import com.magnet.magnetchat.model.Conversation;
+import com.magnet.magnetchat.helpers.MessageHelper;
+import com.magnet.magnetchat.helpers.UserHelper;
+import com.magnet.magnetchat.model.Chat;
 import com.magnet.magnetchat.model.Message;
 import com.magnet.magnetchat.mvp.api.ChatContract;
 import com.magnet.magnetchat.ui.activities.ChatDetailsActivity;
+import com.magnet.magnetchat.ui.adapters.BaseSortedAdapter;
 import com.magnet.magnetchat.util.Logger;
 import com.magnet.magnetchat.util.Utils;
 import com.magnet.max.android.Max;
 import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;
-import com.magnet.mmx.client.api.ChannelDetailOptions;
+import com.magnet.max.android.util.StringUtil;
 import com.magnet.mmx.client.api.ListResult;
 import com.magnet.mmx.client.api.MMX;
 import com.magnet.mmx.client.api.MMXChannel;
@@ -35,16 +38,19 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
 
     protected final ChatContract.View mView;
 
-    protected Conversation mCurrentConversation;
+    protected Chat mCurrentConversation;
     protected final List<UserProfile> mRecipients;
 
-    public ChatPresenterImpl(@NonNull ChatContract.View view, @NonNull Conversation conversation) {
+    public ChatPresenterImpl(@NonNull ChatContract.View view, @NonNull Chat conversation) {
         this.mView = view;
         this.mCurrentConversation = conversation;
-        this.mRecipients = conversation.getSuppliersList();
+        this.mRecipients = conversation.getSortedSubscribers();
 
-        mView.showMessages(conversation.getMessages());
-        mView.showRecipients(conversation.getSuppliersList());
+        //mView.showList(conversation.getMessages(), false);
+        mView.showRecipients(conversation.getSortedSubscribers());
+        setTitle(conversation.getSortedSubscribers());
+
+        onReadMessage();
     }
 
     public ChatPresenterImpl(@NonNull ChatContract.View view, @NonNull final ArrayList<UserProfile> recipients) {
@@ -52,6 +58,7 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
         this.mRecipients = recipients;
 
         mView.showRecipients(mRecipients);
+        setTitle(mRecipients);
 
         List<String> userIds = new ArrayList<>(recipients.size());
         for (UserProfile up : recipients) {
@@ -61,18 +68,18 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
         ChannelHelper.createChannelForUsers(userIds, new ChannelHelper.OnCreateChannelListener() {
             @Override
             public void onSuccessCreated(MMXChannel channel) {
-                addNewConversation(new Conversation(channel, recipients, User.getCurrentUser()));
+                addNewConversation(new Chat(channel, recipients, User.getCurrentUser()));
             }
 
             @Override
             public void onChannelExists(MMXChannel channel) {
-                mCurrentConversation = ChannelCacheManager.getInstance().getConversationByName(channel.getName());
+                mCurrentConversation = ChatManager.getInstance().getConversationByName(channel.getName());
                 if (null == mCurrentConversation) {
                     ChannelHelper.getChannelDetails(channel,
                         null,
                         new ChannelHelper.OnReadChannelDetailListener() {
                         @Override
-                        public void onSuccessFinish(Conversation conversation) {
+                        public void onSuccessFinish(Chat conversation) {
                             addNewConversation(conversation);
                         }
 
@@ -92,11 +99,13 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
                 mView.setProgressIndicator(false);
             }
 
-            private void addNewConversation(Conversation conversation) {
+            private void addNewConversation(Chat conversation) {
                 mCurrentConversation = conversation;
-                ChannelCacheManager.getInstance().addConversation(mCurrentConversation);
+                ChatManager.getInstance().addConversation(mCurrentConversation);
                 mView.setProgressIndicator(false);
-                mView.showMessages(mCurrentConversation.getMessages());
+                mView.showList(mCurrentConversation.getMessages(), false);
+
+                onReadMessage();
             }
         });
     }
@@ -120,38 +129,61 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
     }
 
     @Override
-    public void onLoadMessages(boolean forceUpdate) {
+    public void onLoad(boolean forceUpdate) {
         if (forceUpdate) {
             //TODO :
         } else {
             if (null != mCurrentConversation && mCurrentConversation.hasUnreadMessage()) {
-                mView.showMessages(mCurrentConversation.getMessages());
+                mView.showList(mCurrentConversation.getMessages(), false);
                 mCurrentConversation.setHasUnreadMessage(false);
             }
         }
     }
 
     @Override
-    public void onLoadMessages(final int offset, final int limit) {
+    public void onLoad(final int offset, final int limit) {
         if(null != mCurrentConversation) {
-            List<Message> requestedMessages = mCurrentConversation.getMessages(offset, limit);
-            if(requestedMessages.size() < limit) {
-                mCurrentConversation.getChannel().getMessages(null, null, limit, offset, false, new MMXChannel.OnFinishedListener<ListResult<MMXMessage>>() {
+            if(mCurrentConversation.getMessages().size() < mCurrentConversation.getTotalMessages()) {
+                mCurrentConversation.getChannel().getMessages(null, null, limit, offset, true, new MMXChannel.OnFinishedListener<ListResult<MMXMessage>>() {
                     @Override public void onSuccess(ListResult<MMXMessage> mmxMessageListResult) {
-                        if (null != mmxMessageListResult) {
+                        if (null != mmxMessageListResult && !mmxMessageListResult.items.isEmpty()) {
+                            if(0 == offset) {
+                                mCurrentConversation.getMessages().clear();
+                            }
                             mCurrentConversation.insertMessages(mmxMessageListResult.items);
-                            mView.refreshMessages(offset, limit);
+                            mView.showList(mmxMessageListResult.items, 0 != offset);
                         }
                     }
 
                     @Override public void onFailure(MMXChannel.FailureCode failureCode, Throwable throwable) {
-                        Log.e(TAG, "onLoadMessages : " + offset + "/" + limit, throwable);
+                        Log.e(TAG, "onLoad : " + offset + "/" + limit, throwable);
                     }
                 });
             } else {
                 Log.d(TAG, "-----messages were already loaded");
+                mView.showList(mCurrentConversation.getMessages(offset, limit), 0 != offset);
             }
         }
+    }
+
+    @Override public void onSearch(String query, String sort) {
+
+    }
+
+    @Override public void onSearchReset() {
+
+    }
+
+    @Override public void onItemSelect(int position, Message item) {
+        onOpenAttachment(item);
+    }
+
+    @Override public void onItemLongClick(int position, Message item) {
+
+    }
+
+    @Override public BaseSortedAdapter.ItemComparator<Message> getItemComparator() {
+        return messageItemComparator;
     }
 
     @Override
@@ -160,22 +192,20 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
             //TODO :
         } else {
             if (null != mCurrentConversation && mCurrentConversation.hasRecipientsUpdate()) {
-                mView.showRecipients(mCurrentConversation.getSuppliersList());
+                mView.showRecipients(mCurrentConversation.getSortedSubscribers());
                 mCurrentConversation.setHasRecipientsUpdate(false);
             }
         }
     }
 
     @Override
-    public void onNewMessage(Message message) {
+    public void onNewMessage(MMXMessage message) {
         if (null != mCurrentConversation) {
-            mCurrentConversation.addMessage(message, false);
             mView.showNewMessage(message);
         }
     }
 
-    @Override
-    public void onReadMessage() {
+    private void onReadMessage() {
         if (null != mCurrentConversation) {
             mCurrentConversation.setHasUnreadMessage(false);
         }
@@ -215,16 +245,6 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
     }
 
     @Override
-    public void onMessageClick(Message message) {
-        onOpenAttachment(message);
-    }
-
-    @Override
-    public void onMessageLongClick(Message message) {
-
-    }
-
-    @Override
     public void onChatDetails() {
         Activity activity = mView.getActivity();
         if (mCurrentConversation != null && null != activity) {
@@ -233,7 +253,7 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
     }
 
     @Override
-    public Conversation getCurrentConversation() {
+    public Chat getCurrentConversation() {
         return mCurrentConversation;
     }
 
@@ -257,17 +277,28 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
         }
     }
 
+    private void setTitle(List<UserProfile> recipients) {
+        String title = null;
+        if (recipients.size() == 1) {
+            title = UserHelper.getDisplayNames(recipients);
+        } else {
+            title = "Group";
+        }
+        mView.setTitle(title);
+
+    }
+
     /**
      * Listener which provide the listening of the message sending notification
      */
-    private final Conversation.OnSendMessageListener sendMessageListener = new Conversation.OnSendMessageListener() {
+    private final Chat.OnSendMessageListener sendMessageListener = new Chat.OnSendMessageListener() {
         @Override
-        public void onSuccessSend(Message message) {
+        public void onSuccessSend(MMXMessage message) {
             mView.setProgressIndicator(false);
             mView.setSendEnabled(true);
 
-            ChannelCacheManager.getInstance().getMessagesToApproveDeliver().put(message.getMessageId(), message);
-            if (message.getType() != null && message.getType().equals(Message.TYPE_TEXT)) {
+            ChatManager.getInstance().getMessagesToApproveDeliver().put(message.getId(), message);
+            if (StringUtil.isStringValueEqual(MessageHelper.getMessageType(message), Message.TYPE_TEXT)) {
                 mView.clearInput();
             }
             onNewMessage(message);
@@ -293,8 +324,10 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
             MMXChannel channel = mmxMessage.getChannel();
             if (channel != null && mCurrentConversation != null) {
                 String messageChannelName = channel.getName();
-                if (messageChannelName.equalsIgnoreCase(mCurrentConversation.getChannel().getName())) {
-                    onNewMessage(Message.createMessageFrom(mmxMessage));
+                if (messageChannelName.equalsIgnoreCase(mCurrentConversation.getChannel().getName())
+                    && !mmxMessage.getSender().getUserIdentifier().equals(User.getCurrentUserId())) {
+                    mCurrentConversation.addMessage(mmxMessage, false);
+                    onNewMessage(mmxMessage);
                     return true;
                 }
             }
@@ -304,6 +337,20 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
         @Override
         public boolean onMessageAcknowledgementReceived(User from, String messageId) {
             return true;
+        }
+    };
+
+    private final BaseSortedAdapter.ItemComparator<Message> messageItemComparator = new BaseSortedAdapter.ItemComparator<Message>() {
+        @Override public int compare(Message o1, Message o2) {
+            return (int) (o1.getCreateTime().getTime() - o2.getCreateTime().getTime());
+        }
+
+        @Override public boolean areContentsTheSame(Message o1, Message o2) {
+            return areItemsTheSame(o1, o2);
+        }
+
+        @Override public boolean areItemsTheSame(Message item1, Message item2) {
+            return item1.getMessageId().equals(item2.getMessageId());
         }
     };
 }

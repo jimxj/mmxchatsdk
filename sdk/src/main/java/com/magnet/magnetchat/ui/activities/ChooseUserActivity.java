@@ -9,6 +9,7 @@ import android.support.annotation.NonNull;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -16,13 +17,17 @@ import android.widget.ProgressBar;
 import android.widget.SearchView;
 import android.widget.TextView;
 
+import com.magnet.magnetchat.Constants;
 import com.magnet.magnetchat.R;
+import com.magnet.magnetchat.callbacks.EndlessLinearRecyclerViewScrollListener;
 import com.magnet.magnetchat.callbacks.OnRecyclerViewItemClickListener;
+import com.magnet.magnetchat.helpers.UserHelper;
 import com.magnet.magnetchat.mvp.api.ChooseUserContract;
 import com.magnet.magnetchat.mvp.presenters.ChooseUserPresenterImpl;
 import com.magnet.magnetchat.ui.adapters.SelectedUsersAdapter;
 import com.magnet.magnetchat.ui.adapters.UsersAdapter;
 import com.magnet.magnetchat.ui.custom.CustomSearchView;
+import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;
 
 import java.util.ArrayList;
@@ -30,7 +35,7 @@ import java.util.List;
 
 
 public class ChooseUserActivity extends BaseActivity implements ChooseUserContract.View {
-
+    private static final String TAG = "ChooseUserActivity";
     public static final String TAG_ADD_USER_TO_CHANNEL = "onUsersSelected";
 
     private RecyclerView userList;
@@ -40,11 +45,11 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
     private ProgressBar userSearchProgress;
     private Toolbar toolbar;
 
-    private UsersAdapter adapter;
+    private UsersAdapter mAdapter;
     private SelectedUsersAdapter selectedAdapter;
-    private ArrayList<UserProfile> selectedUsers;
+    private ArrayList<User> selectedUsers;
 
-    private ChooseUserContract.Presenter presenter;
+    private ChooseUserContract.Presenter mPresenter;
 
     @Override
     protected int getLayoutResource() {
@@ -65,10 +70,18 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
         userSearchProgress = (ProgressBar) findViewById(R.id.chooseUserProgress);
 
         userList = (RecyclerView) findViewById(R.id.chooseUserList);
-        userList.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+        LinearLayoutManager userListLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        userList.setLayoutManager(userListLayoutManager);
+        userList.addOnScrollListener(new EndlessLinearRecyclerViewScrollListener(userListLayoutManager) {
+            @Override public void onLoadMore(int page, int totalItemsCount) {
+                Log.d(TAG, "------------onLoadMore User: " + page + "/" + totalItemsCount + "\n");
+                mPresenter.onLoad(totalItemsCount, Constants.USER_PAGE_SIZE);
+            }
+        });
 
         selectedUserList = (RecyclerView) findViewById(R.id.selectedUserList);
-        selectedUserList.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+        selectedUserList.setLayoutManager(layoutManager);
         selectedUsers = new ArrayList<>();
         selectedAdapter = new SelectedUsersAdapter(this, selectedUsers);
         selectedUserList.setAdapter(selectedAdapter);
@@ -76,11 +89,13 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
         String channelName = getIntent().getStringExtra(TAG_ADD_USER_TO_CHANNEL);
         if (channelName != null) {
             setTitle("Add contacts");
-            presenter = new ChooseUserPresenterImpl(this, channelName);
+            mPresenter = new ChooseUserPresenterImpl(this, channelName);
         } else {
             setTitle("All contacts");
-            presenter = new ChooseUserPresenterImpl(this);
+            mPresenter = new ChooseUserPresenterImpl(this);
         }
+
+        mPresenter.onLoad(0, Constants.USER_PAGE_SIZE);
     }
 
     @Override
@@ -91,7 +106,7 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.registerSaveBtn) {
-            presenter.onUsersSelected(selectedUsers);
+            mPresenter.onUsersSelected(selectedUsers);
         }
     }
 
@@ -107,7 +122,7 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
                 public boolean onClose() {
                     search.onActionViewCollapsed();
                     hideKeyboard();
-                    presenter.onLoadUsers(false);
+                    mPresenter.onSearchReset();
                     return true;
                 }
             });
@@ -143,10 +158,19 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
      * @param users users list
      */
     @Override
-    public void updateList(@NonNull List<? extends UserProfile> users) {
-        adapter = new UsersAdapter(this, UsersAdapter.convertToUserProfileList(users), selectedUsers);
-        userList.setAdapter(adapter);
-        adapter.setOnClickListener(userClickListener);
+    public void showUsers(@NonNull List<User> users, boolean toAppend) {
+        if (null == mAdapter) {
+            mAdapter =
+                new UsersAdapter(this, users, selectedUsers, mPresenter.getItemComparator());
+            userList.setAdapter(mAdapter);
+            mAdapter.setOnClickListener(userClickListener);
+        } else {
+            if(toAppend) {
+                mAdapter.addItem(users);
+            } else {
+                mAdapter.swapData(users);
+            }
+        }
     }
 
     /**
@@ -188,7 +212,7 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
         @Override
         public boolean onQueryTextSubmit(String query) {
             hideKeyboard();
-            presenter.searchUsers(query);
+            mPresenter.onSearch(UserHelper.createNameQuery(query), ChooseUserContract.DEFAULT_USER_ORDER);
             return true;
         }
 
@@ -196,7 +220,7 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
         public boolean onQueryTextChange(String newText) {
             if (newText.isEmpty()) {
                 hideKeyboard();
-                presenter.onLoadUsers(false);
+                mPresenter.onSearchReset();
             }
             return true;
         }
@@ -209,7 +233,7 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
         @Override
         public void onClick(int position) {
             hideKeyboard();
-            UserProfile user = adapter.getItem(position);
+            User user = mAdapter.getItem(position);
             if (user != null) {
                 if (selectedUsers.contains(user)) {
                     selectedUsers.remove(user);
@@ -222,7 +246,7 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
                 } else {
                     llSelectedUsers.setVisibility(View.GONE);
                 }
-                //adapter.notifyDataSetChanged();
+                //mAdapter.notifyDataSetChanged();
                 selectedAdapter.notifyDataSetChanged();
             }
         }
