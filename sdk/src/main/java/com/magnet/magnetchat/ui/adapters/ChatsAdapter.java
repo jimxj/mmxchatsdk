@@ -19,11 +19,12 @@ import com.magnet.magnetchat.model.Message;
 import com.magnet.magnetchat.ui.views.section.chat.CircleNameView;
 import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;
+import com.magnet.max.android.util.StringUtil;
 import com.magnet.mmx.client.api.MMXMessage;
 import de.hdodenhof.circleimageview.CircleImageView;
 import java.util.List;
 
-public class ChatsAdapter extends BaseAdapter<ChatsAdapter.ConversationViewHolder, Chat> {
+public class ChatsAdapter extends BaseSortedAdapter<ChatsAdapter.ConversationViewHolder, Chat> {
 
     /**
      * View holder to show mConversations with user's avatars and messages
@@ -68,8 +69,8 @@ public class ChatsAdapter extends BaseAdapter<ChatsAdapter.ConversationViewHolde
         }
     }
 
-    public ChatsAdapter(Context context, List<Chat> conversations) {
-       super(context, conversations);
+    public ChatsAdapter(Context context, List<Chat> conversations, ItemComparator<Chat> comparator) {
+       super(context, conversations, Chat.class, comparator);
     }
 
     @Override
@@ -91,6 +92,7 @@ public class ChatsAdapter extends BaseAdapter<ChatsAdapter.ConversationViewHolde
                 viewHolder.newMessage.setVisibility(View.INVISIBLE);
             }
             viewHolder.date.setText(DateHelper.getConversationLastDate(conversation.getLastPublishedTime()));
+            //viewHolder.date.setText(DateHelper.getDateWithoutSpaces(conversation.getLastPublishedTime()));
             viewHolder.lastMessage.setText(getLastMessage(conversation));
         }
     }

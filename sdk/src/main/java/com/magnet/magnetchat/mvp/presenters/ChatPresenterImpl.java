@@ -318,7 +318,8 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
             MMXChannel channel = mmxMessage.getChannel();
             if (channel != null && mCurrentConversation != null) {
                 String messageChannelName = channel.getName();
-                if (messageChannelName.equalsIgnoreCase(mCurrentConversation.getChannel().getName())) {
+                if (messageChannelName.equalsIgnoreCase(mCurrentConversation.getChannel().getName())
+                    && !mmxMessage.getSender().getUserIdentifier().equals(User.getCurrentUserId())) {
                     mCurrentConversation.addMessage(mmxMessage, false);
                     onNewMessage(mmxMessage);
                     return true;

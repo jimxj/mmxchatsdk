@@ -10,6 +10,7 @@ import com.magnet.magnetchat.core.managers.ChatManager;
 import com.magnet.magnetchat.helpers.ChannelHelper;
 import com.magnet.magnetchat.model.Chat;
 import com.magnet.magnetchat.mvp.api.ChatListContract;
+import com.magnet.magnetchat.ui.adapters.BaseSortedAdapter;
 import com.magnet.magnetchat.util.Logger;
 import com.magnet.magnetchat.util.Utils;
 import com.magnet.max.android.Max;
@@ -191,9 +192,12 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
      *
      * @return list of all conversations
      */
-    @Override
-    public List<Chat> getAllConversations() {
+    private List<Chat> getAllConversations() {
         return mConversations;
+    }
+
+    @Override public BaseSortedAdapter.ItemComparator<Chat> getItemComparator() {
+        return chatItemComparator;
     }
 
     /**
@@ -263,6 +267,23 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
         @Override
         public void onReceive(Context context, Intent intent) {
             showAllConversations();
+        }
+    };
+
+    private final BaseSortedAdapter.ItemComparator<Chat> chatItemComparator = new BaseSortedAdapter.ItemComparator<Chat>() {
+        @Override public int compare(Chat o1, Chat o2) {
+            return 0 - o1.getLastPublishedTime().compareTo(o2.getLastPublishedTime());
+        }
+
+        @Override public boolean areContentsTheSame(Chat o1, Chat o2) {
+            return areItemsTheSame(o1, o2)
+                && o1.getMessages().size() == o2.getMessages().size()
+                && o1.getSubscribers().size() == o2.getSubscribers().size();
+        }
+
+        @Override public boolean areItemsTheSame(Chat item1, Chat item2) {
+            return item1.getChannel().getName().equals(item2.getChannel().getName())
+                && item1.getChannel().isPublic() == item2.getChannel().isPublic();
         }
     };
 

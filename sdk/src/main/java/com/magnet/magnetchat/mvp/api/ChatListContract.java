@@ -2,6 +2,7 @@ package com.magnet.magnetchat.mvp.api;
 
 import com.magnet.magnetchat.model.Chat;
 
+import com.magnet.magnetchat.ui.adapters.BaseSortedAdapter;
 import java.util.List;
 
 /**
@@ -56,11 +57,7 @@ public interface ChatListContract {
          */
         void onPause();
 
-        /**
-         * Method which provide to getting of the list of the all conversations
-         *
-         * @return list of all conversations
-         */
-        List<Chat> getAllConversations();
+
+        BaseSortedAdapter.ItemComparator<Chat> getItemComparator();
     }
 }

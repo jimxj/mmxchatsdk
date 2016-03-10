@@ -3,6 +3,8 @@
  */
 package com.magnet.magnetchat.mvp.api;
 
+import com.magnet.magnetchat.ui.adapters.BaseSortedAdapter;
+
 public interface IListPresenter<T> {
 
   void onLoad(int offset, int limit);
@@ -14,4 +16,5 @@ public interface IListPresenter<T> {
   void onItemSelect(int position, T item);
 
   void onItemLongClick(int position, T item);
+
 }

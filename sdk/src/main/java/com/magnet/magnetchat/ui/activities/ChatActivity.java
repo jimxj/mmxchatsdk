@@ -150,7 +150,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
             }
         }
 
-        mPresenter.onLoad(0, Constants.MESSAGE_PAGE_SIZE);
+        //mPresenter.onLoad(0, Constants.MESSAGE_PAGE_SIZE);
 
         googleApiClient = new GoogleApiClient.Builder(this).addConnectionCallbacks(connectionCallback)
                 .addOnConnectionFailedListener(connectionFailedListener).addApi(LocationServices.API).build();
@@ -282,7 +282,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
     @Override
     public void showNewMessage(MMXMessage message) {
         if (mAdapter != null) {
-            mAdapter.append(Arrays.asList(Message.createMessageFrom(message)));
+            mAdapter.append(Message.createMessageFrom(message));
             //mAdapter.notifyItemChanged(mAdapter.getItemCount());
             messagesListView.smoothScrollToPosition(mAdapter.getItemCount());
         }

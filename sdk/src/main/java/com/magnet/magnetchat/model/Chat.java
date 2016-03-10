@@ -4,6 +4,7 @@ import android.location.Location;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
+import com.magnet.magnetchat.helpers.DateHelper;
 import com.magnet.magnetchat.helpers.MessageHelper;
 import com.magnet.magnetchat.helpers.UserHelper;
 import com.magnet.magnetchat.util.Logger;
@@ -135,10 +136,6 @@ public class Chat extends ChannelDetail {
         this.hasUnreadMessage = hasUnreadMessage;
     }
 
-    public void setLastPublishedTime(Date lastActiveTime) {
-        this.lastPublishedTime = lastActiveTime;
-    }
-
     public List<MMXMessage> getMessages(int offset, int limit) {
         if (limit > 0) {
             int size = messages.size();
@@ -158,6 +155,9 @@ public class Chat extends ChannelDetail {
         if (!messages.contains(message)) {
             appendMessage(message, isNewMessage);
             hasMessageUpdate = true;
+
+            lastPublishedTime = null != message.getTimestamp() ? message.getTimestamp() : new Date();
+
             return true;
         }
 
@@ -184,7 +184,10 @@ public class Chat extends ChannelDetail {
 
         if (newMessageAdded) {
             setHasUnreadMessage(true);
-            setLastPublishedTime(new Date());
+        }
+
+        if(null != conversation.getLastPublishedTime() && (conversation.getLastPublishedTime().getTime() > lastPublishedTime.getTime())) {
+            lastPublishedTime = conversation.getLastPublishedTime();
         }
 
         return newMessageAdded;
@@ -286,7 +289,6 @@ public class Chat extends ChannelDetail {
 
         if(isNew) {
             hasUnreadMessage = true;
-            lastPublishedTime = new Date();
         }
     }
 

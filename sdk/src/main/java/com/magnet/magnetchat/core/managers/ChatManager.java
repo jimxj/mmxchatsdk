@@ -11,6 +11,7 @@ import com.magnet.mmx.client.api.MMXChannel;
 import com.magnet.mmx.client.api.MMXMessage;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -84,10 +85,8 @@ public class ChatManager {
         return Collections.EMPTY_LIST;
     }
 
-    public List<Chat> getConversations() {
-        ArrayList<Chat> list = new ArrayList<>(conversations.values());
-        Collections.sort(list, conversationComparator);
-        return list;
+    public Collection<Chat> getConversations() {
+        return conversations.values();
     }
 
     public Map<String, MMXMessage> getMessagesToApproveDeliver() {

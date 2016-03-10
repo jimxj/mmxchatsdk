@@ -49,11 +49,15 @@ public abstract class BaseAdapter<V extends RecyclerView.ViewHolder, T> extends 
         if(null != items && !items.isEmpty()) {
             int sizeBefore = mData.size();
             for(T item : items) {
-                if (!mData.contains(item)) {
-                    mData.add(item);
-                }
+                append(item);
             }
             notifyItemRangeInserted(sizeBefore, mData.size());
+        }
+    }
+
+    public void append(T item) {
+        if (!mData.contains(item)) {
+            mData.add(item);
         }
     }
 

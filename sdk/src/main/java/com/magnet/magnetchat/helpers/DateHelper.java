@@ -57,11 +57,19 @@ public class DateHelper {
         return new Date(date.getTime() - TimeZone.getDefault().getOffset(System.currentTimeMillis()));
     }
 
+    public static Date getUtcNow() {
+        return localToUtc(new Date());
+    }
+
     public static String getTime(Date date) {
         return DateFormat.getTimeInstance(DateFormat.SHORT).format(date);
     }
 
     public static String getDateWithoutSpaces() {
+        return getDateWithoutSpaces(new Date());
+    }
+
+    public static String getDateWithoutSpaces(Date date) {
         SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_TEMPLATE_WITHOUT_SPACE);
         return dateFormat.format(new Date());
     }
