@@ -6,10 +6,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
@@ -32,8 +32,9 @@ import com.magnet.magnetchat.R;
 import com.magnet.magnetchat.callbacks.EndlessLinearRecyclerViewScrollListener;
 import com.magnet.magnetchat.callbacks.OnRecyclerViewItemClickListener;
 import com.magnet.magnetchat.core.managers.ChatManager;
+import com.magnet.magnetchat.helpers.BitmapHelper;
+import com.magnet.magnetchat.helpers.IntentHelper;
 import com.magnet.magnetchat.helpers.PermissionHelper;
-import com.magnet.magnetchat.helpers.UserHelper;
 import com.magnet.magnetchat.model.Chat;
 import com.magnet.magnetchat.model.Message;
 import com.magnet.magnetchat.mvp.api.ChatContract;
@@ -42,15 +43,11 @@ import com.magnet.magnetchat.ui.adapters.MessagesAdapter;
 import com.magnet.magnetchat.util.Utils;
 import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;
-
 import com.magnet.mmx.client.api.MMXMessage;
+
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-
-import nl.changer.polypicker.Config;
-import nl.changer.polypicker.ImagePickerActivity;
 
 public class ChatActivity extends BaseActivity implements ChatContract.View {
 
@@ -62,7 +59,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
     public static final String TAG_CREATE_WITH_RECIPIENTS = "createWithRecipients";
     public static final String TAG_CREATE_NEW = "createNew";
 
-    private static final String[] ATTACHMENT_VARIANTS = {"Send photo", "Send location", /*"Send video",*/ "Cancel"};
+    private static final String[] ATTACHMENT_VARIANTS = {"Take photo", "Choose from gallery", "Send location", /*"Send video",*/ "Cancel"};
 
     public static final int INTENT_REQUEST_GET_IMAGES = 14;
     public static final int INTENT_SELECT_VIDEO = 13;
@@ -124,7 +121,8 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
 
         //TODO:Infinity scroll implementation (with crash for now)
         messagesListView.addOnScrollListener(new EndlessLinearRecyclerViewScrollListener(layoutManager) {
-            @Override public void onLoadMore(int page, int totalItemsCount) {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount) {
                 Log.d(TAG, "------------onLoadMore Message: " + page + "/" + totalItemsCount + "," + mPresenter.getCurrentConversation().getMessages().size() + "\n");
                 mPresenter.onLoad(totalItemsCount, Constants.MESSAGE_PAGE_SIZE);
             }
@@ -257,7 +255,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
             });
             messagesListView.setAdapter(mAdapter);
         } else {
-            if(toAppend){
+            if (toAppend) {
                 mAdapter.addItem(Message.fromMMXMessages(messages));
             } else {
                 mAdapter.swapData(Message.fromMMXMessages(messages));
@@ -294,13 +292,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
      */
     @Override
     public void showImagePicker() {
-        Intent intent = new Intent(this, ImagePickerActivity.class);
-        Config config = new Config.Builder()
-                .setTabBackgroundColor(R.color.white)
-                .setSelectionLimit(1)
-                .build();
-        ImagePickerActivity.setConfig(config);
-        startActivityForResult(intent, INTENT_REQUEST_GET_IMAGES);
+        startActivityForResult(IntentHelper.photoCapture(), INTENT_REQUEST_GET_IMAGES);
     }
 
     /**
@@ -382,14 +374,25 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
 
         if (resultCode == Activity.RESULT_OK) {
             if (requestCode == INTENT_REQUEST_GET_IMAGES) {
-                Parcelable[] parcelableUris = intent.getParcelableArrayExtra(ImagePickerActivity.EXTRA_IMAGE_URIS);
-                if (parcelableUris == null) {
+
+                Bundle extras = intent.getExtras();
+                Bitmap imageBitmap = (Bitmap) extras.get("data");
+                Uri uri = BitmapHelper.storeImage(imageBitmap, 100);
+
+                if (uri == null) {
                     return;
                 }
-                Uri[] uris = new Uri[parcelableUris.length];
-                System.arraycopy(parcelableUris, 0, uris, 0, parcelableUris.length);
-
+                Uri[] uris = {uri};
                 mPresenter.onSendImages(uris);
+
+
+//                Parcelable[] parcelableUris = intent.getParcelableArrayExtra(ImagePickerActivity.EXTRA_IMAGE_URIS);
+//                if (parcelableUris == null) {
+//                    return;
+//                }
+//                Uri[] uris = new Uri[parcelableUris.length];
+//                System.arraycopy(parcelableUris, 0, uris, 0, parcelableUris.length);
+//                mPresenter.onSendImages(uris);
             }
         }
     }
@@ -436,7 +439,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
                                 showImagePicker();
                             }
                             break;
-                        case 1:
+                        case 2:
                             if (!needPermission(REQUEST_LOCATION, PermissionHelper.LOCATION_PERMISSION1, PermissionHelper.LOCATION_PERMISSION2)) {
                                 sendLocation();
                             }
