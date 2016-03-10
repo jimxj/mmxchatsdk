@@ -1,6 +1,6 @@
 package com.magnet.magnetchat.helpers;
 
-import com.magnet.magnetchat.core.managers.ChannelCacheManager;
+import com.magnet.magnetchat.core.managers.ChatManager;
 import com.magnet.magnetchat.core.managers.SharedPreferenceManager;
 import com.magnet.magnetchat.util.Logger;
 import com.magnet.max.android.ApiCallback;
@@ -159,7 +159,7 @@ public class UserHelper {
         User.logout(new ApiCallback<Boolean>() {
             @Override
             public void success(Boolean aBoolean) {
-                ChannelCacheManager.getInstance().resetConversations();
+                ChatManager.getInstance().resetConversations();
                 Logger.debug("logout", "success");
                 if (listener != null)
                     listener.onSuccess();

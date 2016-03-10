@@ -21,10 +21,11 @@ import com.magnet.magnetchat.ui.views.section.chat.CircleNameView;
 import com.magnet.max.android.Attachment;
 import com.magnet.max.android.User;
 import com.magnet.max.android.util.StringUtil;
+import com.magnet.mmx.client.api.MMXMessage;
 import java.util.Date;
 import java.util.List;
 
-public class MessagesAdapter extends BaseAdapter<MessagesAdapter.ViewHolder, Message> {
+public class MessagesAdapter extends BaseSortedAdapter<MessagesAdapter.ViewHolder, Message> {
     private final static String TAG = MessagesAdapter.class.getSimpleName();
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
@@ -76,8 +77,8 @@ public class MessagesAdapter extends BaseAdapter<MessagesAdapter.ViewHolder, Mes
         }
     }
 
-    public MessagesAdapter(Context context, List<Message> messages) {
-        super(context, messages);
+    public MessagesAdapter(Context context, List<Message> messages, ItemComparator<Message> comparator) {
+        super(context, messages, Message.class, comparator);
     }
 
     @Override

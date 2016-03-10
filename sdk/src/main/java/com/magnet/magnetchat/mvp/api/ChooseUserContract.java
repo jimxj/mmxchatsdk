@@ -3,6 +3,8 @@ package com.magnet.magnetchat.mvp.api;
 import android.app.Activity;
 import android.support.annotation.NonNull;
 
+import com.magnet.magnetchat.ui.adapters.BaseSortedAdapter;
+import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;
 
 import java.util.List;
@@ -68,7 +70,7 @@ public interface ChooseUserContract {
          *
          * @param users users list
          */
-        void showUsers(@NonNull List<? extends UserProfile> users, boolean toAppend);
+        void showUsers(@NonNull List<User> users, boolean toAppend);
 
         /**
          * Method which provide the closing of the Activity
@@ -84,48 +86,30 @@ public interface ChooseUserContract {
 
     }
 
-    interface Presenter {
-
-        /**
-         * Method which provide to getting of the reading channels
-         */
-        void onLoadUsers(int offset, int limit);
-
-        /**
-         * Method which provide the searching of the user by query
-         *
-         * @param query current query
-         */
-        void onSearchUsers(@NonNull String query, String order);
-
-        /**
-         * Method which provide the search resetting
-         */
-        void onResetSearch();
+    interface Presenter extends IListPresenter<User> {
 
         /**
          * Method which provide the user selection
          *
          * @param userList user list
          */
-        void onUsersSelected(@NonNull final List<UserProfile> userList);
+        void onUsersSelected(@NonNull final List<User> userList);
 
         /**
          * Method which provide to adding of the user to the chat
          *
          * @param selectedUsers selected users
          */
-        void onAddUsersToChat(@NonNull List<UserProfile> selectedUsers);
+        void onAddUsersToChat(@NonNull List<User> selectedUsers);
 
         /**
          * Method which provide the creating of the new chat
          *
          * @param selectedUsers selected users
          */
-        void onNewChat(@NonNull List<UserProfile> selectedUsers);
+        void onNewChat(@NonNull List<User> selectedUsers);
 
         UserQuery getDefaultQuery();
-
     }
 
 }

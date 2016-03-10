@@ -3,8 +3,8 @@ package com.magnet.magnetchat.helpers;
 import android.content.Intent;
 
 import com.magnet.magnetchat.Constants;
-import com.magnet.magnetchat.core.managers.ChannelCacheManager;
-import com.magnet.magnetchat.model.Conversation;
+import com.magnet.magnetchat.core.managers.ChatManager;
+import com.magnet.magnetchat.model.Chat;
 import com.magnet.magnetchat.util.Logger;
 import com.magnet.max.android.ApiCallback;
 import com.magnet.max.android.ApiError;
@@ -18,6 +18,7 @@ import com.magnet.mmx.client.api.ListResult;
 import com.magnet.mmx.client.api.MMXChannel;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,7 +28,7 @@ public class ChannelHelper {
     public static final String ACTION_ADDED_CONVERSATION = "com.magnet.magnetchat.ADDED_CONVERSATION";
 
     public interface OnReadChannelDetailListener {
-        void onSuccessFinish(Conversation conversation);
+        void onSuccessFinish(Chat conversation);
 
         void onFailure(Throwable throwable);
     }
@@ -63,9 +64,9 @@ public class ChannelHelper {
     }
 
     public static void getSubscriptionDetails(final int offset, final int limit, final MMXChannel.OnFinishedListener<List<ChannelDetail>> listener) {
-        boolean needToRefreshSubscriptions = 0 == offset || null == ChannelCacheManager.getInstance().getAllSubscriptions();
+        boolean needToRefreshSubscriptions = 0 == offset || null == ChatManager.getInstance().getAllSubscriptions();
         if (!needToRefreshSubscriptions) {
-            getChannelDetails(ChannelCacheManager.getInstance().getSubscriptions(offset, limit), listener);
+            getChannelDetails(ChatManager.getInstance().getSubscriptions(offset, limit), listener);
         } else {
             MMXChannel.getAllSubscriptions(new MMXChannel.OnFinishedListener<List<MMXChannel>>() {
                 @Override
@@ -73,11 +74,11 @@ public class ChannelHelper {
                     Logger.debug(TAG, "getSubscriptionDetails success : " + channels);
                     //ChannelCacheManager.getInstance().resetConversations();
                     if (null != channels && channels.size() > 0) {
-                        ChannelCacheManager.getInstance().setAllSubscriptions(channels);
-                        getChannelDetails(ChannelCacheManager.getInstance().getSubscriptions(offset, limit), listener);
+                        ChatManager.getInstance().setAllSubscriptions(channels);
+                        getChannelDetails(ChatManager.getInstance().getSubscriptions(offset, limit), listener);
                     } else {
                         if (listener != null) {
-                            listener.onSuccess(null);
+                            listener.onSuccess(Collections.EMPTY_LIST);
                         }
                     }
                 }
@@ -114,8 +115,8 @@ public class ChannelHelper {
                     @Override
                     public void onSuccess(List<ChannelDetail> channelDetails) {
                         if (null != channelDetails && 1 == channelDetails.size()) {
-                            Conversation conversation = new Conversation(channelDetails.get(0));
-                            ChannelCacheManager.getInstance().addConversation(conversation);
+                            Chat conversation = new Chat(channelDetails.get(0));
+                            ChatManager.getInstance().addConversation(conversation);
 
                             if (null != listener) {
                                 listener.onSuccessFinish(conversation);
@@ -186,10 +187,10 @@ public class ChannelHelper {
         //        });
     }
 
-    public static void addUserToConversation(final Conversation conversation, final List<UserProfile> userList, final OnAddUserListener listener) {
+    public static void addUserToConversation(final Chat conversation, final List<User> userList, final OnAddUserListener listener) {
         Set<User> userSet = new HashSet<>();
         for (UserProfile user : userList) {
-            if (null == conversation.getSupplier(user.getUserIdentifier())) {
+            if (!conversation.containSubscriber(user)) {
                 userSet.add((User) user);
             }
         }
@@ -198,7 +199,7 @@ public class ChannelHelper {
             public void onSuccess(List<String> strings) {
                 Logger.debug("add user", "success");
                 for (UserProfile user : userList) {
-                    conversation.addSupplier(user);
+                    conversation.addSubscriber(user);
                 }
 
                 if (listener != null) {
@@ -291,13 +292,13 @@ public class ChannelHelper {
         });
     }
 
-    public static void unsubscribeFromChannel(final Conversation conversation, final OnLeaveChannelListener listener) {
+    public static void unsubscribeFromChannel(final Chat conversation, final OnLeaveChannelListener listener) {
         final MMXChannel channel = conversation.getChannel();
         if (channel != null) {
             channel.unsubscribe(new MMXChannel.OnFinishedListener<Boolean>() {
                 @Override
                 public void onSuccess(Boolean aBoolean) {
-                    ChannelCacheManager.getInstance().removeConversation(channel.getName());
+                    ChatManager.getInstance().removeConversation(channel.getName());
                     Logger.debug("unsubscribe", "success");
                     if (listener != null)
                         listener.onSuccess();
@@ -313,13 +314,13 @@ public class ChannelHelper {
         }
     }
 
-    public static void deleteChannel(final Conversation conversation, final OnLeaveChannelListener listener) {
+    public static void deleteChannel(final Chat conversation, final OnLeaveChannelListener listener) {
         final MMXChannel channel = conversation.getChannel();
         if (channel != null) {
             channel.delete(new MMXChannel.OnFinishedListener<Void>() {
                 @Override
                 public void onSuccess(Void aVoid) {
-                    ChannelCacheManager.getInstance().removeConversation(channel.getName());
+                    ChatManager.getInstance().removeConversation(channel.getName());
                     Logger.debug("delete", "success");
                     if (listener != null)
                         listener.onSuccess();

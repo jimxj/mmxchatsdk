@@ -27,6 +27,7 @@ import com.magnet.magnetchat.mvp.presenters.ChooseUserPresenterImpl;
 import com.magnet.magnetchat.ui.adapters.SelectedUsersAdapter;
 import com.magnet.magnetchat.ui.adapters.UsersAdapter;
 import com.magnet.magnetchat.ui.custom.CustomSearchView;
+import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;
 
 import java.util.ArrayList;
@@ -46,7 +47,7 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
 
     private UsersAdapter mAdapter;
     private SelectedUsersAdapter selectedAdapter;
-    private ArrayList<UserProfile> selectedUsers;
+    private ArrayList<User> selectedUsers;
 
     private ChooseUserContract.Presenter mPresenter;
 
@@ -74,7 +75,7 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
         userList.addOnScrollListener(new EndlessLinearRecyclerViewScrollListener(userListLayoutManager) {
             @Override public void onLoadMore(int page, int totalItemsCount) {
                 Log.d(TAG, "------------onLoadMore User: " + page + "/" + totalItemsCount + "\n");
-                mPresenter.onLoadUsers(totalItemsCount, Constants.USER_PAGE_SIZE);
+                mPresenter.onLoad(totalItemsCount, Constants.USER_PAGE_SIZE);
             }
         });
 
@@ -94,7 +95,7 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
             mPresenter = new ChooseUserPresenterImpl(this);
         }
 
-        mPresenter.onLoadUsers(0, Constants.USER_PAGE_SIZE);
+        mPresenter.onLoad(0, Constants.USER_PAGE_SIZE);
     }
 
     @Override
@@ -121,7 +122,7 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
                 public boolean onClose() {
                     search.onActionViewCollapsed();
                     hideKeyboard();
-                    mPresenter.onResetSearch();
+                    mPresenter.onSearchReset();
                     return true;
                 }
             });
@@ -157,17 +158,17 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
      * @param users users list
      */
     @Override
-    public void showUsers(@NonNull List<? extends UserProfile> users, boolean toAppend) {
+    public void showUsers(@NonNull List<User> users, boolean toAppend) {
         if (null == mAdapter) {
             mAdapter =
-                new UsersAdapter(this, UserHelper.convertToUserProfileList(users), selectedUsers);
+                new UsersAdapter(this, users, selectedUsers, mPresenter.getItemComparator());
             userList.setAdapter(mAdapter);
             mAdapter.setOnClickListener(userClickListener);
         } else {
             if(toAppend) {
-                mAdapter.append(UserHelper.convertToUserProfileList(users));
+                mAdapter.addItem(users);
             } else {
-                mAdapter.swapData(UserHelper.convertToUserProfileList(users));
+                mAdapter.swapData(users);
             }
         }
     }
@@ -211,7 +212,7 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
         @Override
         public boolean onQueryTextSubmit(String query) {
             hideKeyboard();
-            mPresenter.onSearchUsers(UserHelper.createNameQuery(query), ChooseUserContract.DEFAULT_USER_ORDER);
+            mPresenter.onSearch(UserHelper.createNameQuery(query), ChooseUserContract.DEFAULT_USER_ORDER);
             return true;
         }
 
@@ -219,7 +220,7 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
         public boolean onQueryTextChange(String newText) {
             if (newText.isEmpty()) {
                 hideKeyboard();
-                mPresenter.onResetSearch();
+                mPresenter.onSearchReset();
             }
             return true;
         }
@@ -232,7 +233,7 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
         @Override
         public void onClick(int position) {
             hideKeyboard();
-            UserProfile user = mAdapter.getItem(position);
+            User user = mAdapter.getItem(position);
             if (user != null) {
                 if (selectedUsers.contains(user)) {
                     selectedUsers.remove(user);

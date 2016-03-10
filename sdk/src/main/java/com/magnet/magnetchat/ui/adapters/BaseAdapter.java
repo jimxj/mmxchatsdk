@@ -48,7 +48,28 @@ public abstract class BaseAdapter<V extends RecyclerView.ViewHolder, T> extends 
     public void append(List<T> items) {
         if(null != items && !items.isEmpty()) {
             int sizeBefore = mData.size();
-            mData.addAll(items);
+            for(T item : items) {
+                append(item);
+            }
+            notifyItemRangeInserted(sizeBefore, mData.size());
+        }
+    }
+
+    public void append(T item) {
+        if (!mData.contains(item)) {
+            mData.add(item);
+        }
+    }
+
+    public void insert(List<T> items) {
+        if(null != items && !items.isEmpty()) {
+            int sizeBefore = mData.size();
+            for(int i = items.size() -1; i >=0; i--) {
+                T item = items.get(i);
+                if (!mData.contains(item)) {
+                    mData.add(0, item);
+                }
+            }
             notifyItemRangeInserted(sizeBefore, mData.size());
         }
     }
@@ -85,4 +106,6 @@ public abstract class BaseAdapter<V extends RecyclerView.ViewHolder, T> extends 
     protected Context getContext() {
         return mContext;
     }
+
+
 }

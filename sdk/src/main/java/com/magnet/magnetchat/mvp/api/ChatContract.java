@@ -8,31 +8,17 @@ import android.location.Location;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 
-import com.magnet.magnetchat.model.Conversation;
+import com.magnet.magnetchat.model.Chat;
 import com.magnet.magnetchat.model.Message;
+import com.magnet.magnetchat.ui.adapters.BaseSortedAdapter;
 import com.magnet.max.android.UserProfile;
 
+import com.magnet.mmx.client.api.MMXMessage;
 import java.util.List;
 
 public interface ChatContract {
 
-    interface View {
-
-        /**
-         * Show or hide the progress bar
-         *
-         * @param active
-         */
-        void setProgressIndicator(boolean active);
-
-        /**
-         * Method which provide to show the messages
-         *
-         * @param messages messages list
-         */
-        void showMessages(List<Message> messages);
-
-        void refreshMessages(int offset, int limit);
+    interface View extends IListView<MMXMessage> {
 
         /**
          * Method which provide to show the recipients
@@ -46,7 +32,7 @@ public interface ChatContract {
          *
          * @param message new message
          */
-        void showNewMessage(Message message);
+        void showNewMessage(MMXMessage message);
 
         /**
          * Method which provide to show of the image picker
@@ -90,7 +76,7 @@ public interface ChatContract {
         Activity getActivity();
     }
 
-    interface Presenter {
+    interface Presenter extends IListPresenter<Message> {
 
         /**
          * Method which provide the action when Activity/Fragment call onResume method
@@ -105,15 +91,11 @@ public interface ChatContract {
         void onPause();
 
 
-        void onLoadMessages(boolean forceUpdate);
-
-        void onLoadMessages(int offset, int limit);
+        void onLoad(boolean forceUpdate);
 
         void onLoadRecipients(boolean forceUpdate);
 
-        void onNewMessage(Message message);
-
-        void onReadMessage();
+        void onNewMessage(MMXMessage message);
 
         void onSendText(String text);
 
@@ -121,14 +103,9 @@ public interface ChatContract {
 
         void onSendLocation(Location location);
 
-        void onMessageClick(Message message);
-
-        void onMessageLongClick(Message message);
-
         void onChatDetails();
 
-        Conversation getCurrentConversation();
-
+        Chat getCurrentConversation();
     }
 
 }

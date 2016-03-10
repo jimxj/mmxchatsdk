@@ -14,21 +14,23 @@ import com.bumptech.glide.request.target.Target;
 import com.magnet.magnetchat.R;
 import com.magnet.magnetchat.helpers.DateHelper;
 import com.magnet.magnetchat.helpers.UserHelper;
-import com.magnet.magnetchat.model.Conversation;
+import com.magnet.magnetchat.model.Chat;
 import com.magnet.magnetchat.model.Message;
 import com.magnet.magnetchat.ui.views.section.chat.CircleNameView;
 import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;
+import com.magnet.max.android.util.StringUtil;
+import com.magnet.mmx.client.api.MMXMessage;
 import de.hdodenhof.circleimageview.CircleImageView;
 import java.util.List;
 
-public class ChatsAdapter extends BaseAdapter<ChatsAdapter.ConversationViewHolder, Conversation> {
+public class ChatsAdapter extends BaseSortedAdapter<ChatsAdapter.ConversationViewHolder, Chat> {
 
     /**
      * View holder to show mConversations with user's avatars and messages
      */
     protected class ConversationViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
-        Conversation conversation;
+        Chat conversation;
         ImageView newMessage;
         CircleImageView imageAvatar;
         CircleNameView viewAvatar;
@@ -67,8 +69,8 @@ public class ChatsAdapter extends BaseAdapter<ChatsAdapter.ConversationViewHolde
         }
     }
 
-    public ChatsAdapter(Context context, List<Conversation> conversations) {
-       super(context, conversations);
+    public ChatsAdapter(Context context, List<Chat> conversations, ItemComparator<Chat> comparator) {
+       super(context, conversations, Chat.class, comparator);
     }
 
     @Override
@@ -80,7 +82,7 @@ public class ChatsAdapter extends BaseAdapter<ChatsAdapter.ConversationViewHolde
     @Override
     public void onBindViewHolder(ConversationViewHolder holder, int position) {
         ConversationViewHolder viewHolder = holder;
-        Conversation conversation = getItem(position);
+        Chat conversation = getItem(position);
         if (viewHolder != null && conversation != null) {
             viewHolder.conversation = conversation;
             prepareTitleAndAvatar(conversation, viewHolder);
@@ -89,7 +91,8 @@ public class ChatsAdapter extends BaseAdapter<ChatsAdapter.ConversationViewHolde
             } else {
                 viewHolder.newMessage.setVisibility(View.INVISIBLE);
             }
-            viewHolder.date.setText(DateHelper.getConversationLastDate(conversation.getLastActiveTime()));
+            viewHolder.date.setText(DateHelper.getConversationLastDate(conversation.getLastPublishedTime()));
+            //viewHolder.date.setText(DateHelper.getDateWithoutSpaces(conversation.getLastPublishedTime()));
             viewHolder.lastMessage.setText(getLastMessage(conversation));
         }
     }
@@ -100,30 +103,8 @@ public class ChatsAdapter extends BaseAdapter<ChatsAdapter.ConversationViewHolde
      * @param conversation
      * @return empty line, if conversation has not any massage
      */
-    protected String getLastMessage(Conversation conversation) {
-        List<Message> messages = conversation.getMessages();
-        if (messages != null && messages.size() > 0) {
-            Message message = messages.get(messages.size() - 1);
-            String msgType = message.getType();
-            if (msgType == null) {
-                msgType = Message.TYPE_TEXT;
-            }
-            switch (msgType) {
-                case Message.TYPE_MAP:
-                    return "User's location";
-                case Message.TYPE_VIDEO:
-                    return "User's video";
-                case Message.TYPE_PHOTO:
-                    return "User's photo";
-                case Message.TYPE_TEXT:
-                    String text = message.getText().replace(System.getProperty("line.separator"), " ");
-                    if (text.length() > 23) {
-                        text = text.substring(0, 20) + "...";
-                    }
-                    return text;
-            }
-        }
-        return "";
+    protected String getLastMessage(Chat conversation) {
+        return conversation.getLastMessageSummary();
     }
 
     /**
@@ -189,8 +170,8 @@ public class ChatsAdapter extends BaseAdapter<ChatsAdapter.ConversationViewHolde
      * @param conversation object for current item
      * @param viewHolder
      */
-    protected void prepareTitleAndAvatar(Conversation conversation, ConversationViewHolder viewHolder) {
-        List<UserProfile> suppliers = conversation.getSuppliersList();
+    protected void prepareTitleAndAvatar(Chat conversation, ConversationViewHolder viewHolder) {
+        List<UserProfile> suppliers = conversation.getSortedSubscribers();
         //If all suppliers left conversation, show current user.
         if (suppliers.size() == 0) {
             User currentUser = User.getCurrentUser();
@@ -201,7 +182,7 @@ public class ChatsAdapter extends BaseAdapter<ChatsAdapter.ConversationViewHolde
         } else {
             if (suppliers.size() > 1) {
                 Glide.with(getContext()).load(R.drawable.user_group).fitCenter().into(viewHolder.imageAvatar);
-                showImageAvatar(UserHelper.getDisplayNames(conversation.getSuppliersList()), viewHolder);
+                showImageAvatar(UserHelper.getDisplayNames(conversation.getSortedSubscribers()), viewHolder);
             } else {
                 //If there is one supplier, show his avatar.
                 setUserAvatar(suppliers.get(0), viewHolder);

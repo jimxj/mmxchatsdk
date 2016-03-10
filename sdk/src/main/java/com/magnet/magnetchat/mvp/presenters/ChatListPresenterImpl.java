@@ -6,11 +6,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 
 import com.magnet.magnetchat.callbacks.NewMessageProcessListener;
-import com.magnet.magnetchat.core.managers.ChannelCacheManager;
+import com.magnet.magnetchat.core.managers.ChatManager;
 import com.magnet.magnetchat.helpers.ChannelHelper;
-import com.magnet.magnetchat.model.Conversation;
-import com.magnet.magnetchat.model.Message;
+import com.magnet.magnetchat.model.Chat;
 import com.magnet.magnetchat.mvp.api.ChatListContract;
+import com.magnet.magnetchat.ui.adapters.BaseSortedAdapter;
 import com.magnet.magnetchat.util.Logger;
 import com.magnet.magnetchat.util.Utils;
 import com.magnet.max.android.Max;
@@ -30,9 +30,10 @@ import java.util.List;
 public class ChatListPresenterImpl implements ChatListContract.Presenter {
     protected static final String TAG = "ChatListPresenter";
 
-    protected List<Conversation> mConversations = new ArrayList<>();
+    protected List<Chat> mConversations = new ArrayList<>();
     private boolean isLoadingWhenCreating = false;
     protected ChatListContract.View mView;
+    protected boolean mIsSearchMode;
 
     /**
      * Constructor
@@ -47,26 +48,32 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
      * Method which provide to getting of the reading channels
      */
     @Override
-    public void onLoadConversations(final int offset, int limit) {
+    public void onLoad(final int offset, int limit) {
+        if(mIsSearchMode) {
+            return;
+        }
+
         ChannelHelper.getSubscriptionDetails(offset, limit, new MMXChannel.OnFinishedListener<List<ChannelDetail>>() {
             @Override
             public void onSuccess(List<ChannelDetail> channelDetails) {
-                List<Conversation> newConversations = new ArrayList<Conversation>();
-                if (null != channelDetails) {
+                List<Chat> newConversations = new ArrayList<Chat>();
+                if (null != channelDetails && !channelDetails.isEmpty()) {
                     for (ChannelDetail cd : channelDetails) {
-                        Conversation c = new Conversation(cd);
-                        ChannelCacheManager.getInstance().addConversation(c);
+                        Chat c = new Chat(cd);
+                        ChatManager.getInstance().addConversation(c);
                         newConversations.add(c);
                     }
                 }
 
-                if(offset == 0) {
-                    mConversations.clear();
-                    mConversations.addAll(ChannelCacheManager.getInstance().getConversations());
-                    mView.showList(mConversations);
-                } else {
-                    mConversations.addAll(newConversations);
-                }
+                mView.showList(newConversations, 0 != offset);
+                //
+                //if(offset == 0) {
+                //    mConversations.clear();
+                //    mConversations.addAll(ChatManager.getInstance().getConversations());
+                //    mView.showList(mConversations, );
+                //} else {
+                //    mConversations.addAll(newConversations);
+                //}
 
                 finishGetChannels();
             }
@@ -92,7 +99,7 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
     }
 
     @Override
-    public void onConversationUpdate(Conversation conversation, boolean isNew) {
+    public void onConversationUpdate(Chat conversation, boolean isNew) {
         mView.showConversationUpdate(conversation, isNew);
     }
 
@@ -102,9 +109,9 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
      */
     @Override
     public void onResume() {
-        if (!isLoadingWhenCreating && ChannelCacheManager.getInstance().isConversationListUpdated()) {
+        if (!isLoadingWhenCreating && ChatManager.getInstance().isConversationListUpdated()) {
             showAllConversations();
-            ChannelCacheManager.getInstance().resetConversationListUpdated();
+            ChatManager.getInstance().resetConversationListUpdated();
         }
         MMX.registerListener(eventListener);
 
@@ -133,10 +140,10 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
      * @param query search query
      */
     @Override
-    public void onSearchConversation(String query) {
-        final List<Conversation> searchResult = new ArrayList<>();
-        for (Conversation conversation : getAllConversations()) {
-            for (UserProfile userProfile : conversation.getSuppliersList()) {
+    public void onSearch(String query, String order) {
+        final List<Chat> searchResult = new ArrayList<>();
+        for (Chat conversation : getAllConversations()) {
+            for (UserProfile userProfile : conversation.getSortedSubscribers()) {
                 if (userProfile.getDisplayName() != null && userProfile.getDisplayName().toLowerCase().contains(query.toLowerCase())) {
                     searchResult.add(conversation);
                     break;
@@ -146,14 +153,17 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
         if (searchResult.isEmpty()) {
             Utils.showMessage(Max.getApplicationContext(), "Nothing found");
         }
-        mView.showList(searchResult);
+        mView.showList(searchResult, false);
+
+        mIsSearchMode = true;
     }
 
     /**
      * Method which provide the search resetting
      */
     @Override
-    public void onResetSearch() {
+    public void onSearchReset() {
+        mIsSearchMode = false;
         showAllConversations();
     }
 
@@ -163,7 +173,7 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
      * @param conversation channel
      */
     @Override
-    public void onConversationClick(Conversation conversation) {
+    public void onItemSelect(int position, Chat conversation) {
         mView.showChatDetails(conversation);
     }
 
@@ -173,7 +183,7 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
      * @param conversation channel
      */
     @Override
-    public void onConversationLongClick(Conversation conversation) {
+    public void onItemLongClick(int position, Chat conversation) {
 
     }
 
@@ -182,9 +192,12 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
      *
      * @return list of all conversations
      */
-    @Override
-    public List<Conversation> getAllConversations() {
+    private List<Chat> getAllConversations() {
         return mConversations;
+    }
+
+    @Override public BaseSortedAdapter.ItemComparator<Chat> getItemComparator() {
+        return chatItemComparator;
     }
 
     /**
@@ -192,8 +205,8 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
      */
     private void showAllConversations() {
         mConversations.clear();
-        mConversations.addAll(ChannelCacheManager.getInstance().getConversations());
-        mView.showList(mConversations);
+        mConversations.addAll(ChatManager.getInstance().getConversations());
+        mView.showList(mConversations, false);
     }
 
     /**
@@ -203,9 +216,9 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
         @Override
         public boolean onMessageReceived(MMXMessage mmxMessage) {
             Logger.debug(TAG, "onMessageReceived");
-            ChannelCacheManager.getInstance().handleIncomingMessage(mmxMessage, new NewMessageProcessListener() {
+            ChatManager.getInstance().handleIncomingMessage(mmxMessage, new NewMessageProcessListener() {
                 @Override
-                public void onProcessSuccess(Conversation conversation, Message message,
+                public void onProcessSuccess(Chat conversation, MMXMessage message,
                                              boolean isNewChat) {
                     onConversationUpdate(conversation, isNewChat);
                 }
@@ -254,6 +267,23 @@ public class ChatListPresenterImpl implements ChatListContract.Presenter {
         @Override
         public void onReceive(Context context, Intent intent) {
             showAllConversations();
+        }
+    };
+
+    private final BaseSortedAdapter.ItemComparator<Chat> chatItemComparator = new BaseSortedAdapter.ItemComparator<Chat>() {
+        @Override public int compare(Chat o1, Chat o2) {
+            return 0 - o1.getLastPublishedTime().compareTo(o2.getLastPublishedTime());
+        }
+
+        @Override public boolean areContentsTheSame(Chat o1, Chat o2) {
+            return areItemsTheSame(o1, o2)
+                && o1.getMessages().size() == o2.getMessages().size()
+                && o1.getSubscribers().size() == o2.getSubscribers().size();
+        }
+
+        @Override public boolean areItemsTheSame(Chat item1, Chat item2) {
+            return item1.getChannel().getName().equals(item2.getChannel().getName())
+                && item1.getChannel().isPublic() == item2.getChannel().isPublic();
         }
     };
 
