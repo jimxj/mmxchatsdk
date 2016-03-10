@@ -2,6 +2,7 @@ package com.magnet.magnetchat.ui.adapters;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -22,10 +23,11 @@ import com.magnet.max.android.UserProfile;
 import com.magnet.max.android.util.StringUtil;
 import com.magnet.mmx.client.api.MMXMessage;
 import de.hdodenhof.circleimageview.CircleImageView;
+import java.util.Arrays;
 import java.util.List;
 
 public class ChatsAdapter extends BaseSortedAdapter<ChatsAdapter.ConversationViewHolder, Chat> {
-
+    private static final String TAG = "ChatsAdapter";
     /**
      * View holder to show mConversations with user's avatars and messages
      */
@@ -104,7 +106,11 @@ public class ChatsAdapter extends BaseSortedAdapter<ChatsAdapter.ConversationVie
      * @return empty line, if conversation has not any massage
      */
     protected String getLastMessage(Chat conversation) {
-        return conversation.getLastMessageSummary();
+        String lastMessage = conversation.getLastMessageSummary();
+        if(StringUtil.isEmpty(lastMessage)) {
+            lastMessage = "No message";
+        }
+        return lastMessage;
     }
 
     /**
@@ -141,8 +147,6 @@ public class ChatsAdapter extends BaseSortedAdapter<ChatsAdapter.ConversationVie
     }
 
     private void showImageAvatar(String name, ConversationViewHolder viewHolder) {
-        viewHolder.title.setText(name);
-
         if(viewHolder.imageAvatar.getVisibility() == View.GONE) {
             viewHolder.imageAvatar.setVisibility(View.VISIBLE);
         }
@@ -152,8 +156,6 @@ public class ChatsAdapter extends BaseSortedAdapter<ChatsAdapter.ConversationVie
     }
 
     private void showNameAvatar(String name, ConversationViewHolder viewHolder) {
-        viewHolder.title.setText(name);
-
         viewHolder.viewAvatar.setUserName(name);
 
         if(viewHolder.viewAvatar.getVisibility() == View.GONE) {
@@ -164,6 +166,19 @@ public class ChatsAdapter extends BaseSortedAdapter<ChatsAdapter.ConversationVie
         }
     }
 
+    private void showTitle(ConversationViewHolder viewHolder, Chat chat) {
+        String title = null;
+        if(!chat.getSubscribers().isEmpty()) {
+            title = UserHelper.getDisplayNames(chat.getSubscribers());
+        } else {
+            title = UserHelper.getDisplayName(User.getCurrentUser());
+        }
+        if(StringUtil.isEmpty(title)) {
+            Log.e(TAG, "----------title is empty for Chat : " + chat);
+        }
+        viewHolder.title.setText(title);
+    }
+
     /**
      * Sets title to conversation item(supplier name) and avatar image.
      *
@@ -171,21 +186,20 @@ public class ChatsAdapter extends BaseSortedAdapter<ChatsAdapter.ConversationVie
      * @param viewHolder
      */
     protected void prepareTitleAndAvatar(Chat conversation, ConversationViewHolder viewHolder) {
-        List<UserProfile> suppliers = conversation.getSortedSubscribers();
         //If all suppliers left conversation, show current user.
-        if (suppliers.size() == 0) {
+        showTitle(viewHolder, conversation);
+        if (conversation.getSubscribers().size() == 0) {
             User currentUser = User.getCurrentUser();
             if (currentUser != null) {
-                viewHolder.title.setText(String.format("%s %s", currentUser.getFirstName(), currentUser.getLastName()));
                 setUserAvatar(currentUser, viewHolder);
             }
         } else {
-            if (suppliers.size() > 1) {
+            if (conversation.getSubscribers().size() > 1) {
                 Glide.with(getContext()).load(R.drawable.user_group).fitCenter().into(viewHolder.imageAvatar);
                 showImageAvatar(UserHelper.getDisplayNames(conversation.getSortedSubscribers()), viewHolder);
             } else {
                 //If there is one supplier, show his avatar.
-                setUserAvatar(suppliers.get(0), viewHolder);
+                setUserAvatar(conversation.getSubscribers().get(0), viewHolder);
             }
         }
     }

@@ -158,6 +158,8 @@ public class Chat extends ChannelDetail {
 
             lastPublishedTime = null != message.getTimestamp() ? message.getTimestamp() : new Date();
 
+            totalMessages++;
+
             return true;
         }
 
@@ -243,6 +245,13 @@ public class Chat extends ChannelDetail {
         return "";
     }
 
+    @Override public String toString() {
+        return new StringBuilder("Chat { \n").append("channel : ").append(channel)
+            .append("\nmessages : ").append(Arrays.deepToString(messages.toArray()))
+            .append("\nsubscribers : ").append(Arrays.deepToString(subscribers.toArray()))
+            .toString();
+    }
+
     private void sendMessage(Map<String, String> content, final OnSendMessageListener listener) {
         sendMessage(content, null, listener);
     }
@@ -259,7 +268,6 @@ public class Chat extends ChannelDetail {
             public void onSuccess(String s) {
                 Logger.debug("send message", "success");
                 addMessage(message, false);
-                totalMessages++;
                 listener.onSuccessSend(message);
             }
 
