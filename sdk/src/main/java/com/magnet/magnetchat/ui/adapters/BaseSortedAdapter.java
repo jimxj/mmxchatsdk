@@ -93,7 +93,9 @@ public abstract class BaseSortedAdapter<V extends RecyclerView.ViewHolder, T> ex
     }
 
     public void addItem(List<T> items) {
-        mData.addAll(items);
+        if(null != items && !items.isEmpty()) {
+            mData.addAll(items);
+        }
     }
 
     public void swapData(List<T> data){

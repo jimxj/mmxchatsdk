@@ -38,7 +38,7 @@ public interface ChatDetailsContract {
          *
          * @return
          */
-        boolean isOwnerChannel();
+        boolean isChannelOwner();
 
         BaseSortedAdapter.ItemComparator<UserProfile> getItemComparator();
     }

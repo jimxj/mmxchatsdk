@@ -47,8 +47,7 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
         this.mRecipients = conversation.getSortedSubscribers();
 
         //mView.showList(conversation.getMessages(), false);
-        mView.showRecipients(conversation.getSortedSubscribers());
-        setTitle(conversation.getSortedSubscribers());
+        showRecipients(conversation.getSortedSubscribers());
 
         onReadMessage();
     }
@@ -57,8 +56,7 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
         this.mView = view;
         this.mRecipients = recipients;
 
-        mView.showRecipients(mRecipients);
-        setTitle(mRecipients);
+        showRecipients(mRecipients);
 
         List<String> userIds = new ArrayList<>(recipients.size());
         for (UserProfile up : recipients) {
@@ -96,6 +94,7 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
             @Override
             public void onFailureCreated(Throwable throwable) {
                 Utils.showMessage("Can't create conversation");
+                Log.e(TAG, "Can't create conversation", throwable);
                 mView.setProgressIndicator(false);
             }
 
@@ -192,7 +191,7 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
             //TODO :
         } else {
             if (null != mCurrentConversation && mCurrentConversation.hasRecipientsUpdate()) {
-                mView.showRecipients(mCurrentConversation.getSortedSubscribers());
+                showRecipients(mCurrentConversation.getSortedSubscribers());
                 mCurrentConversation.setHasRecipientsUpdate(false);
             }
         }
@@ -277,13 +276,17 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
         }
     }
 
-    private void setTitle(List<UserProfile> recipients) {
+    private void showRecipients(List<UserProfile> recipients) {
         String title = null;
         if (recipients.size() == 1) {
             title = UserHelper.getDisplayNames(recipients);
         } else {
             title = "Group";
         }
+        setTitle(title);
+    }
+
+    private void setTitle(String title) {
         mView.setTitle(title);
 
     }
@@ -350,7 +353,7 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
         }
 
         @Override public boolean areItemsTheSame(Message item1, Message item2) {
-            return item1.getMessageId().equals(item2.getMessageId());
+            return item1 == item2 || item1.getMessageId().equals(item2.getMessageId());
         }
     };
 }

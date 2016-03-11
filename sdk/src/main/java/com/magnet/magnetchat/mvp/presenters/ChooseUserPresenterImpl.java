@@ -152,20 +152,7 @@ public class ChooseUserPresenterImpl implements ChooseUserContract.Presenter {
                 if(null != users && !users.isEmpty()) {
                     mCurrentQuery.addCurrentOffset(users.size());
 
-                    users.remove(User.getCurrentUser());
-                    if (mConversation != null) {
-                        List<Integer> indexes = new ArrayList<>();
-                        for (int i = 0; i < users.size(); i++) {
-                            if (! mConversation.containSubscriber(users.get(i))) {
-                                indexes.add(i);
-                            }
-                        }
-                        for (Integer i : indexes) {
-                            if (i < users.size()) {
-                                users.remove(i.intValue());
-                            }
-                        }
-                    }
+                    filterUsers(users);
                 }
 
                 if(userQuery.isDefault()) {
@@ -189,6 +176,20 @@ public class ChooseUserPresenterImpl implements ChooseUserContract.Presenter {
                 Logger.error("find users", apiError);
             }
         });
+    }
+
+    private void filterUsers(List<User> users) {
+        users.remove(User.getCurrentUser());
+        if (mConversation != null) {
+            List<User> existingUsers = new ArrayList<>();
+            for (User u : users) {
+                if (mConversation.containSubscriber(u)) {
+                    existingUsers.add(u);
+                }
+            }
+
+            users.removeAll(existingUsers);
+        }
     }
 
     /**
@@ -235,7 +236,7 @@ public class ChooseUserPresenterImpl implements ChooseUserContract.Presenter {
         }
 
         @Override public boolean areItemsTheSame(User item1, User item2) {
-            return item1.getUserIdentifier().equals(item2.getUserIdentifier());
+            return item1 == item2 || item1.getUserIdentifier().equals(item2.getUserIdentifier());
         }
     };
 }

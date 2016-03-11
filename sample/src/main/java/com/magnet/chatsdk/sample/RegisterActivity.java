@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.support.v7.widget.AppCompatEditText;
 import android.view.View;
 import com.google.gson.Gson;
-import com.magnet.chatsdk.sample.R;
 import com.magnet.magnetchat.helpers.UserHelper;
 import com.magnet.magnetchat.model.MagnetError;
 import com.magnet.magnetchat.ui.activities.BaseActivity;
@@ -43,13 +42,13 @@ public class RegisterActivity extends BaseActivity {
     viewProgress = findViewById(R.id.viewProgress);
     viewProgress.setVisibility(View.GONE);
 
-    setOnClickListeners(R.id.registerSaveBtn, R.id.buttonBack);
+    setOnClickListeners(R.id.fabAdd, R.id.buttonBack);
   }
 
   @Override
   public void onClick(View v) {
     hideKeyboard();
-    if (v.getId() == R.id.registerSaveBtn) {
+    if (v.getId() == R.id.fabAdd) {
       onRegister();
     } else if (v.getId() == R.id.buttonBack) {
       onBackPressed();

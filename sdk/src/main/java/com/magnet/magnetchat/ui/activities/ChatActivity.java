@@ -133,6 +133,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
             Chat currentConversation = ChatManager.getInstance().getConversationByName(channelName);
             if (currentConversation != null) {
                 mPresenter = new ChatPresenterImpl(this, currentConversation);
+                mPresenter.onLoad(0, Constants.MESSAGE_PAGE_SIZE);
             } else {
                 showMessage("Can load the conversation");
                 finish();
@@ -148,8 +149,6 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
                 return;
             }
         }
-
-        mPresenter.onLoad(0, Constants.MESSAGE_PAGE_SIZE);
 
         googleApiClient = new GoogleApiClient.Builder(this).addConnectionCallbacks(connectionCallback)
                 .addOnConnectionFailedListener(connectionFailedListener).addApi(LocationServices.API).build();
@@ -256,7 +255,9 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
             messagesListView.setAdapter(mAdapter);
         } else {
             if (toAppend) {
-                mAdapter.addItem(Message.fromMMXMessages(messages));
+                if(!messages.isEmpty()) {
+                    mAdapter.addItem(Message.fromMMXMessages(messages));
+                }
             } else {
                 mAdapter.swapData(Message.fromMMXMessages(messages));
             }

@@ -26,19 +26,19 @@ public class ChatDetailsPresenterImpl implements ChatDetailsContract.Presenter {
     private static final String TAG = "ChatDetailsPresenter";
 
     private final ChatDetailsContract.View mView;
-    private final MMXChannel mmCurrentChannel;
+    private final MMXChannel mCurrentChannel;
     private WeakReference<Activity> mActivityRef;
 
     public ChatDetailsPresenterImpl(ChatDetailsContract.View view, MMXChannel channel, Activity activity) {
         this.mView = view;
-        this.mmCurrentChannel = channel;
+        this.mCurrentChannel = channel;
         this.mActivityRef = new WeakReference<>(activity);
     }
 
     @Override
     public void onLoadRecipients(boolean forceUpdate) {
         mView.setProgressIndicator(true);
-        mmCurrentChannel.getAllSubscribers(100, 0, new MMXChannel.OnFinishedListener<ListResult<User>>() {
+        mCurrentChannel.getAllSubscribers(100, 0, new MMXChannel.OnFinishedListener<ListResult<User>>() {
             @Override
             public void onSuccess(ListResult<User> userListResult) {
                 onComplete();
@@ -70,20 +70,17 @@ public class ChatDetailsPresenterImpl implements ChatDetailsContract.Presenter {
     public void onAddRecipients() {
         if (null != mActivityRef.get()) {
             mActivityRef.get().startActivity(ChooseUserActivity.getIntentToAddUserToChannel(mActivityRef.get(),
-                    mmCurrentChannel.getName()));
+                    mCurrentChannel.getName()));
             mView.finishDetails();
         }
     }
 
     @Override
-    public boolean isOwnerChannel() {
-        if (mmCurrentChannel == null) {
+    public boolean isChannelOwner() {
+        if (mCurrentChannel == null) {
             return false;
         }
-        if (StringUtil.isStringValueEqual(mmCurrentChannel.getOwnerId(), User.getCurrentUserId())) {
-            return true;
-        }
-        return false;
+        return StringUtil.isStringValueEqual(mCurrentChannel.getOwnerId(), User.getCurrentUserId());
     }
 
     @Override public BaseSortedAdapter.ItemComparator<UserProfile> getItemComparator() {
