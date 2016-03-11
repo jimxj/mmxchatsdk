@@ -17,7 +17,6 @@ import com.magnet.magnetchat.model.Chat;
 import com.magnet.magnetchat.mvp.api.ChatDetailsContract;
 import com.magnet.magnetchat.mvp.presenters.ChatDetailsPresenterImpl;
 import com.magnet.magnetchat.ui.adapters.UserProfilesAdapter;
-import com.magnet.magnetchat.ui.adapters.UsersAdapter;
 import com.magnet.max.android.UserProfile;
 import com.magnet.mmx.client.api.MMXChannel;
 
@@ -88,11 +87,10 @@ public class ChatDetailsActivity extends BaseActivity implements ChatDetailsCont
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        if (mPresenter.isOwnerChannel() == false) {
-            return true;
+        if (mPresenter.isChannelOwner()) {
+            int menuId = R.menu.menu_chat_details;
+            getMenuInflater().inflate(menuId, menu);
         }
-        int menuId = R.menu.menu_chat_details;
-        getMenuInflater().inflate(menuId, menu);
         return true;
     }
 

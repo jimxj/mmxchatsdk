@@ -28,7 +28,6 @@ import com.magnet.magnetchat.ui.adapters.SelectedUsersAdapter;
 import com.magnet.magnetchat.ui.adapters.UsersAdapter;
 import com.magnet.magnetchat.ui.custom.CustomSearchView;
 import com.magnet.max.android.User;
-import com.magnet.max.android.UserProfile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,7 +62,7 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        setOnClickListeners(R.id.registerSaveBtn);
+        setOnClickListeners(R.id.fabAdd);
 
         tvSelectedAmount = (TextView) findViewById(R.id.tvSelectedUsersAmount);
         llSelectedUsers = (LinearLayout) findViewById(R.id.llSelectedUsers);
@@ -105,7 +104,7 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
 
     @Override
     public void onClick(View v) {
-        if (v.getId() == R.id.registerSaveBtn) {
+        if (v.getId() == R.id.fabAdd) {
             mPresenter.onUsersSelected(selectedUsers);
         }
     }
