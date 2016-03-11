@@ -46,7 +46,6 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
         this.mCurrentConversation = conversation;
         this.mRecipients = conversation.getSortedSubscribers();
 
-        //mView.showList(conversation.getMessages(), false);
         showRecipients(conversation.getSortedSubscribers());
 
         onReadMessage();
