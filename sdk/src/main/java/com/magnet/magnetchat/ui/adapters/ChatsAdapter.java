@@ -16,14 +16,11 @@ import com.magnet.magnetchat.R;
 import com.magnet.magnetchat.helpers.DateHelper;
 import com.magnet.magnetchat.helpers.UserHelper;
 import com.magnet.magnetchat.model.Chat;
-import com.magnet.magnetchat.model.Message;
 import com.magnet.magnetchat.ui.views.section.chat.CircleNameView;
 import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;
 import com.magnet.max.android.util.StringUtil;
-import com.magnet.mmx.client.api.MMXMessage;
 import de.hdodenhof.circleimageview.CircleImageView;
-import java.util.Arrays;
 import java.util.List;
 
 public class ChatsAdapter extends BaseSortedAdapter<ChatsAdapter.ConversationViewHolder, Chat> {
@@ -77,7 +74,7 @@ public class ChatsAdapter extends BaseSortedAdapter<ChatsAdapter.ConversationVie
 
     @Override
     public ConversationViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = mInflater.inflate(R.layout.item_conversation, parent, false);
+        View view = mInflater.inflate(R.layout.item_chat, parent, false);
         return new ConversationViewHolder(view);
     }
 

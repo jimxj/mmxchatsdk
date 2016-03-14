@@ -108,7 +108,7 @@ public class ChatListFragment extends BaseFragment implements ChatListContract.V
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_home, menu);
+        inflater.inflate(R.menu.menu_chat_list, menu);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
             final CustomSearchView search = (CustomSearchView) menu.findItem(R.id.menu_search).getActionView();
             search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
