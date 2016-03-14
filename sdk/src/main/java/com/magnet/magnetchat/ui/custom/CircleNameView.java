@@ -1,6 +1,8 @@
-package com.magnet.magnetchat.ui.views.section.chat;
+package com.magnet.magnetchat.ui.custom;
 
 import android.content.Context;
+import android.databinding.BindingMethod;
+import android.databinding.BindingMethods;
 import android.graphics.Typeface;
 import android.support.v7.widget.AppCompatTextView;
 import android.util.AttributeSet;

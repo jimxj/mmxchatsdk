@@ -2,7 +2,10 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <data>
+        <import type="com.magnet.magnetchat.ui.views.helpers.UserViewHelper"/>
+        <import type="android.view.View"/>
         <variable name="user" type="com.magnet.max.android.UserProfile"/>
+        <variable name="previousUser" type="com.magnet.max.android.UserProfile"/>
     </data>
     <LinearLayout
         android:layout_width="match_parent"
@@ -17,9 +20,9 @@
             android:paddingBottom="@dimen/dimen_5"
             android:paddingLeft="@dimen/dimen_15"
             android:paddingTop="@dimen/dimen_5"
-            android:text="A"
+            android:text="@{UserViewHelper.getUserGroup(user)}"
             android:textColor="#777777"
-            android:visibility="gone" />
+            android:visibility="@{UserViewHelper.shouldShowGroup(user, previousUser) ? View.VISIBLE : View.GONE}" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -27,32 +30,21 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <RelativeLayout
+            <com.magnet.magnetchat.ui.custom.CircleAvatarOrNameView
                 android:id="@+id/rlUserAvatar"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
                 android:layout_marginBottom="@dimen/dimen_7"
                 android:layout_marginLeft="@dimen/dimen_15"
                 android:layout_marginRight="@dimen/dimen_15"
                 android:layout_marginTop="@dimen/dimen_7"
-                android:orientation="horizontal">
+                app:userName="@{user.displayName}"
+                app:avatarUrl="@{user.avatarUrl}">
 
-                <com.magnet.magnetchat.ui.views.section.chat.CircleNameView
-                    android:id="@+id/viewUserAvatar"
-                    android:layout_width="@dimen/dimen_50"
-                    android:layout_height="@dimen/dimen_50"
-                    app:userName = "@{user.displayName}"/>
-
-                <de.hdodenhof.circleimageview.CircleImageView
-                    android:id="@+id/imageUserAvatar"
-                    android:layout_width="@dimen/dimen_50"
-                    android:layout_height="@dimen/dimen_50" />
-
-            </RelativeLayout>
+            </com.magnet.magnetchat.ui.custom.CircleAvatarOrNameView>
 
             <android.support.v7.widget.AppCompatTextView
-                android:id="@+id/itemUserFirstName"
+                android:id="@+id/itemUserDisplayName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/dimen_5"
@@ -60,14 +52,6 @@
                 android:textColor="@android:color/black"
                 android:textSize="@dimen/text_15"
                 android:text="@{user.displayName}"/>
-
-            <android.support.v7.widget.AppCompatTextView
-                android:id="@+id/itemUserLastName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@android:color/black"
-                android:textSize="@dimen/text_16"
-                android:textStyle="bold" />
         </LinearLayout>
         <View
             android:layout_width="match_parent"

@@ -17,11 +17,10 @@ import com.magnet.magnetchat.callbacks.OnRecyclerViewItemClickListener;
 import com.magnet.magnetchat.helpers.DateHelper;
 import com.magnet.magnetchat.helpers.UserHelper;
 import com.magnet.magnetchat.model.Message;
-import com.magnet.magnetchat.ui.views.section.chat.CircleNameView;
+import com.magnet.magnetchat.ui.custom.CircleNameView;
 import com.magnet.max.android.Attachment;
 import com.magnet.max.android.User;
 import com.magnet.max.android.util.StringUtil;
-import com.magnet.mmx.client.api.MMXMessage;
 import java.util.Date;
 import java.util.List;
 

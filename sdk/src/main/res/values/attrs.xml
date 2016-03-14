@@ -8,4 +8,9 @@
         <attr name="iconSearch" format="reference" />
     </declare-styleable>
 
+    <declare-styleable name="CircleAvatarOrNameView">
+        <!--<attr name="colorText" format="color" />-->
+        <attr name="colorBackground" format="color" />
+    </declare-styleable>
+
 </resources>

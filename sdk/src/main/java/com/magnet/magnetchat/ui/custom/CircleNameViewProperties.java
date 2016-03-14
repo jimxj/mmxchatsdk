@@ -1,4 +1,4 @@
-package com.magnet.magnetchat.ui.views.section.chat;
+package com.magnet.magnetchat.ui.custom;
 
 import android.graphics.Typeface;
 import com.magnet.magnetchat.ui.views.abs.ViewProperty;
@@ -16,7 +16,7 @@ public class CircleNameViewProperties extends ViewProperty {
         private int textDimension;
         private int textColor;
 
-        private PropertyBuilder() {
+        public PropertyBuilder() {
         }
 
         public PropertyBuilder addTypeface(Typeface typeface) {

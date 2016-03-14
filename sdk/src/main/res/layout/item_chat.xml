@@ -30,7 +30,7 @@
         android:layout_toRightOf="@+id/imConversationNewMsg"
         android:orientation="horizontal">
 
-        <com.magnet.magnetchat.ui.views.section.chat.CircleNameView
+        <com.magnet.magnetchat.ui.custom.CircleNameView
             android:id="@+id/viewConversationOwnerAvatar"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />

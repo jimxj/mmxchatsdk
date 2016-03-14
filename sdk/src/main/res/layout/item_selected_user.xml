@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:padding="@dimen/dimen_10">
 
-    <com.magnet.magnetchat.ui.views.section.chat.CircleNameView
+    <com.magnet.magnetchat.ui.custom.CircleNameView
         android:id="@+id/viewUserName"
         android:layout_width="@dimen/dimen_50"
         android:layout_height="@dimen/dimen_50" />

@@ -36,7 +36,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <com.magnet.magnetchat.ui.views.section.chat.CircleNameView
+            <com.magnet.magnetchat.ui.custom.CircleNameView
                 android:id="@+id/viewOtherAvatar"
                 android:layout_width="@dimen/dimen_50"
                 android:layout_height="@dimen/dimen_50"
@@ -56,7 +56,7 @@
                 android:layout_marginTop="@dimen/dimen_5"
                 android:visibility="gone" />
 
-            <com.magnet.magnetchat.ui.views.section.chat.CircleNameView
+            <com.magnet.magnetchat.ui.custom.CircleNameView
                 android:id="@+id/viewMyAvatar"
                 android:layout_width="@dimen/dimen_50"
                 android:layout_height="@dimen/dimen_50"

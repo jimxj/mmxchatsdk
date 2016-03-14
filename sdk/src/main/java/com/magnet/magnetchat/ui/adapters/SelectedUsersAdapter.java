@@ -10,7 +10,7 @@ import com.bumptech.glide.load.resource.drawable.GlideDrawable;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 import com.magnet.magnetchat.R;
-import com.magnet.magnetchat.ui.views.section.chat.CircleNameView;
+import com.magnet.magnetchat.ui.custom.CircleNameView;
 import com.magnet.max.android.UserProfile;
 import de.hdodenhof.circleimageview.CircleImageView;
 import java.util.List;
