@@ -18,19 +18,6 @@ public class SelectedUsersAdapter extends RecyclerView.Adapter<SelectedUsersAdap
     private List<UserProfile> userList;
     private Context context;
 
-    public class SelectedUserViewHolder extends
-        BindingViewHolder<UserProfile, ItemSelectedUserBinding> {
-        public SelectedUserViewHolder(ItemSelectedUserBinding itemView) {
-            super(itemView);
-        }
-
-        @Override
-        public void bindTo(@NonNull UserProfile item) {
-            mBinding.setUser(item);
-            mBinding.executePendingBindings();
-        }
-    }
-
     public SelectedUsersAdapter(Context context, List<? extends UserProfile> users) {
         this.context = context;
         this.userList = (List<UserProfile>) users;
@@ -56,4 +43,16 @@ public class SelectedUsersAdapter extends RecyclerView.Adapter<SelectedUsersAdap
         return userList.size();
     }
 
+    public class SelectedUserViewHolder extends
+        BindingViewHolder<UserProfile, ItemSelectedUserBinding> {
+        public SelectedUserViewHolder(ItemSelectedUserBinding itemView) {
+            super(itemView);
+        }
+
+        @Override
+        public void bindTo(@NonNull UserProfile item) {
+            mBinding.setUser(item);
+            mBinding.executePendingBindings();
+        }
+    }
 }

@@ -20,6 +20,13 @@ public abstract class BaseUsersAdapter<V extends BaseUsersAdapter.UserViewHolder
         super(context, data, clazz, comparator);
     }
 
+    @NonNull
+    protected UserViewHolder createUserViewHolder(ViewGroup parent) {
+        ItemUserBinding
+            binding = DataBindingUtil.inflate(mInflater, R.layout.item_user, parent, false);
+        return new UserViewHolder(binding);
+    }
+
     /**
      * ViewHolder for user items.
      */
@@ -44,11 +51,5 @@ public abstract class BaseUsersAdapter<V extends BaseUsersAdapter.UserViewHolder
                 mOnClickListener.onClick(getAdapterPosition());
             }
         }
-    }
-
-    @NonNull protected UserViewHolder createUserViewHolder(ViewGroup parent) {
-        ItemUserBinding
-            binding = DataBindingUtil.inflate(mInflater, R.layout.item_user, parent, false);
-        return new UserViewHolder(binding);
     }
 }

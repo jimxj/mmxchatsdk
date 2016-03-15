@@ -16,6 +16,23 @@ import java.util.List;
 
 public class ChatsAdapter extends BaseSortedAdapter<ChatsAdapter.ConversationViewHolder, Chat> {
     private static final String TAG = "ChatsAdapter";
+
+    public ChatsAdapter(Context context, List<Chat> conversations, ItemComparator<Chat> comparator) {
+       super(context, conversations, Chat.class, comparator);
+    }
+
+    @Override
+    public ConversationViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        ItemChatBinding
+            binding = DataBindingUtil.inflate(mInflater, R.layout.item_chat, parent, false);
+        return new ConversationViewHolder(binding);
+    }
+
+    @Override
+    public void onBindViewHolder(ConversationViewHolder holder, int position) {
+        holder.bindTo(getItem(position));
+    }
+
     /**
      * View holder to show mConversations with user's avatars and messages
      */
@@ -50,21 +67,5 @@ public class ChatsAdapter extends BaseSortedAdapter<ChatsAdapter.ConversationVie
             mBinding.setSingleRecipient(ChatViewHelper.getSingleRecipient(item));
             mBinding.executePendingBindings();
         }
-    }
-
-    public ChatsAdapter(Context context, List<Chat> conversations, ItemComparator<Chat> comparator) {
-       super(context, conversations, Chat.class, comparator);
-    }
-
-    @Override
-    public ConversationViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        ItemChatBinding
-            binding = DataBindingUtil.inflate(mInflater, R.layout.item_chat, parent, false);
-        return new ConversationViewHolder(binding);
-    }
-
-    @Override
-    public void onBindViewHolder(ConversationViewHolder holder, int position) {
-        holder.bindTo(getItem(position));
     }
 }

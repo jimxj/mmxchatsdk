@@ -17,6 +17,25 @@ import java.util.List;
 public class MessagesAdapter extends BaseSortedAdapter<MessagesAdapter.MessageViewHolder, Message> {
     private final static String TAG = MessagesAdapter.class.getSimpleName();
 
+    public MessagesAdapter(Context context, List<Message> messages, ItemComparator<Message> comparator) {
+        super(context, messages, Message.class, comparator);
+    }
+
+    @Override
+    public MessageViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        ItemMessageBinding binding = DataBindingUtil.inflate(mInflater, R.layout.item_message, parent, false);
+        return new MessageViewHolder(binding);
+    }
+
+    @Override
+    public void onBindViewHolder(MessageViewHolder holder, int position) {
+        holder.bindTo(getItem(position));
+    }
+
+    public void setmOnClickListener(OnRecyclerViewItemClickListener onConversationLongClick) {
+        this.mOnClickListener = onConversationLongClick;
+    }
+
     public class MessageViewHolder extends BindingViewHolder<Message, ItemMessageBinding> implements View.OnClickListener, View.OnLongClickListener {
         public MessageViewHolder(@NonNull ItemMessageBinding viewDataBinding) {
             super(viewDataBinding);
@@ -47,24 +66,5 @@ public class MessagesAdapter extends BaseSortedAdapter<MessagesAdapter.MessageVi
 
             mBinding.executePendingBindings();
         }
-    }
-
-    public MessagesAdapter(Context context, List<Message> messages, ItemComparator<Message> comparator) {
-        super(context, messages, Message.class, comparator);
-    }
-
-    @Override
-    public MessageViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        ItemMessageBinding binding = DataBindingUtil.inflate(mInflater, R.layout.item_message, parent, false);
-        return new MessageViewHolder(binding);
-    }
-
-    @Override
-    public void onBindViewHolder(MessageViewHolder holder, int position) {
-        holder.bindTo(getItem(position));
-    }
-
-    public void setmOnClickListener(OnRecyclerViewItemClickListener onConversationLongClick) {
-        this.mOnClickListener = onConversationLongClick;
     }
 }
