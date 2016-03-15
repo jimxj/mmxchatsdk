@@ -2,9 +2,6 @@ package com.magnet.magnetchat.mvp.api;
 
 import com.magnet.magnetchat.model.Chat;
 
-import com.magnet.magnetchat.ui.adapters.BaseSortedAdapter;
-import java.util.List;
-
 /**
  * Copyright (c) 2012-2016 Magnet Systems. All rights reserved.
  */

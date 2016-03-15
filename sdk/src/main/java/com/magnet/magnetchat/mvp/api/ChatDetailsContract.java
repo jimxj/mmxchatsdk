@@ -1,7 +1,6 @@
 package com.magnet.magnetchat.mvp.api;
 
-import com.magnet.magnetchat.ui.adapters.BaseSortedAdapter;
-import com.magnet.max.android.User;
+import com.magnet.magnetchat.ui.adapters.base.BaseSortedAdapter;
 import com.magnet.max.android.UserProfile;
 
 import java.util.List;

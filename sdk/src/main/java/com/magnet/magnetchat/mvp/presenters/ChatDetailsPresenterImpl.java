@@ -9,7 +9,7 @@ import android.util.Log;
 import com.magnet.magnetchat.helpers.UserHelper;
 import com.magnet.magnetchat.mvp.api.ChatDetailsContract;
 import com.magnet.magnetchat.ui.activities.ChooseUserActivity;
-import com.magnet.magnetchat.ui.adapters.BaseSortedAdapter;
+import com.magnet.magnetchat.ui.adapters.base.BaseSortedAdapter;
 import com.magnet.magnetchat.util.Utils;
 import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;

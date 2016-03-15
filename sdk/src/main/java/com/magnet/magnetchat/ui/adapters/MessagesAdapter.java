@@ -17,6 +17,7 @@ import com.magnet.magnetchat.callbacks.OnRecyclerViewItemClickListener;
 import com.magnet.magnetchat.helpers.DateHelper;
 import com.magnet.magnetchat.helpers.UserHelper;
 import com.magnet.magnetchat.model.Message;
+import com.magnet.magnetchat.ui.adapters.base.BaseSortedAdapter;
 import com.magnet.magnetchat.ui.custom.CircleNameView;
 import com.magnet.max.android.Attachment;
 import com.magnet.max.android.User;

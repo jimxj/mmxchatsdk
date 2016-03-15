@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2012-2016 Magnet Systems. All rights reserved.
  */
-package com.magnet.magnetchat.ui.adapters;
+package com.magnet.magnetchat.ui.adapters.base;
 
 import android.databinding.ViewDataBinding;
 import android.support.annotation.NonNull;

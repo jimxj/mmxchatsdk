@@ -18,7 +18,7 @@ import com.magnet.magnetchat.model.Chat;
 import com.magnet.magnetchat.model.Message;
 import com.magnet.magnetchat.mvp.api.ChatContract;
 import com.magnet.magnetchat.ui.activities.ChatDetailsActivity;
-import com.magnet.magnetchat.ui.adapters.BaseSortedAdapter;
+import com.magnet.magnetchat.ui.adapters.base.BaseSortedAdapter;
 import com.magnet.magnetchat.util.Logger;
 import com.magnet.magnetchat.util.Utils;
 import com.magnet.max.android.Max;

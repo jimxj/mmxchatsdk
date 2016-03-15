@@ -7,11 +7,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import com.magnet.magnetchat.R;
 import com.magnet.magnetchat.databinding.ItemUserBinding;
-import com.magnet.max.android.User;
+import com.magnet.magnetchat.ui.adapters.base.BaseSortedAdapter;
+import com.magnet.magnetchat.ui.adapters.base.BindingViewHolder;
 import com.magnet.max.android.UserProfile;
 import java.util.List;
 
-public abstract class BaseUsersAdapter<V extends BaseUsersAdapter.UserViewHolder, T extends UserProfile> extends BaseSortedAdapter<V, T> {
+public abstract class BaseUsersAdapter<V extends BaseUsersAdapter.UserViewHolder, T extends UserProfile> extends
+    BaseSortedAdapter<V, T> {
 
     public BaseUsersAdapter(Context context, List<T> data, Class<T> clazz,
         ItemComparator comparator) {
@@ -21,7 +23,7 @@ public abstract class BaseUsersAdapter<V extends BaseUsersAdapter.UserViewHolder
     /**
      * ViewHolder for user items.
      */
-    public class UserViewHolder extends BindingViewHolder<UserProfile, ItemUserBinding>  implements View.OnClickListener {
+    public class UserViewHolder extends BindingViewHolder<UserProfile, ItemUserBinding> implements View.OnClickListener {
         public UserViewHolder(ItemUserBinding binding) {
             super(binding);
 

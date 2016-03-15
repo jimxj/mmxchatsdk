@@ -1,4 +1,4 @@
-package com.magnet.magnetchat.ui.adapters;
+package com.magnet.magnetchat.ui.adapters.base;
 
 import android.content.Context;
 import android.support.v7.util.SortedList;

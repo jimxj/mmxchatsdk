@@ -3,7 +3,7 @@
  */
 package com.magnet.magnetchat.mvp.api;
 
-import com.magnet.magnetchat.ui.adapters.BaseSortedAdapter;
+import com.magnet.magnetchat.ui.adapters.base.BaseSortedAdapter;
 
 public interface IListPresenter<T> {
 

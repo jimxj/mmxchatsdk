@@ -16,6 +16,7 @@ import com.magnet.magnetchat.R;
 import com.magnet.magnetchat.helpers.DateHelper;
 import com.magnet.magnetchat.helpers.UserHelper;
 import com.magnet.magnetchat.model.Chat;
+import com.magnet.magnetchat.ui.adapters.base.BaseSortedAdapter;
 import com.magnet.magnetchat.ui.custom.CircleNameView;
 import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;
