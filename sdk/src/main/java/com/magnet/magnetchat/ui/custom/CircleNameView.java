@@ -55,7 +55,7 @@ public class CircleNameView extends BaseView<CircleNameViewProperties> {
             //Get property
             Typeface typeface = property.getTypeface();
             int textColor = property.getTextColor();
-            int textDimmension = property.getTextDimension();
+            int textDimension = property.getTextDimension();
             //Set property
             if (typeface != null) {
                 labelUserName.setTypeface(typeface);
@@ -65,8 +65,8 @@ public class CircleNameView extends BaseView<CircleNameViewProperties> {
                 labelUserName.setTextColor(textColor);
             }
 
-            if (isNotDefaultID(textDimmension)) {
-                UserInterfaceHelper.setControlsTextDimension(getContext(), textDimmension, labelUserName);
+            if (isNotDefaultID(textDimension)) {
+                UserInterfaceHelper.setControlsTextDimension(getContext(), textDimension, labelUserName);
             }
 
         }

@@ -6,6 +6,7 @@ package com.magnet.magnetchat.ui.custom;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.databinding.BindingAdapter;
+import android.support.annotation.DrawableRes;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -63,9 +64,14 @@ public class CircleAvatarOrNameView extends FrameLayout {
 
   }
 
-  @BindingAdapter(value = {"userName", "avatarUrl"}, requireAll = false)
-  public static void setAvatarOrName(CircleAvatarOrNameView view, String name, String avatarUrl) {
-    view.setAvatarAndName(avatarUrl, name);
+  @BindingAdapter(value = {"imageResId", "userName", "avatarUrl"}, requireAll = false)
+  public static void setAvatarOrName(CircleAvatarOrNameView view, @DrawableRes
+  int imageResId, String name, String avatarUrl) {
+    if(imageResId > 0) {
+      view.setAvatar(imageResId);
+    } else {
+      view.setAvatarAndName(avatarUrl, name);
+    }
   }
 
   @Override protected void onLayout(boolean changed, int l, int t, int r, int b) {
