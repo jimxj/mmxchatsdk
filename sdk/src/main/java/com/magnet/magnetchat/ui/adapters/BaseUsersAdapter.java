@@ -3,11 +3,11 @@ package com.magnet.magnetchat.ui.adapters;
 import android.content.Context;
 import android.databinding.DataBindingUtil;
 import android.support.annotation.NonNull;
-import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
 import com.magnet.magnetchat.R;
 import com.magnet.magnetchat.databinding.ItemUserBinding;
+import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;
 import java.util.List;
 
@@ -21,19 +21,18 @@ public abstract class BaseUsersAdapter<V extends BaseUsersAdapter.UserViewHolder
     /**
      * ViewHolder for user items.
      */
-    public class UserViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        ItemUserBinding mBinding;
-
+    public class UserViewHolder extends BindingViewHolder<UserProfile, ItemUserBinding>  implements View.OnClickListener {
         public UserViewHolder(ItemUserBinding binding) {
-            super(binding.getRoot());
-            this.mBinding = binding;
+            super(binding);
 
             itemView.setOnClickListener(this);
         }
 
-        public void bindTo(@NonNull T user, T previousUser) {
+        @Override
+        public void bindTo(@NonNull UserProfile user) {
             mBinding.setUser(user);
-            mBinding.setPreviousUser(previousUser);
+            int position = getAdapterPosition();
+            mBinding.setPreviousUser(position > 0 ? getItem(position - 1) : null);
             mBinding.executePendingBindings();
         }
 

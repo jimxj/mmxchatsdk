@@ -233,21 +233,34 @@ public class ChooseUserActivity extends BaseActivity implements ChooseUserContra
         public void onClick(int position) {
             hideKeyboard();
             User user = mAdapter.getItem(position);
+
             if (user != null) {
+                boolean isAdding = true;
                 if (selectedUsers.contains(user)) {
                     selectedUsers.remove(user);
+                    isAdding = false;
                 } else {
                     selectedUsers.add(user);
                 }
                 if (selectedUsers.size() > 0) {
                     tvSelectedAmount.setText(String.format("%d selected", selectedUsers.size()));
-                    llSelectedUsers.setVisibility(View.VISIBLE);
+
+                    if(isAdding && 1 == selectedUsers.size()) {
+                        llSelectedUsers.setVisibility(View.VISIBLE);
+                    }
+
+                    if(isAdding) {
+                        selectedAdapter.notifyItemInserted(selectedUsers.size());
+                    } else {
+                        selectedAdapter.notifyItemRemoved(selectedUsers.size());
+                    }
                 } else {
                     llSelectedUsers.setVisibility(View.GONE);
                 }
-                //mAdapter.notifyDataSetChanged();
-                selectedAdapter.notifyDataSetChanged();
             }
+
+            mAdapter.colorSelected(userList.getLayoutManager().findViewByPosition(position), user);
+            //mAdapter.notifyItemChanged(position);
         }
 
         @Override

@@ -1,6 +1,8 @@
 package com.magnet.magnetchat.ui.adapters;
 
 import android.content.Context;
+import android.databinding.DataBindingUtil;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,26 +12,28 @@ import com.bumptech.glide.load.resource.drawable.GlideDrawable;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 import com.magnet.magnetchat.R;
+import com.magnet.magnetchat.databinding.ItemSelectedUserBinding;
+import com.magnet.magnetchat.databinding.ItemUserBinding;
 import com.magnet.magnetchat.ui.custom.CircleNameView;
 import com.magnet.max.android.UserProfile;
 import de.hdodenhof.circleimageview.CircleImageView;
 import java.util.List;
 
-public class SelectedUsersAdapter extends RecyclerView.Adapter<SelectedUsersAdapter.AvatarViewHolder> {
+public class SelectedUsersAdapter extends RecyclerView.Adapter<SelectedUsersAdapter.SelectedUserViewHolder> {
 
     private LayoutInflater inflater;
     private List<UserProfile> userList;
     private Context context;
 
-    public class AvatarViewHolder extends RecyclerView.ViewHolder {
-
-        CircleNameView nameView;
-        CircleImageView imageView;
-
-        public AvatarViewHolder(View itemView) {
+    public class SelectedUserViewHolder extends BindingViewHolder<UserProfile, ItemSelectedUserBinding> {
+        public SelectedUserViewHolder(ItemSelectedUserBinding itemView) {
             super(itemView);
-            nameView = (CircleNameView) itemView.findViewById(R.id.viewUserName);
-            imageView = (CircleImageView) itemView.findViewById(R.id.imageUserAvatar);
+        }
+
+        @Override
+        public void bindTo(@NonNull UserProfile item) {
+            mBinding.setUser(item);
+            mBinding.executePendingBindings();
         }
     }
 
@@ -40,33 +44,16 @@ public class SelectedUsersAdapter extends RecyclerView.Adapter<SelectedUsersAdap
     }
 
     @Override
-    public AvatarViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = inflater.inflate(R.layout.item_selected_user, parent, false);
-        return new AvatarViewHolder(view);
+    public SelectedUserViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        ItemSelectedUserBinding
+            binding = DataBindingUtil.inflate(inflater, R.layout.item_selected_user, parent, false);
+        return new SelectedUserViewHolder(binding);
     }
 
     @Override
-    public void onBindViewHolder(final AvatarViewHolder holder, int position) {
-        UserProfile user = userList.get(position);
-        if (user != null) {
-            holder.nameView.setUserName(user.getDisplayName());
-            if (user.getAvatarUrl() != null) {
-                holder.imageView.setVisibility(View.VISIBLE);
-                Glide.with(context).load(user.getAvatarUrl()).fitCenter().listener(new RequestListener<String, GlideDrawable>() {
-                    @Override
-                    public boolean onException(Exception e, String s, Target<GlideDrawable> target, boolean b) {
-                        holder.imageView.setVisibility(View.GONE);
-                        return false;
-                    }
-
-                    @Override
-                    public boolean onResourceReady(GlideDrawable glideDrawable, String s, Target<GlideDrawable> target, boolean b, boolean b1) {
-                        return false;
-                    }
-                }).into(holder.imageView);
-            } else {
-                holder.imageView.setVisibility(View.GONE);
-            }
+    public void onBindViewHolder(final SelectedUserViewHolder holder, int position) {
+        if(null != holder) {
+            holder.bindTo(userList.get(position));
         }
     }
 

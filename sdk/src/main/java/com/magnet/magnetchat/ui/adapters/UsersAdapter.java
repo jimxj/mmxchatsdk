@@ -24,7 +24,7 @@ public class UsersAdapter extends BaseUsersAdapter<BaseUsersAdapter.UserViewHold
     @Override
     public void onBindViewHolder(final BaseUsersAdapter.UserViewHolder viewHolder, int position) {
         if (viewHolder != null) {
-            viewHolder.bindTo(getItem(position), position > 0 ? getItem(position - 1) : null);
+            viewHolder.bindTo(getItem(position));
 
             colorSelected(viewHolder.itemView, getItem(position));
         }
@@ -36,7 +36,7 @@ public class UsersAdapter extends BaseUsersAdapter<BaseUsersAdapter.UserViewHold
      * @param view
      * @param user
      */
-    private void colorSelected(View view, UserProfile user) {
+    public void colorSelected(View view, UserProfile user) {
         if (selectedUsers != null && selectedUsers.contains(user)) {
             view.setBackgroundResource(R.color.itemSelected);
         } else {

@@ -18,6 +18,6 @@ public class UserProfilesAdapter extends BaseUsersAdapter<BaseUsersAdapter.UserV
 
     @Override
     public void onBindViewHolder(final BaseUsersAdapter.UserViewHolder viewHolder, int position) {
-        viewHolder.bindTo(getItem(position), position > 0 ? getItem(position - 1) : null);
+        viewHolder.bindTo(getItem(position));
     }
 }

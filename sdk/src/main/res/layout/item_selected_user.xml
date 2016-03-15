@@ -1,17 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:padding="@dimen/dimen_10">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto">
+<data>
+    <variable name="user" type="com.magnet.max.android.UserProfile"/>
+</data>
 
-    <com.magnet.magnetchat.ui.custom.CircleNameView
-        android:id="@+id/viewUserName"
-        android:layout_width="@dimen/dimen_50"
-        android:layout_height="@dimen/dimen_50" />
+<com.magnet.magnetchat.ui.custom.CircleAvatarOrNameView
+    android:id="@+id/rlUserAvatar"
+    android:layout_width="50dp"
+    android:layout_height="50dp"
+    app:userName="@{user.displayName}"
+    app:avatarUrl="@{user.avatarUrl}" />
 
-    <de.hdodenhof.circleimageview.CircleImageView
-        android:id="@+id/imageUserAvatar"
-        android:layout_width="@dimen/dimen_50"
-        android:layout_height="@dimen/dimen_50" />
-
-</FrameLayout>
+</layout>

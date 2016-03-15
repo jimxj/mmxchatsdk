@@ -39,9 +39,7 @@
                 android:layout_marginRight="@dimen/dimen_15"
                 android:layout_marginTop="@dimen/dimen_7"
                 app:userName="@{user.displayName}"
-                app:avatarUrl="@{user.avatarUrl}">
-
-            </com.magnet.magnetchat.ui.custom.CircleAvatarOrNameView>
+                app:avatarUrl="@{user.avatarUrl}" />
 
             <android.support.v7.widget.AppCompatTextView
                 android:id="@+id/itemUserDisplayName"
