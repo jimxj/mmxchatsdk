@@ -1,113 +1,120 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
-
-    <android.support.v7.widget.AppCompatTextView
-        android:id="@+id/itemMessageDate"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/dimen_5"
-        android:gravity="center"
-        android:textColor="#7d7d7d"
-        android:textSize="15sp"
-        android:visibility="gone" />
-
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <data>
+        <import type="android.view.View"/>
+        <import type="android.view.Gravity"/>
+        <import type="android.graphics.Color"/>
+        <import type="com.magnet.magnetchat.R"/>
+        <import type="com.magnet.magnetchat.ui.views.helpers.MessageViewHelper"/>
+        <import type="com.magnet.max.android.User" />
+        <import type="com.magnet.magnetchat.model.Message"/>
+        <variable name="message" type="com.magnet.magnetchat.model.Message"/>
+        <variable name="previousMessage" type="com.magnet.magnetchat.model.Message"/>
+        <variable name="isMessageFromMe" type="boolean" />
+    </data>
     <LinearLayout
-        android:id="@+id/itemMessageArea"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="@dimen/dimen_10">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
         <android.support.v7.widget.AppCompatTextView
-            android:id="@+id/itemMessageSender"
-            android:layout_width="wrap_content"
+            android:id="@+id/itemMessageDate"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="40dp"
-            android:textColor="#e0e0e6"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:visibility="gone" />
+            android:layout_marginTop="@dimen/dimen_5"
+            android:gravity="center"
+            android:textColor="#7d7d7d"
+            android:textSize="15sp"
+            android:text="@{MessageViewHelper.getDateString(message, previousMessage)}"
+            android:visibility="@{null != MessageViewHelper.getDateString(message, previousMessage) ? View.VISIBLE : View.GONE}" />
 
-        <RelativeLayout
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:id="@+id/itemMessageArea"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <com.magnet.magnetchat.ui.custom.CircleNameView
-                android:id="@+id/viewOtherAvatar"
-                android:layout_width="@dimen/dimen_50"
-                android:layout_height="@dimen/dimen_50"
-                android:layout_gravity="center_vertical"
-                android:layout_marginBottom="@dimen/dimen_5"
-                android:layout_marginRight="@dimen/dimen_10"
-                android:layout_marginTop="@dimen/dimen_5"
-                android:visibility="gone" />
-
-            <de.hdodenhof.circleimageview.CircleImageView
-                android:id="@+id/imageOtherAvatar"
-                android:layout_width="@dimen/dimen_50"
-                android:layout_height="@dimen/dimen_50"
-                android:layout_gravity="center_vertical"
-                android:layout_marginBottom="@dimen/dimen_5"
-                android:layout_marginRight="@dimen/dimen_10"
-                android:layout_marginTop="@dimen/dimen_5"
-                android:visibility="gone" />
-
-            <com.magnet.magnetchat.ui.custom.CircleNameView
-                android:id="@+id/viewMyAvatar"
-                android:layout_width="@dimen/dimen_50"
-                android:layout_height="@dimen/dimen_50"
-                android:layout_alignParentRight="true"
-                android:layout_gravity="center_vertical"
-                android:layout_marginBottom="@dimen/dimen_5"
-                android:layout_marginLeft="@dimen/dimen_10"
-                android:layout_marginTop="@dimen/dimen_5"
-                android:visibility="visible" />
-
-            <de.hdodenhof.circleimageview.CircleImageView
-                android:id="@+id/imageMyAvatar"
-                android:layout_width="@dimen/dimen_50"
-                android:layout_height="@dimen/dimen_50"
-                android:layout_alignParentRight="true"
-                android:layout_gravity="center_vertical"
-                android:layout_marginBottom="@dimen/dimen_5"
-                android:layout_marginLeft="@dimen/dimen_10"
-                android:layout_marginTop="@dimen/dimen_5"
-                android:visibility="visible" />
-
+            android:orientation="vertical"
+            android:gravity="@{isMessageFromMe ? (Gravity.RIGHT | Gravity.END) : (Gravity.LEFT | Gravity.START)}"
+            android:padding="@dimen/dimen_10">
 
             <android.support.v7.widget.AppCompatTextView
-                android:id="@+id/itemMessageText"
+                android:id="@+id/itemMessageSender"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
-                android:layout_gravity="center_vertical"
-                android:layout_toLeftOf="@id/imageMyAvatar"
-                android:layout_toRightOf="@id/imageOtherAvatar"
-                android:background="#dddde4"
-                android:gravity="center_vertical"
-                android:padding="@dimen/dimen_10" />
-        </RelativeLayout>
+                android:layout_marginLeft="40dp"
+                android:textColor="#e0e0e6"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:text="@{message.sender.displayName}"
+                android:visibility="@{!isMessageFromMe ? View.VISIBLE : View.GONE}" />
 
-        <ImageView
-            android:id="@+id/itemMessageImage"
-            android:layout_width="200sp"
-            android:layout_height="150dp"
-            android:scaleType="fitCenter"
-            android:visibility="gone" />
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
 
-        <android.support.v7.widget.AppCompatTextView
-            android:id="@+id/itemMessageDelivered"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Delivered"
-            android:textColor="#7d7d7d"
-            android:textSize="12sp"
-            android:visibility="gone" />
+                <com.magnet.magnetchat.ui.custom.CircleAvatarOrNameView
+                    android:id="@+id/viewOtherAvatar"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginBottom="@dimen/dimen_5"
+                    android:layout_marginRight="@dimen/dimen_10"
+                    android:layout_marginTop="@dimen/dimen_5"
+                    android:visibility="@{!isMessageFromMe ? View.VISIBLE : View.GONE}"
+                    app:userName="@{message.sender.displayName}"
+                    app:avatarUrl="@{message.sender.avatarUrl}" />
+
+                <com.magnet.magnetchat.ui.custom.CircleAvatarOrNameView
+                    android:id="@+id/viewMyAvatar"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_alignParentRight="true"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginBottom="@dimen/dimen_5"
+                    android:layout_marginLeft="@dimen/dimen_10"
+                    android:layout_marginTop="@dimen/dimen_5"
+                    android:visibility="@{isMessageFromMe ? View.VISIBLE : View.GONE}"
+                    app:userName="@{User.getCurrentUser().displayName}"
+                    app:avatarUrl="@{User.getCurrentUser().avatarUrl}" />
+
+
+                <android.support.v7.widget.AppCompatTextView
+                    android:id="@+id/itemMessageText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_gravity="center_vertical"
+                    android:layout_toLeftOf="@id/viewMyAvatar"
+                    android:layout_toRightOf="@id/viewOtherAvatar"
+                    app:backgroundRes="@{isMessageFromMe ? R.drawable.bubble : R.drawable.bubble_odd}"
+                    android:textColor="@{isMessageFromMe ? Color.WHITE : Color.BLACK}"
+                    android:gravity="center_vertical"
+                    android:visibility="@{Message.TYPE_TEXT.equals(message.getType()) ? View.VISIBLE : View.GONE}"
+                    android:text="@{message.text}"
+                    android:padding="@dimen/dimen_10" />
+            </RelativeLayout>
+
+            <ImageView
+                android:id="@+id/itemMessageImage"
+                android:layout_width="200dp"
+                android:layout_height="150dp"
+                android:scaleType="fitCenter"
+                android:visibility="@{Message.TYPE_MAP == message.getType() || Message.TYPE_PHOTO == message.getType() ? View.VISIBLE : View.GONE}"
+                android:src="@{MessageViewHelper.getMessageImageUrl(message)}"
+                app:placeHolder="@{Message.TYPE_MAP == message.getType() ? R.drawable.map_msg : (Message.TYPE_PHOTO == message.getType() ? R.drawable.photo_msg : 0)}"
+            />
+
+            <android.support.v7.widget.AppCompatTextView
+                android:id="@+id/itemMessageDelivered"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Delivered"
+                android:textColor="#7d7d7d"
+                android:textSize="12sp"
+                android:visibility="@{!isMessageFromMe &amp;&amp; message.isDelivered() ? View.VISIBLE : View.GONE}" />
+
+        </LinearLayout>
 
     </LinearLayout>
-
-</LinearLayout>
+</layout>
