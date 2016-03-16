@@ -14,7 +14,7 @@ import com.bumptech.glide.Glide;
 /**
  * Helper to bind additional attributes to widgets
  */
-public class ViewBindingHelper {
+public class ViewBindingAdapters {
 
   /**
    * additional attributes for ImageView

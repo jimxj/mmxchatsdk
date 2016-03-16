@@ -31,7 +31,6 @@ public class ChatSDK {
 
         SharedPreferenceManager.getInstance(context);
         InternetConnectionManager.getInstance(context);
-        ChatManager.getInstance();
     }
 
     public static void messageNotification(String channelName, String fromUserName) {
