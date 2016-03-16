@@ -173,7 +173,7 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
     }
 
     @Override public void onItemSelect(int position, Message item) {
-        onOpenAttachment(item);
+        //onOpenAttachment(item);
     }
 
     @Override public void onItemLongClick(int position, Message item) {
@@ -355,4 +355,18 @@ public class ChatPresenterImpl implements ChatContract.Presenter {
             return item1 == item2 || item1.getMessageId().equals(item2.getMessageId());
         }
     };
+
+    @Override public void onSenderClick(Message message) {
+        Log.d(TAG, "--------sender is clicked for message " + message.getText());
+        mView.showSenderOptions(message);
+    }
+
+    @Override public void onMessageBodyClick(Message message) {
+        Log.d(TAG, "--------message body is clicked for message " + message);
+        onOpenAttachment(message);
+    }
+
+    @Override public void onMessageBodyLongClick(Message message) {
+        Log.d(TAG, "--------message body is long clicked for message " + message);
+    }
 }

@@ -43,9 +43,13 @@ import com.magnet.magnetchat.ui.adapters.MessagesAdapter;
 import com.magnet.magnetchat.util.Utils;
 import com.magnet.max.android.User;
 import com.magnet.max.android.UserProfile;
+import com.magnet.mmx.client.api.MMX;
 import com.magnet.mmx.client.api.MMXMessage;
 
+import com.magnet.mmx.client.api.MMXUserPreferences;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 
@@ -60,6 +64,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
     public static final String TAG_CREATE_NEW = "createNew";
 
     private static final String[] ATTACHMENT_VARIANTS = {"Take photo", "Choose from gallery", "Send location", /*"Send video",*/ "Cancel"};
+    private static final String[] SENDER_OPTIONS = {"Block User", "Cancel"};
 
     public static final int INTENT_REQUEST_GET_IMAGES = 14;
     public static final int INTENT_SELECT_VIDEO = 13;
@@ -72,6 +77,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
     private RecyclerView messagesListView;
     private String channelName;
     private AlertDialog attachmentDialog;
+    private AlertDialog mSenderOptionsDialog;
     private GoogleApiClient googleApiClient;
 
     private ProgressBar chatMessageProgress;
@@ -119,7 +125,6 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
         layoutManager.setReverseLayout(false);
         messagesListView.setLayoutManager(layoutManager);
 
-        //TODO:Infinity scroll implementation (with crash for now)
         messagesListView.addOnScrollListener(new EndlessLinearRecyclerViewScrollListener(layoutManager) {
             @Override
             public void onLoadMore(int page, int totalItemsCount) {
@@ -171,6 +176,10 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
     protected void onPause() {
         if (attachmentDialog != null && attachmentDialog.isShowing()) {
             attachmentDialog.dismiss();
+        }
+
+        if (mSenderOptionsDialog != null && mSenderOptionsDialog.isShowing()) {
+            mSenderOptionsDialog.dismiss();
         }
 
         mPresenter.onPause();
@@ -240,18 +249,7 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
     @Override
     public void showList(List<MMXMessage> messages, boolean toAppend) {
         if (null == mAdapter) {
-            mAdapter = new MessagesAdapter(this, Message.fromMMXMessages(messages), mPresenter.getItemComparator());
-            mAdapter.setmOnClickListener(new OnRecyclerViewItemClickListener() {
-                @Override
-                public void onClick(int position) {
-                    mPresenter.onItemSelect(position, mAdapter.getItem(position));
-                }
-
-                @Override
-                public void onLongClick(int position) {
-
-                }
-            });
+            mAdapter = new MessagesAdapter(this, Message.fromMMXMessages(messages), mPresenter.getItemComparator(), mPresenter);
             messagesListView.setAdapter(mAdapter);
         } else {
             if (toAppend) {
@@ -294,6 +292,41 @@ public class ChatActivity extends BaseActivity implements ChatContract.View {
     @Override
     public void showImagePicker() {
         startActivityForResult(IntentHelper.photoCapture(), INTENT_REQUEST_GET_IMAGES);
+    }
+
+    @Override public void showSenderOptions(final Message message) {
+        if (mSenderOptionsDialog == null) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setItems(SENDER_OPTIONS, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    switch (which) {
+                        case 0:
+                            MMXUserPreferences.blockUsers(new HashSet<User>(Arrays.asList(message.getSender())), new MMX.OnFinishedListener() {
+                                @Override public void onSuccess(Object o) {
+                                    Log.d(TAG, "blocked user " + message.getSender().getUserName());
+                                }
+
+                                @Override public void onFailure(MMX.FailureCode failureCode,
+                                    Throwable throwable) {
+                                    Log.e(TAG, "Failed to block user " + message.getSender().getUserName());
+                                }
+                            });
+                            break;
+                        default:
+                            break;
+                    }
+                    mSenderOptionsDialog.dismiss();
+                }
+            });
+            builder.setCancelable(true);
+            mSenderOptionsDialog = builder.create();
+        }
+        mSenderOptionsDialog.show();
+    }
+
+    @Override public void showMessageOptions(Message message) {
+
     }
 
     /**

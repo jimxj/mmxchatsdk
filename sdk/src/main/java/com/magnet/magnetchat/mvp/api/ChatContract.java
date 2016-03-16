@@ -38,6 +38,10 @@ public interface ChatContract {
          */
         void showImagePicker();
 
+        void showSenderOptions(Message message);
+
+        void showMessageOptions(Message message);
+
         /**
          * Method which provide to clearing of the input field
          */
@@ -75,7 +79,7 @@ public interface ChatContract {
         Activity getActivity();
     }
 
-    interface Presenter extends IListPresenter<Message> {
+    interface Presenter extends IListPresenter<Message>, MessageHandler {
 
         /**
          * Method which provide the action when Activity/Fragment call onResume method

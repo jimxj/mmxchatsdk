@@ -11,6 +11,7 @@
         <import type="com.magnet.magnetchat.model.Message"/>
         <variable name="message" type="com.magnet.magnetchat.model.Message"/>
         <variable name="previousMessage" type="com.magnet.magnetchat.model.Message"/>
+        <variable name="clickHandler" type="com.magnet.magnetchat.ui.adapters.MessagesAdapter.MessageViewHandler" />
         <variable name="isMessageFromMe" type="boolean" />
     </data>
     <LinearLayout
@@ -62,6 +63,7 @@
                     android:layout_marginRight="@dimen/dimen_10"
                     android:layout_marginTop="@dimen/dimen_5"
                     android:visibility="@{!isMessageFromMe ? View.VISIBLE : View.GONE}"
+                    android:onClick="@{clickHandler.onClick}"
                     app:userName="@{message.sender.displayName}"
                     app:avatarUrl="@{message.sender.avatarUrl}" />
 
@@ -90,8 +92,11 @@
                     app:backgroundRes="@{isMessageFromMe ? R.drawable.bubble : R.drawable.bubble_odd}"
                     android:textColor="@{isMessageFromMe ? Color.WHITE : Color.BLACK}"
                     android:gravity="center_vertical"
+                    android:textIsSelectable="true"
                     android:visibility="@{Message.TYPE_TEXT.equals(message.getType()) ? View.VISIBLE : View.GONE}"
                     android:text="@{message.text}"
+                    android:onClick="@{clickHandler.onClick}"
+                    android:OnLongClickListener="@{clickHandler.onLongClick}"
                     android:padding="@dimen/dimen_10" />
             </RelativeLayout>
 
@@ -102,6 +107,7 @@
                 android:scaleType="fitCenter"
                 android:visibility="@{Message.TYPE_MAP == message.getType() || Message.TYPE_PHOTO == message.getType() ? View.VISIBLE : View.GONE}"
                 android:src="@{MessageViewHelper.getMessageImageUrl(message)}"
+                android:onClick="@{clickHandler.onClick}"
                 app:placeHolder="@{Message.TYPE_MAP == message.getType() ? R.drawable.map_msg : (Message.TYPE_PHOTO == message.getType() ? R.drawable.photo_msg : 0)}"
             />
 
