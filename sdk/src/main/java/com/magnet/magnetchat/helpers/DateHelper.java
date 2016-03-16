@@ -50,11 +50,11 @@ public class DateHelper {
     }
 
     public static Date utcToLocal(Date date) {
-        return new Date(date.getTime() + TimeZone.getDefault().getOffset(System.currentTimeMillis()));
+        return null != date ? new Date(date.getTime() + TimeZone.getDefault().getOffset(System.currentTimeMillis())) : null;
     }
 
     public static Date localToUtc(Date date) {
-        return new Date(date.getTime() - TimeZone.getDefault().getOffset(System.currentTimeMillis()));
+        return null != date ? new Date(date.getTime() - TimeZone.getDefault().getOffset(System.currentTimeMillis())) : null;
     }
 
     public static Date getUtcNow() {
